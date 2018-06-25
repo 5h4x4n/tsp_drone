@@ -19,9 +19,9 @@ public class PDSTSP extends TSP {
 
 	public PDSTSP() {}
 
-	public PDSTSP( Point2D.Double[] nodes, double[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
+	public PDSTSP( String name, String comment, double[][] nodes, int[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
 					int[] droneDeliveryPossible, int droneFleetSize ){
-		super( nodes, distances, truckTimes );
+		super( name, comment, nodes, distances, truckTimes );
 		this.droneFlightTime = droneFlightTime;
 		this.droneTimes = droneTimes;
 		this.droneDeliveryPossible = droneDeliveryPossible;
@@ -51,24 +51,26 @@ public class PDSTSP extends TSP {
 		Point2D.Double[] nodes = convertNodeArrayToPoint2dArray( pdstspLibJson.getNode_coordinates() );
 
 		log.info( "Calculate distances with distanceTye (edge_weight_type) '" + pdstspLibJson.getEdge_weight_type() + "'." );
-		double[][] distances = calculateTravelDistances( nodes, pdstspLibJson.getEdge_weight_type() );
+		//double[][] distances = calculateTravelDistances( nodes, pdstspLibJson.getEdge_weight_type() );
 
 		log.info( "Calculate truckTimes with speed '" + pdstspLibJson.getTruck_speed() + "'." );
-		double[][] truckTimes = calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
+		//double[][] truckTimes = calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
 
 		log.info( "Calculate droneTimes with speed '" + pdstspLibJson.getTruck_speed() + "'." );
-		double[][] droneTimes = calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
+		//double[][] droneTimes = calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
 
-		PDSTSP pdstsp = new PDSTSP( nodes, distances, truckTimes, droneFlightTime, droneTimes, pdstspLibJson.getDrone_delivery_possible(), pdstspLibJson.getDrone_fleet_size() );
-		log.info( pdstsp );
+		//PDSTSP pdstsp = new PDSTSP( nodes, distances, truckTimes, droneFlightTime, droneTimes, pdstspLibJson.getDrone_delivery_possible(), pdstspLibJson.getDrone_fleet_size() );
+		//log.info( pdstsp );
 
-		return pdstsp;
+		//return pdstsp;
+
+		return null;
 	}
 
 	public String toString() {
 		String toString = "Nodes: \n";
 		for( int i = 0; i < getNodes().length; i++ ) {
-			toString += "[ " + getNodes()[i].getX() + ", " + getNodes()[i].getY() + " ]\n";
+			toString += "[ " + getNodes()[i][0] + ", " + getNodes()[i][1] + " ]\n";
 		}
 		toString += "Drone Flight Time: " + droneFlightTime + "\n";
 		toString += "Drone Fleet Size: " + droneFleetSize + "\n";

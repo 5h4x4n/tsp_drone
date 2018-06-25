@@ -6,11 +6,13 @@ public class TSPLibJson{
 	private String type;
 	private String comment;
 	private int dimension;
-	private double truck_speed;
+	private double truck_speed = 1.0;
 	private String edge_weight_type;
 	private String edge_weight_format;
+	private int[][] edge_weights;
 	private String display_data_type;
 	private double[][] node_coordinates;
+	private double[][] display_data;
 
 	public String getName(){
 		return name;
@@ -68,6 +70,14 @@ public class TSPLibJson{
 		this.edge_weight_format = edge_weight_format;
 	}
 
+	public int[][] getEdge_weights(){
+		return edge_weights;
+	}
+
+	public void setEdge_weights( int[][] edge_weights ){
+		this.edge_weights = edge_weights;
+	}
+
 	public String getDisplay_data_type(){
 		return display_data_type;
 	}
@@ -84,6 +94,14 @@ public class TSPLibJson{
 		this.node_coordinates = node_coordinates;
 	}
 
+	public double[][] getDisplay_data(){
+		return display_data;
+	}
+
+	public void setDisplay_data( double[][] display_data ){
+		this.display_data = display_data;
+	}
+
 	public String toString() {
 
 		String toString;
@@ -97,7 +115,7 @@ public class TSPLibJson{
 		toString += "Edge Weight Format: " + edge_weight_format + "\n";
 		toString += "Display Data Type: " + display_data_type + "\n";
 		toString += "Node Coordinates: \n";
-		int i = 0;
+		int i = 1;
 		for( double[] nodeCoordinates : node_coordinates ) {
 			toString += "\t" + i++ + ": [ " + nodeCoordinates[0] + ", " + nodeCoordinates[1]  + " ]\n";
 		}
