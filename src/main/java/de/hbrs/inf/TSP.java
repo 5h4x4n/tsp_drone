@@ -311,7 +311,7 @@ public class TSP{
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 						double runtimeOptimizationMilliseconds = runtimeOptimization / 1e6;
 						double runtimeCalcGrbModelMilliseconds = runtimeCalcGrbModel / 1e6;
-						log.info( "Calc GRB Model runtime: " + runtimeCalcGrbModelMilliseconds + "ms" );
+						log.info( "Runtime of GRB Model calculation: " + runtimeCalcGrbModelMilliseconds + "ms" );
 						log.info( "Total optimization runtime: " + runtimeOptimizationMilliseconds + "ms" );
 						//TODO generate tour form solution edges
 						//log.info( "Tour: " + getTourFromSolutionEdges( solutionEdges ));
