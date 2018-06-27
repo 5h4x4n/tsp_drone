@@ -4,12 +4,7 @@ public class Application {
 
 	public static void main( String[] args ) {
 
-		if (args.length < 1) {
-			System.out.println("Usage: java tsp_drone <filename>");
-			System.exit(1);
-		}
-
-
+		//TODO read and handle arguments, read tsp/pdstsp/etc problem/s and solve them
 
 	}
 
