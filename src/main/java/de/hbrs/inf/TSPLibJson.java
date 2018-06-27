@@ -114,12 +114,23 @@ public class TSPLibJson{
 		toString += "Edge Weight Type: " + edge_weight_type + "\n";
 		toString += "Edge Weight Format: " + edge_weight_format + "\n";
 		toString += "Display Data Type: " + display_data_type + "\n";
-		toString += "Node Coordinates: \n";
-		int i = 1;
-		for( double[] nodeCoordinates : node_coordinates ) {
-			toString += "\t" + i++ + ": [ " + nodeCoordinates[0] + ", " + nodeCoordinates[1]  + " ]\n";
+		if( node_coordinates != null ){
+			int i = 1;
+			toString += "Node Coordinates: \n";
+			for( double[] nodeCoordinates : node_coordinates ){
+				toString += "\t" + i++ + ": [ " + nodeCoordinates[0] + ", " + nodeCoordinates[1] + " ]\n";
+			}
 		}
-
+		if( edge_weights != null ){
+			toString += "Edge Weights: \n";
+			for( int i = 0; i < edge_weights.length; i++ ){
+				for( int j = 0; j < edge_weights[i].length; j++){
+					toString += edge_weights[i][j] + ", ";
+				}
+				toString = toString.substring( 0, toString.length() - 2 );
+				toString += "\n";
+			}
+		}
 		return toString;
 	}
 
