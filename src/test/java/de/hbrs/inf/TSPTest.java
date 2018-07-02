@@ -25,15 +25,4 @@ public class TSPTest{
 		tsp.grbOptimize();
 	}
 
-	@Test
-	public void testExamplesTspLib() {
-		File directory = new File( "resources/tsplib" );
-		for( File file : directory.listFiles() ) {
-			log.info( "##################### " + file.getName() + "#####################" );
-			TSP tsp = TSP.getObjectFromJson( file.getPath() );
-			tsp.grbOptimize();
-		}
-
-	}
-
 }
