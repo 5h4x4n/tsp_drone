@@ -2,53 +2,50 @@ package de.hbrs.inf;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import gurobi.GRBModel;
 import org.apache.log4j.Logger;
 import java.awt.geom.Point2D;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
-public class PDSTSP extends TSP {
+public class Pdstsp extends Tsp{
 
 	private double droneFlightTime;
 	private int droneFleetSize;
 	private double[][] droneTimes;
 	private int[] droneDeliveryPossible;
 
-	private static Logger log = Logger.getLogger( PDSTSP.class.getName() );
+	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
-	public PDSTSP() {}
-
-	public PDSTSP( String name, String comment, double[][] nodes, int[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
+	public Pdstsp( String name, String comment, String type, double[][] nodes, int[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
 					int[] droneDeliveryPossible, int droneFleetSize ){
-		super( name, comment, nodes, distances, truckTimes );
+		super( name, comment, type, nodes, distances, truckTimes );
 		this.droneFlightTime = droneFlightTime;
 		this.droneTimes = droneTimes;
 		this.droneDeliveryPossible = droneDeliveryPossible;
 		this.droneFleetSize = droneFleetSize;
 	}
 
-	public static PDSTSP getObjectFromJson( String fileName ) {
-		PDSTSPLibJson pdstspLibJson;
+	public static Pdstsp getObjectFromJson( String fileName ) {
+		PdstspLibJson pdstspLibJson;
 		log.info( "Try to read PDSTPSJson file '" + fileName + "' and convert it to corresponding java object." );
 		try {
 			Gson gson = new Gson();
 			JsonReader reader = new JsonReader( new FileReader( fileName ));
-			pdstspLibJson = gson.fromJson( reader, PDSTSPLibJson.class );
-			log.info( "PDSTSPLibJson successfully read: \n" + pdstspLibJson );
+			pdstspLibJson = gson.fromJson( reader, PdstspLibJson.class );
+			log.info( "PdstspLibJson successfully read: \n" + pdstspLibJson );
 
 		} catch ( FileNotFoundException e ) {
 			log.error( "File not found '" + fileName + "'." );
 			return null;
 		} catch ( Exception e ) {
-			log.error( "Something went wrong while reading PDSTSPLibJson File! Error message: " + e.getMessage() );
+			log.error( "Something went wrong while reading PdstspLibJson File! Error message: " + e.getMessage() );
 			return null;
 		}
 
-		//convert PDSTSPLibJson to PDSTSP object
+		//convert PdstspLibJson to Pdstsp object
 		double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
 		log.info( "Convert node coordinates to Point2D.Double array." );
-		Point2D.Double[] nodes = convertNodeArrayToPoint2dArray( pdstspLibJson.getNode_coordinates() );
+		//Point2D.Double[] nodes = convertNodeArrayToPoint2dArray( pdstspLibJson.getNode_coordinates() );
 
 		log.info( "Calculate distances with distanceTye (edge_weight_type) '" + pdstspLibJson.getEdge_weight_type() + "'." );
 		//double[][] distances = calculateTravelDistances( nodes, pdstspLibJson.getEdge_weight_type() );
@@ -59,7 +56,7 @@ public class PDSTSP extends TSP {
 		log.info( "Calculate droneTimes with speed '" + pdstspLibJson.getTruck_speed() + "'." );
 		//double[][] droneTimes = calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
 
-		//PDSTSP pdstsp = new PDSTSP( nodes, distances, truckTimes, droneFlightTime, droneTimes, pdstspLibJson.getDrone_delivery_possible(), pdstspLibJson.getDrone_fleet_size() );
+		//Pdstsp pdstsp = new Pdstsp( nodes, distances, truckTimes, droneFlightTime, droneTimes, pdstspLibJson.getDrone_delivery_possible(), pdstspLibJson.getDrone_fleet_size() );
 		//log.info( pdstsp );
 
 		//return pdstsp;

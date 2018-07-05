@@ -1,6 +1,6 @@
 package de.hbrs.inf;
 
-public class PDSTSPLibJson extends TSPLibJson{
+public class PdstspLibJson extends TspLibJson{
 
 	private double drone_flight_range;
 	private int drone_fleet_size;

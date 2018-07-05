@@ -1,6 +1,6 @@
 package de.hbrs.inf;
 
-public class TSPLibJson{
+public class TspLibJson{
 
 	private String name;
 	private String type;

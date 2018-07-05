@@ -91,10 +91,12 @@ public class Application{
 		//iterate over all given json files
 		for( File file : jsonFiles ) {
 			log.info( "##################### Start: " + file.getName() + " #####################" );
-			TSP tsp = TSP.getObjectFromJson( file.getPath() );
-			tsp.grbOptimize();
+			TspModel tspModel = JsonTspMapper.getObjectFromJson( file.getPath() );
+			tspModel.grbOptimize();
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
+
+		//TODO get result objects from grbOptimize, show them and write to output file
 
 	}
 
