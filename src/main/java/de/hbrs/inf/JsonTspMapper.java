@@ -39,7 +39,7 @@ public class JsonTspMapper{
 		log.info( "Calculate truckTimes with speed '" + tspLibJson.getTruck_speed() + "'." );
 		double[][] truckTimes = TspModel.calculateTravelTimes( tspLibJson.getTruck_speed(), distances );
 
-		Tsp tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), nodes, distances, truckTimes );
+		Tsp tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), tspLibJson.getDimension(), nodes, distances, truckTimes );
 		log.info( "Created Tsp model from JSON file." );
 		//log.debug( tsp );
 

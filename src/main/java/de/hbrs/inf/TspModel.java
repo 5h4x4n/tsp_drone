@@ -8,6 +8,7 @@ public abstract class TspModel{
 	protected String name;
 	protected String comment;
 	protected String type;
+	protected int dimension;
 	protected double[][] nodes;
 	protected int[][] distances;
 	protected double[][] truckTimes;
@@ -16,10 +17,11 @@ public abstract class TspModel{
 	protected GRBVar[][] grbVars;
 	private static Logger log = Logger.getLogger( de.hbrs.inf.Tsp.class.getName() );
 
-	public TspModel( String name, String comment, String type, double[][] nodes, int[][] distances, double[][] truckTimes ){
+	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double[][] truckTimes ){
 		this.name = name;
 		this.comment = comment;
 		this.type = type;
+		this.dimension = dimension;
 		this.nodes = nodes;
 		this.distances = distances;
 		this.truckTimes = truckTimes;
@@ -168,7 +170,7 @@ public abstract class TspModel{
 				}
 
 				if( optimizationStatus == GRB.Status.OPTIMAL ){
-					double objval = grbModel.get( GRB.DoubleAttr.ObjVal );
+					int objval = (int) ( grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d );
 					log.info( "Found objective: " + objval );
 
 					GRBVar[] vars = grbModel.getVars();
@@ -177,7 +179,7 @@ public abstract class TspModel{
 					String solutionString = "";
 
 					for(int i = 0; i < vars.length; i++){
-						if( x[i] != 0.0 ){
+						if( (int)(x[i] + 0.5d) != 0 ){
 							solutionString += varNames[i] + ", ";
 						}
 					}
@@ -199,9 +201,10 @@ public abstract class TspModel{
 
 						//TODO create and return result object
 					} else {
+						//TODO add runtime of last iteration
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
 						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
-						log.info( "Current optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
+						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					log.info( "Model is infeasible" );

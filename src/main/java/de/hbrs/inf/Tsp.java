@@ -11,8 +11,8 @@ public class Tsp extends TspModel {
 	private int additionalConstraintsCounter = 0;
 	private static Logger log = Logger.getLogger( Tsp.class.getName() );
 
-	public Tsp( String name, String comment, String type, double[][] nodes, int[][] distances, double[][] truckTimes ){
-		super(name, comment, type, nodes, distances, truckTimes );
+	public Tsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double[][] truckTimes ){
+		super(name, comment, type, dimension, nodes, distances, truckTimes );
 	}
 
 	public String toString(){
@@ -25,12 +25,10 @@ public class Tsp extends TspModel {
 
 		GRBModel grbModel = new GRBModel( grbEnv );
 
-		int n = nodes.length;
-
 		// create decision variables
-		grbVars = new GRBVar[n][n];
-		for(int i = 0; i < n; i++){
-			for(int j = i + 1; j < n; j++){
+		grbVars = new GRBVar[dimension][dimension];
+		for(int i = 0; i < dimension; i++){
+			for(int j = i + 1; j < dimension; j++){
 				log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][j] );
 				grbVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][j], GRB.BINARY, "x" + String.valueOf( i ) + "_" + String.valueOf( j ) );
 				grbVars[j][i] = grbVars[i][j];
@@ -38,10 +36,10 @@ public class Tsp extends TspModel {
 		}
 
 		// create degree-2 constraints
-		for(int i = 0; i < n; i++){
+		for(int i = 0; i < dimension; i++){
 			GRBLinExpr grbExpr = new GRBLinExpr();
 			String logString = "";
-			for(int j = 0; j < n; j++){
+			for(int j = 0; j < dimension; j++){
 				if( i != j ){
 					logString += "x" + i + "_" + j + " + ";
 					grbExpr.addTerm( 1.0, grbVars[i][j] );
@@ -60,17 +58,22 @@ public class Tsp extends TspModel {
 
 	protected boolean addViolatedConstraints() throws GRBException{
 
-		GRBVar[] vars = grbModel.getVars();
-		String[] varNames = grbModel.get( GRB.StringAttr.VarName, vars );
-		double[] x = grbModel.get( GRB.DoubleAttr.X, vars );
-
-		ArrayList<String> solution = new ArrayList<String>();
-		for(int i = 0; i < vars.length; i++){
-			if( x[i] != 0.0 ){
-				solution.add( varNames[i].substring( 1 ) );
+		if( log.isDebugEnabled() ){
+			log.debug( "Adjacency matrix of solution:" );
+			for(int i = 0; i < dimension; i++){
+				String rowString = "";
+				for(int j = 0; j < dimension; j++){
+					if( i == j ){
+						rowString += "-, ";
+					} else {
+						rowString += ((int)grbVars[i][j].get( GRB.DoubleAttr.X ) ) + ", ";
+					}
+				}
+				log.debug( rowString.substring( 0, rowString.length() - 2 ) );
 			}
 		}
-		ArrayList<HashSet<Integer>> subtours = findSubtours( solution );
+
+		ArrayList<HashSet<Integer>> subtours = findSubtours();
 		if( subtours.size() > 1 ){
 			log.info( "Found subtours: " + subtours.size() );
 			log.debug( "Subtours: " + subtours );
@@ -109,7 +112,6 @@ public class Tsp extends TspModel {
 		}
 	}
 
-
 	private ArrayList<int[]> createEdgesForSubtourEliminationConstraint( HashSet<Integer> subtour ) {
 		ArrayList<Integer> subtourList = new ArrayList<Integer>( subtour );
 		ArrayList<int[]> edges = new ArrayList<int[]>();
@@ -125,73 +127,47 @@ public class Tsp extends TspModel {
 		return edges;
 	}
 
-	public ArrayList<HashSet<Integer>> findSubtours( ArrayList<String> solutionEdges ) {
+	public ArrayList<HashSet<Integer>> findSubtours() throws GRBException{
 		log.debug( "Starting find subtours" );
-		log.debug( "Solution Edges: " + solutionEdges );
 
 		ArrayList<HashSet<Integer>> subtours = new ArrayList<HashSet<Integer>>();
-		Stack<Integer> unhandledVerticesForSubtour = new Stack<Integer>();
+		Stack<Integer> unvisitedVertices = new Stack<Integer>();
+		for(int i = dimension - 1; i >= 0; i--){
+			unvisitedVertices.add( i );
+		}
 
-		while( !solutionEdges.isEmpty() ) {
-
+		while(!unvisitedVertices.isEmpty()){
+			int currentVertex = unvisitedVertices.pop();
+			log.debug( "currentVertex: " + currentVertex );
+			log.debug( "unvisitedVertices: " + unvisitedVertices );
 			HashSet<Integer> subtour = new HashSet<Integer>();
 			subtours.add( subtour );
-			String currentEdge = solutionEdges.remove( 0 );
-			int[] currentEdgeVertices = getVerticesFromEdge( currentEdge );
-			subtour.add( currentEdgeVertices[0] );
-			subtour.add( currentEdgeVertices[1] );
-			unhandledVerticesForSubtour.push( currentEdgeVertices[0] );
-			unhandledVerticesForSubtour.push( currentEdgeVertices[1] );
+			Stack<Integer> unvisitedVerticesForSubtour = new Stack<Integer>();
+			unvisitedVerticesForSubtour.add( currentVertex );
+			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
 
-			while( !unhandledVerticesForSubtour.empty() ) {
-
-				int currentVertex = unhandledVerticesForSubtour.pop();
-				ArrayList<Integer> edgesToRemove = new ArrayList<Integer>();
-				for( int i = 0; i < solutionEdges.size(); i++ ) {
-					currentEdgeVertices = getVerticesFromEdge( solutionEdges.get( i ) );
-					if( currentEdgeVertices[0] == currentVertex ){
-						subtour.add( currentEdgeVertices[1] );
-						unhandledVerticesForSubtour.add( currentEdgeVertices[1] );
-						edgesToRemove.add( i );
-					} else if( currentEdgeVertices[1] == currentVertex ) {
-						subtour.add( currentEdgeVertices[0] );
-						unhandledVerticesForSubtour.add( currentEdgeVertices[0] );
-						edgesToRemove.add( i );
+			while( !unvisitedVerticesForSubtour.isEmpty() ){
+				Integer currentSubtourVertex = unvisitedVerticesForSubtour.pop();
+				log.debug( "currentSubtourVertex: " + currentSubtourVertex );
+				log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
+				subtour.add( currentSubtourVertex );
+				log.debug( "subtour: " + subtour );
+				unvisitedVertices.remove( currentSubtourVertex );
+				for(int i = 0; i < dimension; i++){
+					if( i != currentSubtourVertex ){
+						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
+						if( ( (int)( grbVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) + 0.5d ) ) == 1 && !subtour.contains( i ) ){
+							unvisitedVerticesForSubtour.add( i );
+							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
+						}
 					}
 				}
-				//Remove edgesToRemove from solutionEdges
-				log.debug( "Edges to remove from solution edges: " + edgesToRemove );
-				log.debug( "Solution edges size: " + solutionEdges.size() );
-				log.debug( "Solution edges: " + solutionEdges );
-				for( int i : edgesToRemove ) {
-					log.debug( "Try to remove index: " + i + ", solution egdes size: " + solutionEdges.size() );
-					solutionEdges.remove( i );
-				}
 			}
+			log.debug( "subtour: " + subtour );
 		}
 		log.debug( "Ending find subtours" );
 		return subtours;
-	}
 
-	private int[] getVerticesFromEdge( String edge ) {
-		int[] vertices = new int[2];
-		String[] edgeVertices = edge.split( "_" );
-		vertices[0] = Integer.parseInt( edgeVertices[0] );
-		vertices[1] = Integer.parseInt( edgeVertices[1] );
-		return vertices;
-	}
-
-	private ArrayList<Integer> getTourFromSolutionEdges( ArrayList<String> solutionEdges ) {
-		ArrayList<Integer> tour = new ArrayList<Integer>();
-		//TODO implementation
-		tour.add( 0 );
-		for( int i=0; i < nodes.length; i++ ) {
-			int currentNode = tour.get( i );
-
-
-		}
-
-		return tour;
 	}
 
 	public double[][] getNodes(){

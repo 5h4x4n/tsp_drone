@@ -16,9 +16,9 @@ public class Pdstsp extends Tsp{
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
-	public Pdstsp( String name, String comment, String type, double[][] nodes, int[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
+	public Pdstsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double[][] truckTimes, double droneFlightTime, double[][] droneTimes,
 					int[] droneDeliveryPossible, int droneFleetSize ){
-		super( name, comment, type, nodes, distances, truckTimes );
+		super( name, comment, type, dimension, nodes, distances, truckTimes );
 		this.droneFlightTime = droneFlightTime;
 		this.droneTimes = droneTimes;
 		this.droneDeliveryPossible = droneDeliveryPossible;
