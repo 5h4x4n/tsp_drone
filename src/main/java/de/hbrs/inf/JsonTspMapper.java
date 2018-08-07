@@ -13,13 +13,48 @@ public class JsonTspMapper{
 
 	public static TspModel getObjectFromJson( String fileName ) {
 
-		TspLibJson tspLibJson;
+		TspModel tsp = null;
 		log.info( "Try to read json file '" + fileName + "' and convert it to corresponding tsp object." );
 		try{
+			TspLibJson tspLibJson;
 			Gson gson = new Gson();
 			JsonReader reader = new JsonReader( new FileReader( fileName ) );
 			tspLibJson = gson.fromJson( reader, TspLibJson.class );
 			log.debug( "TspLibJson successfully read: \n" + tspLibJson );
+
+
+			double[][] nodes = TspModel.calculateNodes( tspLibJson );
+			log.info( "Calculate distances with edge_weight_type '" + tspLibJson.getEdge_weight_type() + "'." );
+			int[][] distances = TspModel.calculateTravelDistances( tspLibJson.getNode_coordinates(), tspLibJson.getEdge_weights(),
+							tspLibJson.getDimension(), tspLibJson.getEdge_weight_type(), tspLibJson.getEdge_weight_format() );
+
+			switch(	tspLibJson.getType().toUpperCase() ) {
+				case "TSP":
+					//convert TspLibJson to Tsp object
+					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), tspLibJson.getDimension(), nodes, distances );
+					break;
+
+				case "PDSTSP":
+					reader = new JsonReader( new FileReader( fileName ) );
+					PdstspLibJson pdstspLibJson = gson.fromJson( reader, PdstspLibJson.class );
+
+					double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
+					log.info( "Calculate droneTimes with speed '" + pdstspLibJson.getDrone_speed() + "'." );
+					double [][] droneTimes = TspModel.calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
+
+					log.info( "Calculate truckTimes with speed '" + pdstspLibJson.getTruck_speed() + "'." );
+					double [][] truckTimes = TspModel.calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
+
+					//convert PdstspLibJson to Pdstsp object
+					tsp = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), pdstspLibJson.getType(), pdstspLibJson.getDimension(),
+									nodes, distances, pdstspLibJson.getTruck_speed(), truckTimes, pdstspLibJson.getDrone_speed(),
+									droneFlightTime, pdstspLibJson.getDrone_fleet_size(), droneTimes, pdstspLibJson.getDrone_delivery_possible() );
+					break;
+
+				default:
+					log.info( "TSP Type '" + tspLibJson.getType().toUpperCase() + "' not supported yet." );
+					break;
+			}
 
 		} catch(FileNotFoundException e){
 			log.error( "File not found '" + fileName + "'." );
@@ -29,20 +64,8 @@ public class JsonTspMapper{
 			return null;
 		}
 
-		//convert TspLibJson to Tsp object
-		double[][] nodes = Tsp.calculateNodes( tspLibJson );
-
-		log.info( "Calculate distances with edge_weight_type '" + tspLibJson.getEdge_weight_type() + "'." );
-		int[][] distances = TspModel.calculateTravelDistances( tspLibJson.getNode_coordinates(), tspLibJson.getEdge_weights(),
-						tspLibJson.getDimension(), tspLibJson.getEdge_weight_type(), tspLibJson.getEdge_weight_format() );
-
-		log.info( "Calculate truckTimes with speed '" + tspLibJson.getTruck_speed() + "'." );
-		double[][] truckTimes = TspModel.calculateTravelTimes( tspLibJson.getTruck_speed(), distances );
-
-		Tsp tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), tspLibJson.getDimension(), nodes, distances, truckTimes );
 		log.info( "Created Tsp model from JSON file." );
-		//log.debug( tsp );
-
+		log.debug( tsp );
 		return tsp;
 	}
 
