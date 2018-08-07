@@ -105,6 +105,16 @@ public abstract class TspModel{
 					}
 				}
 				return distances;
+			} else if( edge_weight_format.equals( "UPPER_ROW" ) ){
+				int[][] distances = new int[dimension][dimension];
+				for( int i = 0; i < dimension; i++ ){
+					distances[i][i] = 0;
+					for( int j = 0; j < dimension - i - 1; j++ ){
+						distances[i][j + i + 1] = edge_weights[i][j];
+						distances[j + i + 1][i] = edge_weights[i][j];
+					}
+				}
+				return distances;
 			} else {
 				log.error( "edge_weight_format '" + edge_weight_format + "' not supported." );
 				return null;
