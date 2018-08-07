@@ -63,10 +63,14 @@ public abstract class TspModel{
 
 			for(int i = 0; i < dimension; i++){
 				for(int j = 0; j < dimension; j++){
-					double q1 = Math.cos( longitude[i] - longitude[j] );
-					double q2 = Math.cos( latitude[i] - latitude[j] );
-					double q3 = Math.cos( latitude[i] + latitude[j] );
-					distances[i][j] = (int)(Defines.EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0);
+					if( i == j ) {
+						distances[i][j] = 0;
+					} else {
+						double q1 = Math.cos( longitude[i] - longitude[j] );
+						double q2 = Math.cos( latitude[i] - latitude[j] );
+						double q3 = Math.cos( latitude[i] + latitude[j] );
+						distances[i][j] = (int)(Defines.EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0);
+					}
 				}
 			}
 			return distances;
@@ -76,9 +80,13 @@ public abstract class TspModel{
 
 			for(int i = 0; i < dimension; i++){
 				for(int j = 0; j < dimension; j++){
-					double deltaX = node_coordinates[i][0] - node_coordinates[j][0];
-					double deltaY = node_coordinates[i][1] - node_coordinates[j][1];
-					distances[i][j] = (int)(Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5);
+					if( i == j ) {
+						distances[i][j] = 0;
+					} else {
+						double deltaX = node_coordinates[i][0] - node_coordinates[j][0];
+						double deltaY = node_coordinates[i][1] - node_coordinates[j][1];
+						distances[i][j] = (int)(Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5);
+					}
 				}
 			}
 			return distances;
@@ -88,8 +96,12 @@ public abstract class TspModel{
 				int[][] distances = new int[dimension][dimension];
 				for(int i = 0; i < dimension; i++){
 					for(int j = i; j < dimension; j++){
-						distances[j][i] = edge_weights[j][i];
-						distances[i][j] = edge_weights[j][i];
+						if( i == j ) {
+							distances[i][j] = 0;
+						} else {
+							distances[j][i] = edge_weights[j][i];
+							distances[i][j] = edge_weights[j][i];
+						}
 					}
 				}
 				return distances;
