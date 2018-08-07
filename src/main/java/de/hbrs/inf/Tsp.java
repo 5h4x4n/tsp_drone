@@ -46,7 +46,7 @@ public class Tsp extends TspModel {
 			grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_" + String.valueOf( i ) );
 		}
 
-		log.info( "End calculation of gurobi model for the PDSTSP without subtour elimination constraints" );
+		log.info( "End calculation of gurobi model for the TSP without subtour elimination constraints" );
 
 		return grbModel;
 	}
