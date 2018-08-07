@@ -6,7 +6,6 @@ public class TspLibJson{
 	private String type;
 	private String comment;
 	private int dimension;
-	private double truck_speed = 1.0;
 	private String edge_weight_type;
 	private String edge_weight_format;
 	private int[][] edge_weights;
@@ -44,14 +43,6 @@ public class TspLibJson{
 
 	public void setDimension( int dimension ){
 		this.dimension = dimension;
-	}
-
-	public double getTruck_speed(){
-		return truck_speed;
-	}
-
-	public void setTruck_speed( double truck_speed ){
-		this.truck_speed = truck_speed;
 	}
 
 	public String getEdge_weight_type(){
@@ -110,7 +101,6 @@ public class TspLibJson{
 		toString += "Type: " + type + "\n";
 		toString += "Comment: " + comment + "\n";
 		toString += "Dimension: " + dimension + "\n";
-		toString += "Truck Speed: " + truck_speed + "\n";
 		toString += "Edge Weight Type: " + edge_weight_type + "\n";
 		toString += "Edge Weight Format: " + edge_weight_format + "\n";
 		toString += "Display Data Type: " + display_data_type + "\n";

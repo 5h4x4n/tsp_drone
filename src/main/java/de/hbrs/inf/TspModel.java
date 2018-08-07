@@ -11,20 +11,20 @@ public abstract class TspModel{
 	protected int dimension;
 	protected double[][] nodes;
 	protected int[][] distances;
-	protected double[][] truckTimes;
 	protected GRBModel grbModel;
 	protected GRBEnv grbEnv;
-	protected GRBVar[][] grbVars;
-	private static Logger log = Logger.getLogger( de.hbrs.inf.Tsp.class.getName() );
+	protected GRBVar[][] grbTruckEdgeVars;
+	protected int additionalConstraintsCounter = 0;
 
-	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double[][] truckTimes ){
+	protected static Logger log = Logger.getLogger( de.hbrs.inf.TspModel.class.getName() );
+
+	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		this.name = name;
 		this.comment = comment;
 		this.type = type;
 		this.dimension = dimension;
 		this.nodes = nodes;
 		this.distances = distances;
-		this.truckTimes = truckTimes;
 	}
 
 	public static double[][] calculateNodes( TspLibJson tspLibJson ){
@@ -130,13 +130,6 @@ public abstract class TspModel{
 			}
 			toString = toString.substring( 0, toString.length() - 2 ) + "\n";
 		}
-		toString += "Truck Times: \n";
-		for(int i = 0; i < truckTimes.length; i++){
-			for(int j = 0; j < truckTimes[0].length; j++){
-				toString += truckTimes[i][j] + ", ";
-			}
-			toString = toString.substring( 0, toString.length() - 2 ) + "\n";
-		}
 
 		return toString;
 	}
@@ -157,7 +150,9 @@ public abstract class TspModel{
 
 			log.info( "Start optimization process" );
 			long runtimeOptimization = System.nanoTime();
+			long currentIterationRuntime;
 			do{
+				currentIterationRuntime = System.nanoTime();
 				log.info( "IterationCounter: " + iterationCounter++ );
 				grbModel.optimize();
 				int optimizationStatus = grbModel.get( GRB.IntAttr.Status );
@@ -188,22 +183,31 @@ public abstract class TspModel{
 
 					if( !addViolatedConstraints() ){
 						isSolutionOptimal = true;
+
+						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
+						double cuurentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
+						log.info( "Last iteration runtime: " + cuurentIterationRuntimeMilliseconds + "ms" );
+
 						log.info( "Found solution for '" + name + "' is optimal!" );
 						log.info( "Optimal objective: " + objval );
+
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 						double runtimeOptimizationMilliseconds = runtimeOptimization / 1e6;
 						double runtimeCalcGrbModelMilliseconds = runtimeCalcGrbModel / 1e6;
-						log.info( "Runtime of GRB Model calculation: " + runtimeCalcGrbModelMilliseconds + "ms" );
 						log.info( "Total optimization runtime: " + runtimeOptimizationMilliseconds + "ms" );
+						log.debug( "Runtime of GRB Model calculation: " + runtimeCalcGrbModelMilliseconds + "ms" );
+
 						//TODO generate solution
 						//log.info( "Tour: " + getSolutionString( solution ) );
 						//TODO show runtime from starting solve-algorithm and maybe also from parts like finding subtours (also percentage)
 
 						//TODO create and return result object
 					} else {
-						//TODO add runtime of last iteration
+						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
+						double cuurentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
 						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
+						log.info( "Last iteration runtime: " + cuurentIterationRuntimeMilliseconds + "ms" );
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
@@ -244,14 +248,6 @@ public abstract class TspModel{
 
 	public void setDistances( int[][] distances ){
 		this.distances = distances;
-	}
-
-	public double[][] getTruckTimes(){
-		return truckTimes;
-	}
-
-	public void setTruckTimes( double[][] truckTimes ){
-		this.truckTimes = truckTimes;
 	}
 }
 
