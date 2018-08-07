@@ -59,12 +59,11 @@ public class Application{
 		if( cmd.hasOption("l") ) {
 			Configuration.setLogFile( cmd.getOptionValue( "l" ) );
 		}
-		System.setProperty( "log4j.logFile", Configuration.getLogFile() );
 
 		if( cmd.hasOption( "d" ) ){
 			Configuration.setLogLevel( "DEBUG" );
 		}
-		System.setProperty( "log4j.logLevel", Configuration.getLogLevel() );
+		Configuration.setSystemProperties();
 
 		log = Logger.getLogger( Application.class.getName() );
 
@@ -92,7 +91,11 @@ public class Application{
 		for( File file : jsonFiles ) {
 			log.info( "##################### Start: " + file.getName() + " #####################" );
 			TspModel tspModel = JsonTspMapper.getObjectFromJson( file.getPath() );
-			tspModel.grbOptimize();
+			if( tspModel != null ){
+				tspModel.grbOptimize();
+			} else {
+				log.info( "Could not convert JSON File '" + file.getName() + "' to TSP Model!" );
+			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
 

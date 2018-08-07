@@ -30,4 +30,9 @@ public class Configuration{
 	public static void setLogLevel( String logLevel ){
 		Configuration.logLevel = logLevel;
 	}
+
+	public static void setSystemProperties() {
+		System.setProperty( "log4j.logLevel", logLevel );
+		System.setProperty( "log4j.logFile", logFile );
+	}
 }
