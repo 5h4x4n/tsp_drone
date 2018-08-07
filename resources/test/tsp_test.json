@@ -2,7 +2,6 @@
     "name" : "TSP Test",
     "type" : "TSP",
     "comment" : "14-Staedte in Burma (Zaw Win)",
-	"truck_speed" : 1.0,
     "dimension" : 14,
     "edge_weight_type" : "GEO",
     "edge_weight_format" : "FUNCTION",
