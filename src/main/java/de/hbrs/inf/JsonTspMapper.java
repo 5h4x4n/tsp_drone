@@ -24,9 +24,17 @@ public class JsonTspMapper{
 
 
 			double[][] nodes = TspModel.calculateNodes( tspLibJson );
+			if( nodes == null && !tspLibJson.getEdge_weight_type().equals( "EXPLICIT" ) ) {
+				log.info( "Could not calculate nodes." );
+				return null;
+			}
 			log.info( "Calculate distances with edge_weight_type '" + tspLibJson.getEdge_weight_type() + "'." );
 			int[][] distances = TspModel.calculateTravelDistances( tspLibJson.getNode_coordinates(), tspLibJson.getEdge_weights(),
 							tspLibJson.getDimension(), tspLibJson.getEdge_weight_type(), tspLibJson.getEdge_weight_format() );
+			if( distances == null ) {
+				log.info( "Could not calculate distances." );
+				return null;
+			}
 
 			switch(	tspLibJson.getType().toUpperCase() ) {
 				case "TSP":
