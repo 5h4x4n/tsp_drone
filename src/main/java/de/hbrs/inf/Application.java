@@ -66,6 +66,7 @@ public class Application{
 		Configuration.setSystemProperties();
 
 		log = Logger.getLogger( Application.class.getName() );
+		log.info( "Start application" );
 
 		if( cmd.hasOption( "j" ) ) {
 			Configuration.setJsonFileOrDir( cmd.getOptionValue( "j" ) );
@@ -94,7 +95,7 @@ public class Application{
 			if( tspModel != null ){
 				tspModel.grbOptimize();
 			} else {
-				log.info( "Could not convert JSON File '" + file.getName() + "' to TSP Model!" );
+				log.error( "Could not convert JSON File '" + file.getName() + "' to TSP Model!" );
 			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
