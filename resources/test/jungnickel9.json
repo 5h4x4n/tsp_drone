@@ -1,0 +1,19 @@
+{
+    "name" : "Jungnickel9",
+    "type" : "TSP",
+    "comment" : "9-city problem from the book Graphen, Algorithmen, Netzwerke by Dieter Jungnickel",
+    "dimension" : 9,
+    "edge_weight_type" : "EXPLICIT",
+    "edge_weight_format" : "UPPER_ROW",
+    "edge_weights" : 
+       [
+           [ 57, 64,  8, 26, 49, 64, 47, 46 ],
+           [     88, 54, 34, 83, 37, 43, 27 ],
+           [         57, 56, 29, 60, 44, 63 ],
+           [             23, 43, 63, 44, 41 ],
+           [                 50, 40, 22, 20 ],
+           [                     80, 63, 70 ],
+           [                         17, 22 ],
+           [                             19 ] 
+       ]
+}
