@@ -1,16 +1,28 @@
 package de.hbrs.inf;
 
+import com.google.gson.annotations.SerializedName;
+
 public class TspLibJson{
 
+	@SerializedName(value = "name", alternate = {"Name", "NAME"})
 	private String name;
+	@SerializedName(value = "type", alternate = {"Type", "TYPE"})
 	private String type;
+	@SerializedName(value = "comment", alternate = {"Comment", "COMMENT"})
 	private String comment;
+	@SerializedName(value = "dimension", alternate = {"Dimension", "DIMENSION"})
 	private int dimension;
+	@SerializedName(value = "edge_weight_type", alternate = {"Edge_Weight_Type", "EDGE_WEIGHT_TYPE"})
 	private String edge_weight_type;
+	@SerializedName(value = "edge_weight_format", alternate = {"Edge_Weight_Format", "EDGE_WEIGHT_FORMAT"})
 	private String edge_weight_format;
+	@SerializedName(value = "edge_weights", alternate = {"Edge_Weights", "EDGE_WEIGHTS"})
 	private int[][] edge_weights;
+	@SerializedName(value = "display_data_type", alternate = {"Display_Data_Type", "DISPLAY_DATA_TYPE"})
 	private String display_data_type;
+	@SerializedName(value = "node_coordinates", alternate = {"Node_Coordinates", "NODE_COORDINATES"})
 	private double[][] node_coordinates;
+	@SerializedName(value = "display_data", alternate = {"Display_Data", "DISPLAY_DATA"})
 	private double[][] display_data;
 
 	public String getName(){

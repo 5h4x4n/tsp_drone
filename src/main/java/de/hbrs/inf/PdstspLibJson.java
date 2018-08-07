@@ -1,11 +1,18 @@
 package de.hbrs.inf;
 
+import com.google.gson.annotations.SerializedName;
+
 public class PdstspLibJson extends TspLibJson{
 
+	@SerializedName(value = "truck_speed", alternate = {"Truck_Speed", "TRUCK_SPEED"})
 	private double truck_speed = 1;
+	@SerializedName(value = "drone_flight_range", alternate = {"Drone_Flight_Range", "DRONE_FLIGHT_RANGE"})
 	private int drone_flight_range;
+	@SerializedName(value = "drone_fleet_size", alternate = {"Drone_Fleet_Size", "DRONE_FLEET_SIZE"})
 	private int drone_fleet_size;
+	@SerializedName(value = "drone_speed", alternate = {"Drone_Speed", "DRONE_SPEED"})
 	private double drone_speed = 1;
+	@SerializedName(value = "drone_delivery_possible", alternate = {"Drone_Delivery_Possible", "DRONE_DELIVERY_POSSIBLE"})
 	private int[] drone_delivery_possible;
 
 	public double getTruck_speed(){
