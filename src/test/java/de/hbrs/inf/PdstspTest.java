@@ -20,6 +20,7 @@ public class PdstspTest{
 	@Test
 	public void testGrbOptimize() {
 		TspModel tspModel = JsonTspMapper.getObjectFromJson( "resources/test/pdstsp_test.json" );
+		assert tspModel != null;
 		tspModel.grbOptimize();
 	}
 

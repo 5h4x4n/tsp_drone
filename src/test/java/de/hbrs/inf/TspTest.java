@@ -6,7 +6,6 @@ import org.junit.Test;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class TspTest{
 
@@ -26,6 +25,7 @@ public class TspTest{
 	@Test
 	public void testGrbOptimize() {
 		TspModel tspModel = JsonTspMapper.getObjectFromJson( "resources/tsplib/wi29.json" );
+		assert tspModel != null;
 		tspModel.grbOptimize();
 	}
 
