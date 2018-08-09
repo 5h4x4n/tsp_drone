@@ -1,37 +1,37 @@
 package de.hbrs.inf;
 
-public class Configuration{
+class Configuration{
 
 	private static String logFile = "tsp_drone.log";
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
 
 
-	public static void setJsonFileOrDir( String jsonFileOrDir ){
+	static void setJsonFileOrDir( String jsonFileOrDir ){
 		Configuration.jsonFileOrDir = jsonFileOrDir;
 	}
 
-	public static String getJsonFileOrDir(){
+	static String getJsonFileOrDir(){
 		return jsonFileOrDir;
 	}
 
-	public static String getLogFile(){
+	static String getLogFile(){
 		return logFile;
 	}
 
-	public static void setLogFile( String logFile ){
+	static void setLogFile( String logFile ){
 		Configuration.logFile = logFile;
 	}
 
-	public static String getLogLevel(){
+	static String getLogLevel(){
 		return logLevel;
 	}
 
-	public static void setLogLevel( String logLevel ){
+	static void setLogLevel( String logLevel ){
 		Configuration.logLevel = logLevel;
 	}
 
-	public static void setSystemProperties() {
+	static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
 		System.setProperty( "log4j.logFile", logFile );
 	}
