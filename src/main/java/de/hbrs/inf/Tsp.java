@@ -6,12 +6,14 @@ import java.util.*;
 
 public class Tsp extends TspModel {
 
+	private ArrayList<Integer> truckTspTour;
+
 	public Tsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		super(name, comment, type, dimension, nodes, distances );
 	}
 
 	public String toString(){
-		//TODO
+		//TODO implement toString
 		return super.toString();
 	}
 
@@ -34,14 +36,14 @@ public class Tsp extends TspModel {
 		// create degree-2 constraints
 		for(int i = 0; i < dimension; i++){
 			GRBLinExpr grbLinExpr = new GRBLinExpr();
-			String logString = "";
+			StringBuilder logString = new StringBuilder();
 			for(int j = 0; j < dimension; j++){
 				if( i != j ){
-					logString += "x" + i + "_" + j + " + ";
+					logString.append( "x" ).append( i ).append( "_" ).append( j ).append( " + " );
 					grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[i][j] );
 				}
 			}
-			logString = logString.substring( 0, logString.length() - 2 );
+			logString = new StringBuilder( logString.substring( 0, logString.length() - 2 ) );
 			log.debug( "Add degree-2 constraint deg2_" + i + ": " + logString + " = 2" );
 			grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_" + String.valueOf( i ) );
 		}
@@ -73,12 +75,12 @@ public class Tsp extends TspModel {
 					continue;
 				}
 				ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
-				String subtourEliminationConstraintString = "";
+				StringBuilder subtourEliminationConstraintString = new StringBuilder();
 				String subtourEliminationConstraintName = "sec_";
 				GRBLinExpr grbExpr = new GRBLinExpr();
 				for(int[] edge : edges){
 					String currentEdgeString = "x" + edge[0] + "_" + edge[1];
-					subtourEliminationConstraintString += currentEdgeString + " + ";
+					subtourEliminationConstraintString.append( currentEdgeString ).append( " + " );
 					grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
 				}
 				subtourEliminationConstraintName += additionalConstraintsCounter++;
@@ -92,15 +94,44 @@ public class Tsp extends TspModel {
 		}
 	}
 
+	@Override
+	protected void getAndSetSolution() throws GRBException{
+		truckTspTour = new ArrayList<>();
+		int currentIndex = 0;
+		int lastIndex = 0;
+		do{
+			for( int j = 0; j < dimension; j++ ) {
+				if( currentIndex != j && lastIndex != j ) {
+					if( (int)grbTruckEdgeVars[currentIndex][j].get( GRB.DoubleAttr.X ) == 1 ) {
+						truckTspTour.add( currentIndex );
+						lastIndex = currentIndex;
+						currentIndex = j;
+						break;
+					}
+				}
+			}
+		} while( currentIndex != 0 );
+	}
+
+	@Override
+	protected void logSolution(){
+		StringBuilder truckTspTourString = new StringBuilder();
+		for( int customer : truckTspTour ){
+			truckTspTourString.append( customer ).append( ", " );
+		}
+		log.info( "Truck TSP Tour size: " + truckTspTour.size() );
+		log.info( "Truck TSP Tour: " + truckTspTourString.substring( 0, truckTspTourString.length() - 2 ) );
+	}
+
 	protected void logIterationDebug() throws GRBException{
 		log.debug( "Adjacency matrix of solution:" );
 		for(int i = 0; i < dimension; i++){
-			String rowString = "";
+			StringBuilder rowString = new StringBuilder();
 			for(int j = 0; j < dimension; j++){
 				if( i == j ){
-					rowString += "-, ";
+					rowString.append( "-, " );
 				} else {
-					rowString += ((int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ) + ", ";
+					rowString.append( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ).append( ", " );
 				}
 			}
 			log.debug( rowString.substring( 0, rowString.length() - 2 ) );
@@ -108,8 +139,8 @@ public class Tsp extends TspModel {
 	}
 
 	private ArrayList<int[]> createEdgesForSubtourEliminationConstraint( HashSet<Integer> subtour ) {
-		ArrayList<Integer> subtourList = new ArrayList<Integer>( subtour );
-		ArrayList<int[]> edges = new ArrayList<int[]>();
+		ArrayList<Integer> subtourList = new ArrayList<>( subtour );
+		ArrayList<int[]> edges = new ArrayList<>();
 		for( int i = 0; i < subtourList.size() - 1; i++ ) {
 			for( int j = i + 1; j < subtourList.size(); j++ ) {
 				int[] edge = new int[2];
@@ -122,13 +153,13 @@ public class Tsp extends TspModel {
 		return edges;
 	}
 
-	public ArrayList<HashSet<Integer>> findSubtours() throws GRBException{
+	private ArrayList<HashSet<Integer>> findSubtours() throws GRBException{
 		log.debug( "Starting find subtours" );
 
-		ArrayList<HashSet<Integer>> subtours = new ArrayList<HashSet<Integer>>();
-		Stack<Integer> unvisitedVertices = new Stack<Integer>();
+		ArrayList<HashSet<Integer>> subtours = new ArrayList<>();
+		Stack<Integer> unvisitedVertices = new Stack<>();
 
-		//this prevents to search subtours for vertices which are not cuurently in the solution
+		//this prevents to search subtours for vertices which are not currently in the solution
 		//needed for e.g. pdstsp
 		for( int i = dimension - 1; i >= 0; i-- ){
 			for( int j = dimension - 1; j >= 0; j-- ){
@@ -145,9 +176,9 @@ public class Tsp extends TspModel {
 			int currentVertex = unvisitedVertices.pop();
 			log.debug( "currentVertex: " + currentVertex );
 			log.debug( "unvisitedVertices: " + unvisitedVertices );
-			HashSet<Integer> subtour = new HashSet<Integer>();
+			HashSet<Integer> subtour = new HashSet<>();
 			subtours.add( subtour );
-			Stack<Integer> unvisitedVerticesForSubtour = new Stack<Integer>();
+			Stack<Integer> unvisitedVerticesForSubtour = new Stack<>();
 			unvisitedVerticesForSubtour.add( currentVertex );
 			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
 

@@ -17,6 +17,7 @@ public class Pdstsp extends Tsp {
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private GRBVar[][] grbDronesCustomersVars;
 	private GRBVar grbObjectiveVar;
+	private ArrayList<Integer>[] dronesCustomers;
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
@@ -42,7 +43,7 @@ public class Pdstsp extends Tsp {
 	public String toString() {
 		return super.toString();
 
-		//TODO
+		//TODO implement toString
 		/*
 		String toString = "Nodes: \n";
 		for( int i = 0; i < getNodes().length; i++ ) {
@@ -93,11 +94,12 @@ public class Pdstsp extends Tsp {
 
 		//Add Truck time constraint as lower bounds for traveltime
 		grbLinExpr = new GRBLinExpr();
-		String logString = "";
+		StringBuilder logString = new StringBuilder(  );
 		for( int i = 0; i < dimension; i++ ) {
 			for( int j = i + 1; j < dimension; j++ ) {
 				if( i != j ) {
-					logString += "trucktimes_" + i + "_" + j + " * x" + i + "_" + j + " + ";
+					logString.append( "trucktimes_" ).append( i ).append( "_" ).append( j ).append( " * x" ).append( i ).append( "_" )
+									.append( j ).append( " + " );
 					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "x" + i + "_" + j );
 					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
 					log.debug( "Add decision var x" + i + "_" + j + " with factor " + truckTimes[i][j] );
@@ -106,21 +108,22 @@ public class Pdstsp extends Tsp {
 
 			}
 		}
-		logString = logString.substring( 0, logString.length() - 3 );
+		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 		log.debug( "Add constraint trucktime: " + logString + " <= traveltime" );
 		grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "trucktime" );
 
 		//Add Drone times constraints also as lower bounds for traveltime
 		for( int v = 0; v < droneFleetSize; v++ ) {
-			logString = "";
+			logString = new StringBuilder(  );
 			grbLinExpr = new GRBLinExpr();
 			for( int i : droneDeliveryPossibleAndInFlightRange ){
-				logString += "(dronetimes_0_" + i + " + dronetimes_" + i + "_0) * y" + v + "_" + i + " + ";
+				logString.append( "(dronetimes_0_" ).append( i ).append( " + dronetimes_" ).append( i ).append( "_0) * y" ).append( v )
+								.append( "_" ).append( i ).append( " + " );
 				grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
 				log.debug( "Add decision var y" + v + "_" + i );
 				grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
 			}
-			logString = logString.substring( 0, logString.length() - 3 );
+			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 			log.debug( "Add constraint dronetime_" + v + ": " + logString + " <= traveltime" );
 			grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "dronetime_" + v );
 		}
@@ -128,34 +131,34 @@ public class Pdstsp extends Tsp {
 		//create constraints that each customer is served by truck or drone exactly once
 		//the constraint implicit contains degree-2 constraints for customers
 		for( int j = 1; j < dimension; j++ ) {
-			logString = "0.5 * (";
+			logString = new StringBuilder( "0.5 * (" );
 			grbLinExpr = new GRBLinExpr();
 			for( int i = 0; i < dimension; i++ ) {
 				if( i != j ) {
-					logString += "x" + i + "_" + j + " + ";
+					logString.append( "x" ).append( i ).append( "_" ).append( j ).append( " + " );
 					grbLinExpr.addTerm( 0.5, grbTruckEdgeVars[i][j] );
 				}
 			}
-			logString = logString.substring( 0, logString.length() - 3 ) +  ") + ";
+			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) ).append( ") + " );
 			if( droneDeliveryPossibleAndInFlightRange.contains( j ) ){
 				for(int v = 0; v < droneFleetSize; v++){
-					logString += "y" + v + "_" + j + " + ";
+					logString.append( "y" ).append( v ).append( "_" ).append( j ).append( " + " );
 					grbLinExpr.addTerm( 1.0, grbDronesCustomersVars[v][j] );
 				}
 			}
-			logString = logString.substring( 0, logString.length() - 3 );
+			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 			log.debug( "Add constraint customer_served_once_" + j + ": " + logString + " = 1" );
 			grbModel.addConstr( grbLinExpr, GRB.EQUAL, 1.0, "customer_served_once_" + j );
 		}
 
 		//Add degree-2 constraint for depot
 		grbLinExpr = new GRBLinExpr();
-		logString = "";
+		logString = new StringBuilder(  );
 		for( int i = 1; i < dimension; i++ ) {
-			logString += "x0_" + i + " + ";
+			logString.append( "x0_" ).append( i ).append( " + " );
 			grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[0][i] );
 		}
-		logString = logString.substring( 0, logString.length() - 3 );
+		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 		log.debug( "Add degree-2 constraint for depot: " + logString + " = 2" );
 		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_depot" );
 
@@ -164,77 +167,55 @@ public class Pdstsp extends Tsp {
 		return grbModel;
 	}
 
+	@Override
 	protected void logIterationDebug() throws GRBException{
 		super.logIterationDebug();
 		log.debug( "Drone customer vars of solution:" );
 		for(int v = 0; v < droneFleetSize; v++){
-			String rowString = "Drone_" + v + " : ";
+			StringBuilder rowString = new StringBuilder( "Drone_" ).append( v ).append( " : " );
 			for(int i = 1; i < dimension; i++){
 				if( grbDronesCustomersVars[v][i] == null ){
-					rowString += "-, ";
+					rowString.append( "-, " );
 				} else {
-					rowString += ((int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) ) + ", ";
+					rowString.append( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) ).append( ", " );
 				}
 			}
 			log.debug( rowString.substring( 0, rowString.length() - 2 ) );
 		}
 	}
 
-	/*
-	public ArrayList<HashSet<Integer>> findSubtours() throws GRBException{
-		log.debug( "Starting find subtours" );
-
-		ArrayList<HashSet<Integer>> subtours = new ArrayList<HashSet<Integer>>();
-		Stack<Integer> unvisitedVertices = new Stack<Integer>();
-		for( int i = dimension - 1; i >= 0; i-- ){
-			unvisitedVertices.add( i );
-		}
-
-		//determine which customer will be served from drones and remove it from unvisitedVertices
-		for( int v = 0; v < droneFleetSize; v++ ){
-			for( int i : droneDeliveryPossibleAndInFlightRange ){
-				if( (int)(grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) + 0.5d ) != 0 ){
-					boolean test = unvisitedVertices.remove( new Integer( i ) );
-				}
-			}
-		}
-
-		//TODO subtour elimination constraints for directed graph or model with undirected graph?!
-
-		while( !unvisitedVertices.isEmpty() ){
-			int currentVertex = unvisitedVertices.pop();
-			log.debug( "currentVertex: " + currentVertex );
-			log.debug( "unvisitedVertices: " + unvisitedVertices );
-			HashSet<Integer> subtour = new HashSet<Integer>();
-			subtours.add( subtour );
-			Stack<Integer> unvisitedVerticesForSubtour = new Stack<Integer>();
-			unvisitedVerticesForSubtour.add( currentVertex );
-			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-
-			while( !unvisitedVerticesForSubtour.isEmpty() ){
-				Integer currentSubtourVertex = unvisitedVerticesForSubtour.pop();
-				log.debug( "currentSubtourVertex: " + currentSubtourVertex );
-				log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-				subtour.add( currentSubtourVertex );
-				log.debug( "subtour: " + subtour );
-				unvisitedVertices.remove( currentSubtourVertex );
-				for(int i = 0; i < dimension; i++){
-					if( i != currentSubtourVertex ){
-						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) + 0.5d ) ) == 1 && !subtour.contains( i ) ){
-							unvisitedVerticesForSubtour.add( i );
-							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-						}
+	@Override
+	protected void getAndSetSolution() throws GRBException{
+		super.getAndSetSolution();
+		dronesCustomers = new ArrayList[droneFleetSize];
+		for( int v = 0; v < droneFleetSize; v++ ) {
+			dronesCustomers[v] = new ArrayList<>();
+			for( int i = 0; i < dimension; i++ ) {
+				if( grbDronesCustomersVars[v][i] != null ) {
+					if( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) == 1 ){
+						dronesCustomers[v].add( i );
 					}
 				}
 			}
-			log.debug( "subtour: " + subtour );
 		}
-		log.debug( "Ending find subtours" );
-		return subtours;
-
 	}
-	*/
+
+	@Override
+	protected void logSolution(){
+		super.logSolution();
+		log.info( "Drones Customer Flights" );
+		StringBuilder logString;
+		for( int v = 0; v < droneFleetSize; v++ ) {
+			log.info( "Drone_" + v + " Customers size: " + dronesCustomers[v].size() );
+			if( dronesCustomers[v].size() > 0 ){
+				logString = new StringBuilder();
+				for(int i = 0; i < dronesCustomers[v].size(); i++){
+					logString.append( dronesCustomers[v].get( i ) ).append( ", " );
+				}
+				log.info( "Drone_" + v + " Customers: " + logString.substring( 0, logString.length() - 2 ) );
+			}
+		}
+	}
 
 	public double getDroneFlightTime(){
 		return droneFlightTime;

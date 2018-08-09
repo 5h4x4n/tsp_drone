@@ -11,10 +11,10 @@ public abstract class TspModel{
 	protected int dimension;
 	protected double[][] nodes;
 	protected int[][] distances;
-	protected GRBModel grbModel;
-	protected GRBEnv grbEnv;
-	protected GRBVar[][] grbTruckEdgeVars;
-	protected int additionalConstraintsCounter = 0;
+	GRBModel grbModel;
+	GRBEnv grbEnv;
+	GRBVar[][] grbTruckEdgeVars;
+	int additionalConstraintsCounter = 0;
 
 	protected static Logger log = Logger.getLogger( de.hbrs.inf.TspModel.class.getName() );
 
@@ -27,10 +27,7 @@ public abstract class TspModel{
 		this.distances = distances;
 	}
 
-	public static double[][] calculateNodes( TspLibJson tspLibJson ){
-
-		int dimension = tspLibJson.getDimension();
-		double[][] nodes = new double[dimension][dimension];
+	static double[][] calculateNodes( TspLibJson tspLibJson ){
 
 		if( tspLibJson.getNode_coordinates() != null && tspLibJson.getNode_coordinates().length > 0 ){
 			return tspLibJson.getNode_coordinates();
@@ -43,97 +40,104 @@ public abstract class TspModel{
 		return null;
 	}
 
-	public static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension,
-					String edge_weight_type, String edge_weight_format ){
+	static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension, String edge_weight_type,
+					String edge_weight_format ){
 
 		//calculate travel distances dependent on the distance type
-		if( edge_weight_type.equals( "GEO" ) ){
-			double[] latitude = new double[dimension];
-			double[] longitude = new double[dimension];
-			int[][] distances = new int[dimension][dimension];
-
-			for(int i = 0; i < dimension; i++){
-				int degX = (int)node_coordinates[i][0];
-				int degY = (int)node_coordinates[i][1];
-				double minX = node_coordinates[i][0] - degX;
-				double minY = node_coordinates[i][1] - degY;
-				latitude[i] = Math.PI * (degX + 5.0 * minX / 3.0) / 180.0;
-				longitude[i] = Math.PI * (degY + 5.0 * minY / 3.0) / 180.0;
-			}
-
-			for(int i = 0; i < dimension; i++){
-				for(int j = 0; j < dimension; j++){
-					if( i == j ) {
-						distances[i][j] = 0;
-					} else {
-						double q1 = Math.cos( longitude[i] - longitude[j] );
-						double q2 = Math.cos( latitude[i] - latitude[j] );
-						double q3 = Math.cos( latitude[i] + latitude[j] );
-						distances[i][j] = (int)(Defines.EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0);
-					}
-				}
-			}
-			return distances;
-
-		} else if( edge_weight_type.equals( "EUC_2D" ) ){
-			int[][] distances = new int[dimension][dimension];
-
-			for(int i = 0; i < dimension; i++){
-				for(int j = 0; j < dimension; j++){
-					if( i == j ) {
-						distances[i][j] = 0;
-					} else {
-						double deltaX = node_coordinates[i][0] - node_coordinates[j][0];
-						double deltaY = node_coordinates[i][1] - node_coordinates[j][1];
-						distances[i][j] = (int)(Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5);
-					}
-				}
-			}
-			return distances;
-
-		} else if( edge_weight_type.equals( "EXPLICIT" ) ){
-			if( edge_weight_format.equals( "LOWER_DIAG_ROW" ) ){
+		switch(edge_weight_type){
+			case "GEO":{
+				double[] latitude = new double[dimension];
+				double[] longitude = new double[dimension];
 				int[][] distances = new int[dimension][dimension];
+
 				for(int i = 0; i < dimension; i++){
-					for(int j = i; j < dimension; j++){
-						if( i == j ) {
+					int degX = (int)node_coordinates[i][0];
+					int degY = (int)node_coordinates[i][1];
+					double minX = node_coordinates[i][0] - degX;
+					double minY = node_coordinates[i][1] - degY;
+					latitude[i] = Math.PI * (degX + 5.0 * minX / 3.0) / 180.0;
+					longitude[i] = Math.PI * (degY + 5.0 * minY / 3.0) / 180.0;
+				}
+
+				for(int i = 0; i < dimension; i++){
+					for(int j = 0; j < dimension; j++){
+						if( i == j ){
 							distances[i][j] = 0;
 						} else {
-							distances[j][i] = edge_weights[j][i];
-							distances[i][j] = edge_weights[j][i];
+							double q1 = Math.cos( longitude[i] - longitude[j] );
+							double q2 = Math.cos( latitude[i] - latitude[j] );
+							double q3 = Math.cos( latitude[i] + latitude[j] );
+							distances[i][j] = (int)(Defines.EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0);
 						}
 					}
 				}
 				return distances;
-			} else if( edge_weight_format.equals( "UPPER_ROW" ) ){
-				int[][] distances = new int[dimension][dimension];
-				for(int i = 0; i < dimension; i++){
-					distances[i][i] = 0;
-					for(int j = 0; j < dimension - i - 1; j++){
-						distances[i][j + i + 1] = edge_weights[i][j];
-						distances[j + i + 1][i] = edge_weights[i][j];
-					}
-				}
-				return distances;
-			} else if( edge_weight_format.equals( "FULL_MATRIX" ) ){
-				int[][] distances = new int[dimension][dimension];
-				for( int i = 0; i < dimension; i++ ){
-					for( int j = 0; j < dimension; j++ ) {
-						distances[i][j] = edge_weights[i][j];
-					}
-				}
-				return distances;
-			} else {
-				log.error( "edge_weight_format '" + edge_weight_format + "' not supported." );
-				return null;
+
 			}
-		} else {
-			log.error( "edge_weight_type '" + edge_weight_type + "' not supported." );
-			return null;
+			case "EUC_2D":{
+				int[][] distances = new int[dimension][dimension];
+
+				for(int i = 0; i < dimension; i++){
+					for(int j = 0; j < dimension; j++){
+						if( i == j ){
+							distances[i][j] = 0;
+						} else {
+							double deltaX = node_coordinates[i][0] - node_coordinates[j][0];
+							double deltaY = node_coordinates[i][1] - node_coordinates[j][1];
+							distances[i][j] = (int)(Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5);
+						}
+					}
+				}
+				return distances;
+
+			}
+			case "EXPLICIT":
+				switch(edge_weight_format){
+					case "LOWER_DIAG_ROW":{
+						int[][] distances = new int[dimension][dimension];
+						for(int i = 0; i < dimension; i++){
+							for(int j = i; j < dimension; j++){
+								if( i == j ){
+									distances[i][j] = 0;
+								} else {
+									distances[j][i] = edge_weights[j][i];
+									distances[i][j] = edge_weights[j][i];
+								}
+							}
+						}
+						return distances;
+					}
+					case "UPPER_ROW":{
+						int[][] distances = new int[dimension][dimension];
+						for(int i = 0; i < dimension; i++){
+							distances[i][i] = 0;
+							for(int j = 0; j < dimension - i - 1; j++){
+								distances[i][j + i + 1] = edge_weights[i][j];
+								distances[j + i + 1][i] = edge_weights[i][j];
+							}
+						}
+						return distances;
+					}
+					case "FULL_MATRIX":{
+						int[][] distances = new int[dimension][dimension];
+						for(int i = 0; i < dimension; i++){
+							for(int j = 0; j < dimension; j++){
+								distances[i][j] = edge_weights[i][j];
+							}
+						}
+						return distances;
+					}
+					default:
+						log.error( "edge_weight_format '" + edge_weight_format + "' not supported." );
+						return null;
+				}
+			default:
+				log.error( "edge_weight_type '" + edge_weight_type + "' not supported." );
+				return null;
 		}
 	}
 
-	public static double[][] calculateTravelTimes( double speed, int[][] distances ){
+	static double[][] calculateTravelTimes( double speed, int[][] distances ){
 
 		int dimension = distances.length;
 
@@ -149,26 +153,26 @@ public abstract class TspModel{
 	}
 
 	public String toString(){
-		String toString = "Nodes: \n";
-		for(int i = 0; i < nodes.length; i++){
-			toString += "[ " + nodes[i][0] + ", " + nodes[i][1] + " ], \n";
+		StringBuilder toString = new StringBuilder( "Nodes: \n" );
+		for( double[] node : nodes ){
+			toString.append( "[ " ).append( node[0] ).append( ", " ).append( node[1] ).append( " ], \n" );
 		}
-		toString += "Distances: \n";
-		for(int i = 0; i < distances.length; i++){
-			for(int j = 0; j < distances[0].length; j++){
-				toString += distances[i][j] + ", ";
+		toString.append( "Distances: \n" );
+		for( int[] distance : distances ){
+			for( int j = 0; j < distances[0].length; j++ ){
+				toString.append( distance[j] ).append( ", " );
 			}
-			toString = toString.substring( 0, toString.length() - 2 ) + "\n";
+			toString = new StringBuilder( toString.substring( 0, toString.length() - 2 ) ).append( "\n" );
 		}
 
-		return toString;
+		return toString.toString();
 	}
 
 	protected abstract GRBModel calcGrbModel() throws GRBException;
 
 	protected abstract boolean addViolatedConstraints() throws GRBException;
 
-	public void grbOptimize(){
+	void grbOptimize(){
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
@@ -187,7 +191,6 @@ public abstract class TspModel{
 				grbModel.optimize();
 				int optimizationStatus = grbModel.get( GRB.IntAttr.Status );
 
-				//TODO check what this part does
 				if( optimizationStatus == GRB.Status.INF_OR_UNBD ){
 					grbModel.set( GRB.IntParam.Presolve, 0 );
 					grbModel.optimize();
@@ -201,14 +204,14 @@ public abstract class TspModel{
 					GRBVar[] vars = grbModel.getVars();
 					String[] varNames = grbModel.get( GRB.StringAttr.VarName, vars );
 					double[] x = grbModel.get( GRB.DoubleAttr.X, vars );
-					String solutionString = "";
+					StringBuilder solutionString = new StringBuilder(  );
 
 					for(int i = 0; i < vars.length; i++){
 						if( (int)(x[i] + 0.5d) != 0 ){
-							solutionString += varNames[i] + ", ";
+							solutionString.append( varNames[i] ).append( ", " );
 						}
 					}
-					solutionString = solutionString.substring( 0, solutionString.length() - 2 );
+					solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
 					log.debug( "Decision variables in solution: " + solutionString );
 
 					if( !addViolatedConstraints() ){
@@ -218,18 +221,19 @@ public abstract class TspModel{
 						double cuurentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
 						log.info( "Last iteration runtime: " + cuurentIterationRuntimeMilliseconds + "ms" );
 
-						log.info( "Found solution for '" + name + "' is optimal!" );
-						log.info( "Optimal objective: " + objval );
-
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 						double runtimeOptimizationMilliseconds = runtimeOptimization / 1e6;
 						double runtimeCalcGrbModelMilliseconds = runtimeCalcGrbModel / 1e6;
+
+						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );
+						getAndSetSolution();
+						logSolution();
+						log.info( "Optimal objective: " + objval );
+
 						log.info( "Total optimization runtime: " + runtimeOptimizationMilliseconds + "ms" );
 						log.debug( "Runtime of GRB Model calculation: " + runtimeCalcGrbModelMilliseconds + "ms" );
 
-						//TODO generate solution
-						//log.info( "Tour: " + getSolutionString( solution ) );
-						//TODO show runtime from starting solve-algorithm and maybe also from parts like finding subtours (also percentage)
+						//TODO show runtime from parts like finding subtours (also percentage)
 
 						//TODO create and return result object
 					} else {
@@ -241,6 +245,7 @@ public abstract class TspModel{
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
+					//TODO change filename specific for input
 					log.info( "Model is infeasible" );
 					// Compute and write out IIS
 					grbModel.computeIIS();
@@ -263,6 +268,10 @@ public abstract class TspModel{
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
 	}
+
+	protected abstract void getAndSetSolution() throws GRBException;
+
+	protected abstract void logSolution();
 
 	public double[][] getNodes(){
 		return nodes;

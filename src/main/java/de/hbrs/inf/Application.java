@@ -45,7 +45,7 @@ public class Application{
 
 		//parse the options passed as command line arguments
 		CommandLineParser parser = new DefaultParser();
-		CommandLine cmd = null;
+		CommandLine cmd;
 		try{
 			cmd = parser.parse( options, args );
 		} catch( ParseException e ){
