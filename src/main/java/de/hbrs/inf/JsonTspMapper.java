@@ -36,7 +36,10 @@ public class JsonTspMapper{
 				return null;
 			}
 
-			switch(	tspLibJson.getType().toUpperCase() ) {
+			String tspType = tspLibJson.getType().toUpperCase();
+			log.info( "TSP Type: " + tspType );
+
+			switch( tspType ) {
 				case "TSP":
 					//convert TspLibJson to Tsp object
 					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), tspLibJson.getDimension(), nodes, distances );
@@ -47,6 +50,7 @@ public class JsonTspMapper{
 					PdstspLibJson pdstspLibJson = gson.fromJson( reader, PdstspLibJson.class );
 
 					double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
+					log.debug( "Drone Flight Time: " + droneFlightTime );
 					log.info( "Calculate droneTimes with speed '" + pdstspLibJson.getDrone_speed() + "'." );
 					double [][] droneTimes = TspModel.calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
 
