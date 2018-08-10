@@ -1,7 +1,7 @@
 {
     "name" : "PDSTSP Test",
     "type" : "PDSTSP",
-    "comment" : "depot and 13 customers",
+    "comment" : "Depot and 13 customers",
     "dimension" : 14,
 	"drone_flight_range" : 1200,
 	"drone_fleet_size" : 2,
