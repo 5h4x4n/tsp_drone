@@ -124,7 +124,11 @@ public class Application{
 			log.info( "##################### Start: " + file.getName() + " #####################" );
 			TspModel tspModel = JsonTspMapper.getObjectFromJson( file.getPath() );
 			if( tspModel != null ){
-				tspModel.grbOptimize();
+				TspResults tspResults = tspModel.grbOptimize();
+
+				if( Configuration.getOutputDirectory() != null ){
+					//TODO create solution file with results in output directory
+				}
 			} else {
 				log.error( "Could not convert JSON File '" + file.getName() + "' to TSP Model!" );
 			}
