@@ -22,7 +22,7 @@ public class Application{
 						.build();
 		options.addOption( debug );
 
-		Option logFile   = Option.builder( "l" )
+		Option logFile = Option.builder( "l" )
 						.longOpt( "logFile" )
 						.argName( "file" )
 						.hasArg()
@@ -40,7 +40,15 @@ public class Application{
 						.build();
 		options.addOption( jsonFileOrDir );
 
-		//TODO add option for output file (results)
+		Option outputFile = Option.builder( "o" )
+						.longOpt( "outputDir" )
+						.argName( "directory" )
+						.hasArg()
+						.required( false )
+						.desc( "use given directory to create file/s with solution/s for each solved problem" )
+						.build();
+		options.addOption( outputFile );
+
 		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
 
 		//parse the options passed as command line arguments
@@ -58,6 +66,11 @@ public class Application{
 		//read options and prepare configuration for the application
 		if( cmd.hasOption("l") ) {
 			Configuration.setLogFile( cmd.getOptionValue( "l" ) );
+		}
+
+		if( cmd.hasOption("o") ) {
+			Configuration.setOutputDirectory( cmd.getOptionValue( "o" ) );
+			log.info( "Set output directory: " + Configuration.getOutputDirectory() );
 		}
 
 		if( cmd.hasOption( "d" ) ){
@@ -84,6 +97,24 @@ public class Application{
 			jsonFiles[0] = fileOrDir;
 		} else {
 			jsonFiles = fileOrDir.listFiles();
+		}
+
+		//check if output directory is given
+		if( Configuration.getOutputDirectory() != null ) {
+			File outputDirectory = new File( Configuration.getOutputDirectory() );
+			if( !outputDirectory.exists() ) {
+				log.info( "Output directory '" + outputDirectory.toString() + "' does no exists. Create now." );
+				if( outputDirectory.mkdir() ) {
+					log.info( "Output directory created successful." );
+				} else {
+					log.info( "Creation of output directory failed." );
+				}
+			} else {
+				if( outputDirectory.isFile() ){
+					log.info( "Given output directory is a file. No solution files will be created." );
+					Configuration.setOutputDirectory( null );
+				}
+			}
 		}
 
 		log.info( "Try to solve the following tsp problems: " + Arrays.toString( jsonFiles ) );
