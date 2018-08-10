@@ -113,19 +113,22 @@ public class Pdstsp extends Tsp {
 		grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "trucktime" );
 
 		//Add Drone times constraints also as lower bounds for traveltime
-		for( int v = 0; v < droneFleetSize; v++ ) {
-			logString = new StringBuilder(  );
-			grbLinExpr = new GRBLinExpr();
-			for( int i : droneDeliveryPossibleAndInFlightRange ){
-				logString.append( "(dronetimes_0_" ).append( i ).append( " + dronetimes_" ).append( i ).append( "_0) * y" ).append( v )
-								.append( "_" ).append( i ).append( " + " );
-				grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
-				log.debug( "Add decision var y" + v + "_" + i );
-				grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
+		if( droneDeliveryPossibleAndInFlightRange.size() > 0 ){
+			for(int v = 0; v < droneFleetSize; v++){
+				logString = new StringBuilder();
+				grbLinExpr = new GRBLinExpr();
+				for(int i : droneDeliveryPossibleAndInFlightRange){
+					logString.append( "(dronetimes_0_" ).append( i ).append( " + dronetimes_" ).append( i ).append( "_0) * y" ).append( v ).append( "_" ).append( i ).append( " + " );
+					grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
+					log.debug( "Add decision var y" + v + "_" + i );
+					grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
+				}
+				logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
+				log.debug( "Add constraint dronetime_" + v + ": " + logString + " <= traveltime" );
+				grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "dronetime_" + v );
 			}
-			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-			log.debug( "Add constraint dronetime_" + v + ": " + logString + " <= traveltime" );
-			grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "dronetime_" + v );
+		} else {
+			log.debug( "No dronetime constraints added, because no customer in flight range can be served by a drone." );
 		}
 
 		//create constraints that each customer is served by truck or drone exactly once
