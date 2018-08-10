@@ -5,6 +5,7 @@ class Configuration{
 	private static String logFile = "tsp_drone.log";
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
+	private static String outputDirectory = null;
 
 
 	static void setJsonFileOrDir( String jsonFileOrDir ){
@@ -34,5 +35,13 @@ class Configuration{
 	static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
 		System.setProperty( "log4j.logFile", logFile );
+	}
+
+	static void setOutputDirectory( String outputDirectory ){
+		Configuration.outputDirectory = outputDirectory;
+	}
+
+	public static String getOutputDirectory(){
+		return outputDirectory;
 	}
 }
