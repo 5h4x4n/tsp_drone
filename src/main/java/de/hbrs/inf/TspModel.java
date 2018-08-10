@@ -15,6 +15,7 @@ public abstract class TspModel{
 	GRBEnv grbEnv;
 	GRBVar[][] grbTruckEdgeVars;
 	int additionalConstraintsCounter = 0;
+	TspResults tspResults;
 
 	protected static Logger log = Logger.getLogger( de.hbrs.inf.TspModel.class.getName() );
 
@@ -172,7 +173,8 @@ public abstract class TspModel{
 
 	protected abstract boolean addViolatedConstraints() throws GRBException;
 
-	void grbOptimize(){
+	TspResults grbOptimize(){
+		tspResults = new TspResults( name );
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
@@ -214,35 +216,46 @@ public abstract class TspModel{
 					solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
 					log.debug( "Decision variables in solution: " + solutionString );
 
+					if( log.isDebugEnabled() ){
+						logIterationDebug();
+					}
+					TspIterationResult currentTspIterationResult = calculateTspIterationResult();
+					tspResults.getIterationResults().add( currentTspIterationResult );
+
 					if( !addViolatedConstraints() ){
 						isSolutionOptimal = true;
 
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double cuurentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
-						log.info( "Last iteration runtime: " + cuurentIterationRuntimeMilliseconds + "ms" );
+						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
+						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
 
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
-						double runtimeOptimizationMilliseconds = runtimeOptimization / 1e6;
-						double runtimeCalcGrbModelMilliseconds = runtimeCalcGrbModel / 1e6;
+
+						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
+						tspResults.setRuntime( runtimeOptimization / 1e6 );
+						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e6 );
+						tspResults.setOptimal( true );
 
 						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );
-						getAndSetSolution();
-						logSolution();
+						log.info( currentTspIterationResult.getSolutionString() );
 						log.info( "Optimal objective: " + objval );
 
-						log.info( "Total optimization runtime: " + runtimeOptimizationMilliseconds + "ms" );
-						log.debug( "Runtime of GRB Model calculation: " + runtimeCalcGrbModelMilliseconds + "ms" );
+						log.info( "Total optimization runtime: " + tspResults.getRuntime() + "ms" );
+						log.debug( "Runtime of GRB Model calculation: " + tspResults.getRuntimeGrbModelCalculation() + "ms" );
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
 						//TODO create and return result object
 					} else {
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double cuurentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
+						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
 						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
-						log.info( "Last iteration runtime: " + cuurentIterationRuntimeMilliseconds + "ms" );
+						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
+
+						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
+						tspResults.setRuntime( currentRuntimeOptimizationMilliseconds );
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input
@@ -267,11 +280,13 @@ public abstract class TspModel{
 		} catch(GRBException e){
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
+
+		return tspResults;
 	}
 
-	protected abstract void getAndSetSolution() throws GRBException;
+	protected abstract void logIterationDebug() throws GRBException;
 
-	protected abstract void logSolution();
+	protected abstract TspIterationResult calculateTspIterationResult() throws GRBException;
 
 	public double[][] getNodes(){
 		return nodes;

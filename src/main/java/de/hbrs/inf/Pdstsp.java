@@ -17,7 +17,6 @@ public class Pdstsp extends Tsp {
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private GRBVar[][] grbDronesCustomersVars;
 	private GRBVar grbObjectiveVar;
-	private ArrayList<Integer>[] dronesCustomers;
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
@@ -171,6 +170,27 @@ public class Pdstsp extends Tsp {
 	}
 
 	@Override
+	protected TspIterationResult calculateTspIterationResult() throws GRBException{
+		PdstspIterationResult pdstspIterationResult = new PdstspIterationResult();
+		pdstspIterationResult.setTruckTours( findSubtours() );
+
+		ArrayList<Integer>[] dronesCustomers = new ArrayList[droneFleetSize];
+		for( int v = 0; v < droneFleetSize; v++ ) {
+			dronesCustomers[v] = new ArrayList<>();
+			for( int i = 0; i < dimension; i++ ) {
+				if( grbDronesCustomersVars[v][i] != null ) {
+					if( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) == 1 ){
+						dronesCustomers[v].add( i );
+					}
+				}
+			}
+		}
+		pdstspIterationResult.setDronesCustomers( dronesCustomers );
+
+		return pdstspIterationResult;
+	}
+
+	@Override
 	protected void logIterationDebug() throws GRBException{
 		super.logIterationDebug();
 		log.debug( "Drone customer vars of solution:" );
@@ -187,6 +207,8 @@ public class Pdstsp extends Tsp {
 		}
 	}
 
+	//TODO Remove?!
+	/*
 	@Override
 	protected void getAndSetSolution() throws GRBException{
 		super.getAndSetSolution();
@@ -202,23 +224,7 @@ public class Pdstsp extends Tsp {
 			}
 		}
 	}
-
-	@Override
-	protected void logSolution(){
-		super.logSolution();
-		log.info( "Drones Customer Flights" );
-		StringBuilder logString;
-		for( int v = 0; v < droneFleetSize; v++ ) {
-			log.info( "Drone_" + v + " Customers size: " + dronesCustomers[v].size() );
-			if( dronesCustomers[v].size() > 0 ){
-				logString = new StringBuilder();
-				for(int i = 0; i < dronesCustomers[v].size(); i++){
-					logString.append( dronesCustomers[v].get( i ) ).append( ", " );
-				}
-				log.info( "Drone_" + v + " Customers: " + logString.substring( 0, logString.length() - 2 ) );
-			}
-		}
-	}
+	*/
 
 	public double getDroneFlightTime(){
 		return droneFlightTime;
