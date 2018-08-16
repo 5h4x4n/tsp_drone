@@ -307,6 +307,31 @@ public abstract class TspModel{
 	public void setDistances( int[][] distances ){
 		this.distances = distances;
 	}
+
+	public String getName(){
+		return name;
+	}
+
+	public String getType(){
+		return type;
+	}
+
+	public int getDimension(){
+		return dimension;
+	}
+
+	public GRBModel getGrbModel(){
+		return grbModel;
+	}
+
+	public int getAdditionalConstraintsCounter(){
+		return additionalConstraintsCounter;
+	}
+
+	public TspResults getTspResults(){
+		return tspResults;
+	}
+
 }
 
 
