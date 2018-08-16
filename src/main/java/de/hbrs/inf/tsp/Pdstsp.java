@@ -281,4 +281,8 @@ public class Pdstsp extends Tsp {
 	public void setDroneSpeed( int droneSpeed ){
 		this.droneSpeed = droneSpeed;
 	}
+
+	public int getDroneDeliveryPossibleAndInFlightRangeCounter(){
+		return droneDeliveryPossibleAndInFlightRange.size();
+	}
 }

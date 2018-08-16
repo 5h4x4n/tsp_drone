@@ -332,6 +332,9 @@ public abstract class TspModel{
 		return tspResults;
 	}
 
+	public int getDecisionVariablesCounter(){
+		return grbModel.getVars().length;
+	}
 }
 
 
