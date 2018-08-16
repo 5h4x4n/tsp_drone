@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp;
 
 import gurobi.*;
 import org.apache.log4j.Logger;

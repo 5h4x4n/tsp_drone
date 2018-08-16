@@ -1,7 +1,10 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.json;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import de.hbrs.inf.tsp.Pdstsp;
+import de.hbrs.inf.tsp.Tsp;
+import de.hbrs.inf.tsp.TspModel;
 import org.apache.log4j.Logger;
 
 import java.io.FileNotFoundException;

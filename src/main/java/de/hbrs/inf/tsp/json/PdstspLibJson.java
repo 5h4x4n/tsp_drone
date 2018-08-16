@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.json;
 
 import com.google.gson.annotations.SerializedName;
 

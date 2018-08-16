@@ -1,5 +1,9 @@
 package de.hbrs.inf;
 
+import de.hbrs.inf.tsp.TspModel;
+import de.hbrs.inf.tsp.TspResults;
+import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
+import de.hbrs.inf.tsp.json.JsonTspMapper;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 

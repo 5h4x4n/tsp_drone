@@ -1,5 +1,6 @@
-package de.hbrs.inf;
-
+package de.hbrs.inf.tsp;
+;
+import de.hbrs.inf.tsp.json.TspLibJson;
 import gurobi.*;
 import org.apache.log4j.Logger;
 
@@ -7,17 +8,18 @@ public abstract class TspModel{
 
 	protected String name;
 	protected String comment;
-	private String type;
+	protected String type;
 	protected int dimension;
 	protected double[][] nodes;
 	protected int[][] distances;
-	GRBModel grbModel;
-	GRBEnv grbEnv;
-	GRBVar[][] grbTruckEdgeVars;
-	int additionalConstraintsCounter = 0;
-	TspResults tspResults;
+	protected GRBModel grbModel;
+	protected GRBEnv grbEnv;
+	protected GRBVar[][] grbTruckEdgeVars;
+	protected int additionalConstraintsCounter = 0;
+	protected TspResults tspResults;
 
-	protected static Logger log = Logger.getLogger( de.hbrs.inf.TspModel.class.getName() );
+	private static final double EARTH_RADIUS = 6378.388;
+	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
 
 	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		this.name = name;
@@ -28,7 +30,7 @@ public abstract class TspModel{
 		this.distances = distances;
 	}
 
-	static double[][] calculateNodes( TspLibJson tspLibJson ){
+	public static double[][] calculateNodes( TspLibJson tspLibJson ){
 
 		if( tspLibJson.getNode_coordinates() != null && tspLibJson.getNode_coordinates().length > 0 ){
 			return tspLibJson.getNode_coordinates();
@@ -41,7 +43,7 @@ public abstract class TspModel{
 		return null;
 	}
 
-	static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension, String edge_weight_type,
+	public static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension, String edge_weight_type,
 					String edge_weight_format ){
 
 		//calculate travel distances dependent on the distance type
@@ -68,7 +70,7 @@ public abstract class TspModel{
 							double q1 = Math.cos( longitude[i] - longitude[j] );
 							double q2 = Math.cos( latitude[i] - latitude[j] );
 							double q3 = Math.cos( latitude[i] + latitude[j] );
-							distances[i][j] = (int)(Defines.EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0);
+							distances[i][j] = (int)( EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0 );
 						}
 					}
 				}
@@ -138,7 +140,7 @@ public abstract class TspModel{
 		}
 	}
 
-	static double[][] calculateTravelTimes( double speed, int[][] distances ){
+	public static double[][] calculateTravelTimes( double speed, int[][] distances ){
 
 		int dimension = distances.length;
 
@@ -173,7 +175,7 @@ public abstract class TspModel{
 
 	protected abstract boolean addViolatedConstraints() throws GRBException;
 
-	TspResults grbOptimize(){
+	public TspResults grbOptimize(){
 		tspResults = new TspResults( name );
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();

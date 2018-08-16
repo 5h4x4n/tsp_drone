@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp;
 
 import org.apache.log4j.Logger;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class TspIterationResult{
 
-	private static Logger log = Logger.getLogger( de.hbrs.inf.TspIterationResult.class.getName() );
+	private static Logger log = Logger.getLogger( TspIterationResult.class.getName() );
 
 	private double iterationRuntime;
 	private ArrayList<ArrayList<Integer>> truckTours;

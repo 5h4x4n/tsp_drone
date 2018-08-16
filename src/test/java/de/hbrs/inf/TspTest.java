@@ -1,5 +1,7 @@
 package de.hbrs.inf;
 
+import de.hbrs.inf.tsp.TspModel;
+import de.hbrs.inf.tsp.json.JsonTspMapper;
 import org.junit.Before;
 import org.junit.Test;
 

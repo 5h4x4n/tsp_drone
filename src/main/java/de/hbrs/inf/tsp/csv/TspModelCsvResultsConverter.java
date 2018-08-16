@@ -1,4 +1,6 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.csv;
+
+import de.hbrs.inf.tsp.TspModel;
 
 public class TspModelCsvResultsConverter{
 	public static String getCsvString( TspModel tspModel ) {
