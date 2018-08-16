@@ -236,6 +236,7 @@ public abstract class TspModel{
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
 						tspResults.setRuntime( runtimeOptimization / 1e6 );
 						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e6 );
+						tspResults.setObjective( objval );
 						tspResults.setOptimal( true );
 
 						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );

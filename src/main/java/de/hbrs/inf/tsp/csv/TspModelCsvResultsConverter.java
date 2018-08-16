@@ -18,6 +18,7 @@ public class TspModelCsvResultsConverter{
 		resultList.add( Integer.toString( tspModel.getAdditionalConstraintsCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTspResults().getIterationCounter() ) );
 		resultList.add( Double.toString( tspModel.getTspResults().getRuntime() ) );
+		resultList.add( Double.toString( tspModel.getTspResults().getObjective() ) );
 
 		String type = tspModel.getType();
 		//add additional results
@@ -46,6 +47,7 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( "Additional Constraints" );
 		parameterList.add( "Iterations" );
 		parameterList.add( "Runtime" );
+		parameterList.add( "Objective" );
 
 		//add additional parameters
 		switch( type ) {
