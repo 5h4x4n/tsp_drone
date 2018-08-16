@@ -46,7 +46,7 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( "Decision Variables" );
 		parameterList.add( "Additional Constraints" );
 		parameterList.add( "Iterations" );
-		parameterList.add( "Runtime" );
+		parameterList.add( "Runtime [s]" );
 		parameterList.add( "Objective" );
 
 		//add additional parameters

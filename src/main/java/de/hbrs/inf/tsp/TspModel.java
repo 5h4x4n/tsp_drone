@@ -228,14 +228,14 @@ public abstract class TspModel{
 						isSolutionOptimal = true;
 
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
-						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
+						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e9;
+						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "s" );
 
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
-						tspResults.setRuntime( runtimeOptimization / 1e6 );
-						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e6 );
+						tspResults.setRuntime( runtimeOptimization / 1e9 );
+						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
 						tspResults.setObjective( objval );
 						tspResults.setOptimal( true );
 
@@ -243,21 +243,21 @@ public abstract class TspModel{
 						log.info( currentTspIterationResult.getSolutionString() );
 						log.info( "Optimal objective: " + objval );
 
-						log.info( "Total optimization runtime: " + tspResults.getRuntime() + "ms" );
-						log.debug( "Runtime of GRB Model calculation: " + tspResults.getRuntimeGrbModelCalculation() + "ms" );
+						log.info( "Total optimization runtime: " + tspResults.getRuntime() + "s" );
+						log.debug( "Runtime of GRB Model calculation: " + tspResults.getRuntimeGrbModelCalculation() + "s" );
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
 						//TODO create and return result object
 					} else {
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
+						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e9;
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
-						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
+						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e9;
 
 						log.debug( currentTspIterationResult.getSolutionString() );
-						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
-						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
+						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "s" );
+						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "s" );
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
 						tspResults.setRuntime( currentRuntimeOptimizationMilliseconds );
