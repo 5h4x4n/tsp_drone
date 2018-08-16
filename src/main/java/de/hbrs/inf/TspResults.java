@@ -57,4 +57,8 @@ public class TspResults{
 	public void setRuntimeGrbModelCalculation( double runtimeGrbModelCalculation ){
 		this.runtimeGrbModelCalculation = runtimeGrbModelCalculation;
 	}
+
+	public int getIterationCounter() {
+		return iterationResults.size();
+	}
 }
