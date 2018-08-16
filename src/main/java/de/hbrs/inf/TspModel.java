@@ -7,7 +7,7 @@ public abstract class TspModel{
 
 	protected String name;
 	protected String comment;
-	protected String type;
+	private String type;
 	protected int dimension;
 	protected double[][] nodes;
 	protected int[][] distances;
@@ -251,6 +251,8 @@ public abstract class TspModel{
 						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e6;
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
 						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
+
+						log.info( currentTspIterationResult.getSolutionString() );
 						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
 

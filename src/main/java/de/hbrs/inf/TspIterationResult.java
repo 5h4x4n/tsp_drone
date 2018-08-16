@@ -28,17 +28,18 @@ public class TspIterationResult{
 	}
 
 	public String getSolutionString(){
-		StringBuilder solutionString = new StringBuilder( "\nTruck Tours size: " ).append( truckTours.size() );
+		StringBuilder solutionString = new StringBuilder( "\nTruck_Tours_Size: " ).append( truckTours.size() );
 		if( truckTours.size() > 0 ){
 			for( int i = 0; i < truckTours.size(); i++ ) {
-				solutionString.append( "\nTruck Tour " ).append( i ).append( " Size: " ).append( truckTours.get( i ).size() );
-				solutionString.append( "\nTruck Tour " ).append( i ).append( ": " );
+				solutionString.append( "\nTruck_Tour_" ).append( i ).append( "_Size: " ).append( truckTours.get( i ).size() );
+				solutionString.append( "\nTruck_Tour_" ).append( i ).append( ": " );
 				for( int j = 0; j < truckTours.get( i ).size(); j++ ) {
 					solutionString.append( truckTours.get( i ).get( j ) ).append( ", " );
 				}
+				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
 			}
 		}
-		return new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) ).toString();
+		return solutionString.toString();
 	}
 
 }
