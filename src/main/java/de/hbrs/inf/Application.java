@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,14 +50,14 @@ public class Application{
 						.build();
 		options.addOption( jsonFileOrDir );
 
-		Option outputDir = Option.builder( "o" )
-						.longOpt( "outputDir" )
+		Option csvDir = Option.builder( "c" )
+						.longOpt( "csv" )
 						.argName( "directory" )
 						.hasArg()
 						.required( false )
 						.desc( "use given directory to create file/s with CSV result/s for each solved problem" )
 						.build();
-		options.addOption( outputDir );
+		options.addOption( csvDir );
 
 		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
 
@@ -85,15 +86,15 @@ public class Application{
 		log = Logger.getLogger( Application.class.getName() );
 		log.info( "Start application" );
 
-		if( cmd.hasOption("o") ) {
-			StringBuilder outputPath = new StringBuilder( cmd.getOptionValue( "o" ) );
-			if( !( outputPath.charAt( outputPath.length() - 1 ) == '/' ) ) {
-				outputPath .append( "/" );
+		if( cmd.hasOption("c") ) {
+			StringBuilder csvPath = new StringBuilder( cmd.getOptionValue( "c" ) );
+			if( !( csvPath.charAt( csvPath.length() - 1 ) == '/' ) ) {
+				csvPath .append( "/" );
 			}
 			String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
-			outputPath.append( datetime );
-			Configuration.setOutputDirectory( outputPath.toString() );
-			log.info( "Set output directory: " + Configuration.getOutputDirectory() );
+			csvPath.append( datetime );
+			Configuration.setCsvDirectory( csvPath.toString() );
+			log.info( "Set csv directory: " + Configuration.getCsvDirectory() );
 		}
 
 		if( cmd.hasOption( "j" ) ) {
@@ -119,19 +120,19 @@ public class Application{
 		}
 
 		//check if output directory is given
-		if( Configuration.getOutputDirectory() != null ) {
-			File outputDirectory = new File( Configuration.getOutputDirectory() );
-			if( !outputDirectory.exists() ) {
-				log.info( "Path to output directory '" + outputDirectory.getAbsolutePath() + "' does no exists. Create now." );
-				if( outputDirectory.mkdirs() ) {
-					log.info( "Output directory '" + outputDirectory.getAbsolutePath() + "' for result file/s successfuly created." );
+		if( Configuration.getCsvDirectory() != null ) {
+			File csvDirectory = new File( Configuration.getCsvDirectory() );
+			if( !csvDirectory.exists() ) {
+				log.info( "Path to csv directory '" + csvDirectory.getAbsolutePath() + "' does no exists. Create now." );
+				if( csvDirectory.mkdirs() ) {
+					log.info( "CSV directory '" + csvDirectory.getAbsolutePath() + "' for result file/s successfuly created." );
 				} else {
-					log.info( "Creation of output directory '" + outputDirectory.getAbsolutePath() + "' for result file/s failed." );
+					log.info( "Creation of csv directory '" + csvDirectory.getAbsolutePath() + "' for result file/s failed." );
 					return;
 				}
 			} else {
-				if( outputDirectory.isFile() ){
-					log.info( "Given output directory is a file." );
+				if( csvDirectory.isFile() ){
+					log.info( "Given csv directory is a file." );
 					return;
 				}
 			}
@@ -146,23 +147,37 @@ public class Application{
 			if( tspModel != null ){
 				TspResults tspResults = tspModel.grbOptimize();
 
-				if( Configuration.getOutputDirectory() != null ){
-					File outputFile = new File( Configuration.getOutputDirectory() + "/" + file.getName() + ".result" );
-					if( !outputFile.exists() ){
+				if( Configuration.getCsvDirectory() != null ){
+					String type = tspModel.getType();
+					File csvFile = new File( Configuration.getCsvDirectory() + "/" + type + ".csv" );
+					if( !csvFile.exists() ){
 						try{
-							outputFile.createNewFile();
+							csvFile.createNewFile();
+							log.info( "Creation of csv result file '" + csvFile.getAbsolutePath() + "' was successful!" );
 						} catch(IOException e){
-							log.info( "Can not create result file '" + outputFile.getAbsolutePath() + "'!" );
+							log.info( "Can not create csv result file '" + csvFile.getAbsolutePath() + "'!" );
 							log.info( "Error: " + e.getMessage() );
 							continue;
 						}
+
+						try{
+							StringBuilder headerString = new StringBuilder( TspModelCsvResultsConverter.getCsvHeaderString( type ) ).append( System.lineSeparator() );
+							Files.write( Paths.get( csvFile.toURI() ), headerString.toString().getBytes() );
+							log.info( "Header written to csv result file '" + csvFile.getAbsolutePath() + "'!" );
+						} catch(IOException e){
+							log.info( "Can not write csv results header to file '" + csvFile.getAbsolutePath() + "'!" );
+							log.info( "Error: " + e.getMessage() );
+							continue;
+						}
+
 					}
 
 					try{
-						Files.write( Paths.get( outputFile.toURI() ), TspModelCsvResultsConverter.getCsvString( tspModel ).getBytes() );
-						log.info( "Results written to file '" + outputFile.getAbsolutePath() + "'!" );
+						StringBuilder csvString = new StringBuilder( TspModelCsvResultsConverter.getCsvResultString( tspModel ) ).append( System.lineSeparator() );
+						Files.write( Paths.get( csvFile.toURI() ), csvString.toString().getBytes(), StandardOpenOption.APPEND );
+						log.info( "Results written to results file '" + csvFile.getAbsolutePath() + "'!" );
 					} catch(IOException e){
-						log.info( "Can not write results to file '" + outputFile.getAbsolutePath() + "'!" );
+						log.info( "Can not write csv results to file '" + csvFile.getAbsolutePath() + "'!" );
 						log.info( "Error: " + e.getMessage() );
 						continue;
 					}
