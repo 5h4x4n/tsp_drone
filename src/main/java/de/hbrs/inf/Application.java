@@ -32,7 +32,7 @@ public class Application{
 		options.addOption( logFile );
 
 		Option jsonFileOrDir = Option.builder( "j" )
-						.longOpt( "jsonFileOrDir" )
+						.longOpt( "json" )
 						.argName( "file_or_directory" )
 						.hasArg()
 						.required( true )
