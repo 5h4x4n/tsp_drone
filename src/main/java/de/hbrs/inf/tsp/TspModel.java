@@ -254,7 +254,7 @@ public abstract class TspModel{
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
 						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e6;
 
-						log.info( currentTspIterationResult.getSolutionString() );
+						log.debug( currentTspIterationResult.getSolutionString() );
 						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "ms" );
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "ms" );
 
