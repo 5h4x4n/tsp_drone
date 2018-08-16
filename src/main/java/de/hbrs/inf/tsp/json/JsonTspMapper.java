@@ -45,7 +45,7 @@ public class JsonTspMapper{
 			switch( tspType ) {
 				case "TSP":
 					//convert TspLibJson to Tsp object
-					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspLibJson.getType(), tspLibJson.getDimension(), nodes, distances );
+					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspType, tspLibJson.getDimension(), nodes, distances );
 					break;
 
 				case "PDSTSP":
@@ -61,13 +61,13 @@ public class JsonTspMapper{
 					double [][] truckTimes = TspModel.calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
 
 					//convert PdstspLibJson to Pdstsp object
-					tsp = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), pdstspLibJson.getType(), pdstspLibJson.getDimension(),
+					tsp = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), tspType, pdstspLibJson.getDimension(),
 									nodes, distances, pdstspLibJson.getTruck_speed(), truckTimes, pdstspLibJson.getDrone_speed(),
 									droneFlightTime, pdstspLibJson.getDrone_fleet_size(), droneTimes, pdstspLibJson.getDrone_delivery_possible() );
 					break;
 
 				default:
-					log.info( "TSP Type '" + tspLibJson.getType().toUpperCase() + "' not supported yet." );
+					log.info( "TSP Type '" + tspType + "' not supported yet." );
 					break;
 			}
 
