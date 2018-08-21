@@ -96,28 +96,6 @@ public class Tsp extends TspModel {
 		}
 	}
 
-	//TODO Remove?!
-	/*
-	@Override
-	protected void getAndSetSolution() throws GRBException{
-		truckTspTour = new ArrayList<>();
-		int currentIndex = 0;
-		int lastIndex = 0;
-		do{
-			for( int j = 0; j < dimension; j++ ) {
-				if( currentIndex != j && lastIndex != j ) {
-					if( (int)grbTruckEdgeVars[currentIndex][j].get( GRB.DoubleAttr.X ) == 1 ) {
-						truckTspTour.add( currentIndex );
-						lastIndex = currentIndex;
-						currentIndex = j;
-						break;
-					}
-				}
-			}
-		} while( currentIndex != 0 );
-	}
-	*/
-
 	@Override
 	protected void logIterationDebug() throws GRBException{
 		log.debug( "Adjacency matrix of solution:" );

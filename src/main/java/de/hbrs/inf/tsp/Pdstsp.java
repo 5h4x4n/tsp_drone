@@ -207,25 +207,6 @@ public class Pdstsp extends Tsp {
 		}
 	}
 
-	//TODO Remove?!
-	/*
-	@Override
-	protected void getAndSetSolution() throws GRBException{
-		super.getAndSetSolution();
-		dronesCustomers = new ArrayList[droneFleetSize];
-		for( int v = 0; v < droneFleetSize; v++ ) {
-			dronesCustomers[v] = new ArrayList<>();
-			for( int i = 0; i < dimension; i++ ) {
-				if( grbDronesCustomersVars[v][i] != null ) {
-					if( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) == 1 ){
-						dronesCustomers[v].add( i );
-					}
-				}
-			}
-		}
-	}
-	*/
-
 	public double getDroneFlightTime(){
 		return droneFlightTime;
 	}

@@ -248,7 +248,6 @@ public abstract class TspModel{
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
-						//TODO create and return result object
 					} else {
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
 						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e9;
