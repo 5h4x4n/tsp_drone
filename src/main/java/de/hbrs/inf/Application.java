@@ -86,17 +86,6 @@ public class Application{
 		log = Logger.getLogger( Application.class.getName() );
 		log.info( "Start application" );
 
-		if( cmd.hasOption("c") ) {
-			StringBuilder csvPath = new StringBuilder( cmd.getOptionValue( "c" ) );
-			if( !( csvPath.charAt( csvPath.length() - 1 ) == '/' ) ) {
-				csvPath .append( "/" );
-			}
-			String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
-			csvPath.append( datetime );
-			Configuration.setCsvDirectory( csvPath.toString() );
-			log.info( "Set csv directory: " + Configuration.getCsvDirectory() );
-		}
-
 		if( cmd.hasOption( "j" ) ) {
 			Configuration.setJsonFileOrDir( cmd.getOptionValue( "j" ) );
 			log.info( "Set json file/directory: " + Configuration.getJsonFileOrDir() );
@@ -117,6 +106,17 @@ public class Application{
 			jsonFiles[0] = fileOrDir;
 		} else {
 			jsonFiles = fileOrDir.listFiles();
+		}
+
+		if( cmd.hasOption("c") ) {
+			StringBuilder csvPath = new StringBuilder( cmd.getOptionValue( "c" ) );
+			if( !( csvPath.charAt( csvPath.length() - 1 ) == '/' ) ) {
+				csvPath .append( "/" );
+			}
+			String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
+			csvPath.append( fileOrDir.getName() ).append( "_" ).append( datetime );
+			Configuration.setCsvDirectory( csvPath.toString() );
+			log.info( "Set csv directory: " + Configuration.getCsvDirectory() );
 		}
 
 		//check if output directory is given
@@ -188,9 +188,6 @@ public class Application{
 			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
-
-		//TODO get result objects from grbOptimize, show them and write to output file
-
 	}
 
 }
