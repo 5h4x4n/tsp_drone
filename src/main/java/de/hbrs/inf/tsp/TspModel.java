@@ -11,10 +11,10 @@ public abstract class TspModel{
 	protected String type;
 	protected int dimension;
 	protected double[][] nodes;
-	protected int[][] distances;
-	protected GRBModel grbModel;
-	protected GRBEnv grbEnv;
-	protected GRBVar[][] grbTruckEdgeVars;
+	protected transient int[][] distances;
+	protected transient GRBModel grbModel;
+	protected transient GRBEnv grbEnv;
+	protected transient GRBVar[][] grbTruckEdgeVars;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected TspResults tspResults;

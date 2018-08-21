@@ -1,5 +1,7 @@
 package de.hbrs.inf;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.TspResults;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
@@ -50,14 +52,28 @@ public class Application{
 						.build();
 		options.addOption( jsonFileOrDir );
 
-		Option csvDir = Option.builder( "c" )
-						.longOpt( "csv" )
+		Option outputDir = Option.builder( "o" )
+						.longOpt( "outputDir" )
 						.argName( "directory" )
 						.hasArg()
 						.required( false )
-						.desc( "use given directory to create file/s with CSV result/s for each solved problem" )
+						.desc( "set directory for outputs like option -c and -r (default: tests)" )
+						.build();
+		options.addOption( outputDir );
+
+		Option csvDir = Option.builder( "c" )
+						.longOpt( "csv" )
+						.required( false )
+						.desc( "use output directory (option: -o) to create file/s with CSV result/s for each solved problem" )
 						.build();
 		options.addOption( csvDir );
+
+		Option jsonResults = Option.builder( "r" )
+						.longOpt( "results" )
+						.required( false )
+						.desc( "use output directory (option: -o) to create file/s with json results for each solved problem" )
+						.build();
+		options.addOption( jsonResults );
 
 		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
 
@@ -108,31 +124,27 @@ public class Application{
 			jsonFiles = fileOrDir.listFiles();
 		}
 
-		if( cmd.hasOption("c") ) {
-			StringBuilder csvPath = new StringBuilder( cmd.getOptionValue( "c" ) );
-			if( !( csvPath.charAt( csvPath.length() - 1 ) == '/' ) ) {
-				csvPath .append( "/" );
+		StringBuilder outputPath = new StringBuilder( "tests/" );
+		if( cmd.hasOption( "o" ) ){
+			outputPath = new StringBuilder( cmd.getOptionValue( "o" ) );
+			if( !(outputPath.charAt( outputPath.length() - 1 ) == '/') ){
+				outputPath.append( "/" );
 			}
-			String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
-			csvPath.append( fileOrDir.getName() ).append( "_" ).append( datetime );
-			Configuration.setCsvDirectory( csvPath.toString() );
-			log.info( "Set csv directory: " + Configuration.getCsvDirectory() );
 		}
+		String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
+		outputPath.append( fileOrDir.getName() ).append( "_" ).append( datetime );
+		Configuration.setOutputDirectory( outputPath.toString() );
+		log.info( "Set csv directory: " + Configuration.getOutputDirectory() );
 
-		//check if output directory is given
-		if( Configuration.getCsvDirectory() != null ) {
-			File csvDirectory = new File( Configuration.getCsvDirectory() );
-			if( !csvDirectory.exists() ) {
-				log.info( "Path to csv directory '" + csvDirectory.getAbsolutePath() + "' does no exists. Create now." );
-				if( csvDirectory.mkdirs() ) {
-					log.info( "CSV directory '" + csvDirectory.getAbsolutePath() + "' for result file/s successfuly created." );
+		//check if any output option is set and create output directory if necessary
+		if( cmd.hasOption( "c" ) || cmd.hasOption( "r" ) ) {
+			File outputDirectory = new File( Configuration.getOutputDirectory() );
+			if( !outputDirectory.exists() ){
+				log.info( "Path to output directory '" + outputDirectory.getAbsolutePath() + "' does no exists. Create now." );
+				if( outputDirectory.mkdirs() ){
+					log.info( "Output directory '" + outputDirectory.getAbsolutePath() + "' for result file/s successfuly created." );
 				} else {
-					log.info( "Creation of csv directory '" + csvDirectory.getAbsolutePath() + "' for result file/s failed." );
-					return;
-				}
-			} else {
-				if( csvDirectory.isFile() ){
-					log.info( "Given csv directory is a file." );
+					log.info( "Creation of output directory '" + outputDirectory.getAbsolutePath() + "' for result file/s failed." );
 					return;
 				}
 			}
@@ -147,9 +159,9 @@ public class Application{
 			if( tspModel != null ){
 				TspResults tspResults = tspModel.grbOptimize();
 
-				if( Configuration.getCsvDirectory() != null ){
+				if( cmd.hasOption( "c" ) ){
 					String type = tspModel.getType();
-					File csvFile = new File( Configuration.getCsvDirectory() + "/" + type + ".csv" );
+					File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
 					if( !csvFile.exists() ){
 						try{
 							csvFile.createNewFile();
@@ -183,6 +195,28 @@ public class Application{
 					}
 
 				}
+
+				if( cmd.hasOption( "r" ) ){
+					File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + file.getName() + ".results" );
+					if( !jsonResultsFile.exists() ) {
+						try{
+							jsonResultsFile.createNewFile();
+							log.info( "Creation of json results file '" + jsonResultsFile.getAbsolutePath() + "' was successful!" );
+						} catch(IOException e){
+							log.info( "Can not create json results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+							log.info( "Error: " + e.getMessage() );
+						}
+					}
+					Gson gson = new GsonBuilder().setPrettyPrinting().create();
+					try{
+						Files.write( Paths.get( jsonResultsFile.toURI() ), gson.toJson( tspModel ).getBytes(), StandardOpenOption.CREATE );
+						log.info( "JSON results written to results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+					} catch(IOException e){
+						log.info( "Can not write json results to file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+						log.info( "Error: " + e.getMessage() );
+					}
+				}
+
 			} else {
 				log.error( "Could not convert JSON File '" + file.getName() + "' to TSP Model!" );
 			}

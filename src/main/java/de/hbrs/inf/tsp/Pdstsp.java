@@ -8,15 +8,15 @@ import java.util.ArrayList;
 public class Pdstsp extends Tsp {
 
 	private double truckSpeed;
-	private double[][] truckTimes;
+	private transient double[][] truckTimes;
 	private double droneSpeed;
 	private double droneFlightTime;
 	private int droneFleetSize;
-	private double[][] droneTimes;
+	private transient double[][] droneTimes;
 	private int[] droneDeliveryPossible;
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
-	private GRBVar[][] grbDronesCustomersVars;
-	private GRBVar grbObjectiveVar;
+	private transient GRBVar[][] grbDronesCustomersVars;
+	private transient GRBVar grbObjectiveVar;
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
