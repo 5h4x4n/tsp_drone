@@ -74,7 +74,7 @@ public class Tsp extends TspModel {
 				double subtourVertexCounter = subtour.size();
 
 				//skip subtours with bigger size than half of the dimension, cause it is not needed
-				if( subtourVertexCounter > distances.length / 2 ){
+				if( subtourVertexCounter > dimension / 2 ){
 					log.debug( "Skip subtour cause it's bigger than half the dimension: " + subtour );
 					continue;
 				}
@@ -86,10 +86,11 @@ public class Tsp extends TspModel {
 					subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
 					grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
 				}
-				subtourEliminationConstraintName += additionalConstraintsCounter++;
+				subtourEliminationConstraintName += additionalConstraintsCounter;
 				log.debug( "Add subtour elimination constraint: " + subtourEliminationConstraintString
 								.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + (subtour.size() - 1) );
 				grbModel.addConstr( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, subtourEliminationConstraintName );
+				additionalConstraintsCounter++;
 			}
 			return true;
 		} else {
