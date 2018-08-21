@@ -16,6 +16,7 @@ public abstract class TspModel{
 	protected GRBEnv grbEnv;
 	protected GRBVar[][] grbTruckEdgeVars;
 	protected int additionalConstraintsCounter = 0;
+	protected int calculatedConstraintsCounter = 0;
 	protected TspResults tspResults;
 
 	private static final double EARTH_RADIUS = 6378.388;
@@ -334,6 +335,10 @@ public abstract class TspModel{
 
 	public int getDecisionVariablesCounter(){
 		return grbModel.getVars().length;
+	}
+
+	public int getTotalConstraintsCounter() {
+		return calculatedConstraintsCounter + additionalConstraintsCounter;
 	}
 }
 

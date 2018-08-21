@@ -110,6 +110,7 @@ public class Pdstsp extends Tsp {
 		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 		log.debug( "Add constraint trucktime: " + logString + " <= traveltime" );
 		grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "trucktime" );
+		calculatedConstraintsCounter++;
 
 		//Add Drone times constraints also as lower bounds for traveltime
 		if( droneDeliveryPossibleAndInFlightRange.size() > 0 ){
@@ -125,6 +126,7 @@ public class Pdstsp extends Tsp {
 				logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 				log.debug( "Add constraint dronetime_" + v + ": " + logString + " <= traveltime" );
 				grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, grbObjectiveVar, "dronetime_" + v );
+				calculatedConstraintsCounter++;
 			}
 		} else {
 			log.debug( "No dronetime constraints added, because no customer in flight range can be served by a drone." );
@@ -151,6 +153,7 @@ public class Pdstsp extends Tsp {
 			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 			log.debug( "Add constraint customer_served_once_" + j + ": " + logString + " = 1" );
 			grbModel.addConstr( grbLinExpr, GRB.EQUAL, 1.0, "customer_served_once_" + j );
+			calculatedConstraintsCounter++;
 		}
 
 		//Add degree-2 constraint for depot
@@ -163,6 +166,7 @@ public class Pdstsp extends Tsp {
 		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 		log.debug( "Add degree-2 constraint for depot: " + logString + " = 2" );
 		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_depot" );
+		calculatedConstraintsCounter++;
 
 		log.info( "End calculation of gurobi model for the PDSTSP without subtour elimination constraints" );
 

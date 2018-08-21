@@ -46,6 +46,7 @@ public class Tsp extends TspModel {
 			logString = new StringBuilder( logString.substring( 0, logString.length() - 2 ) );
 			log.debug( "Add degree-2 constraint deg2_" + i + ": " + logString + " = 2" );
 			grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_" + String.valueOf( i ) );
+			calculatedConstraintsCounter++;
 		}
 
 		log.info( "End calculation of gurobi model for the TSP without subtour elimination constraints" );
