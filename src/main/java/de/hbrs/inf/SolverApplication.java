@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-public class Application{
+public class SolverApplication{
 
 	private static Logger log;
 
@@ -99,7 +99,7 @@ public class Application{
 		}
 		Configuration.setSystemProperties();
 
-		log = Logger.getLogger( Application.class.getName() );
+		log = Logger.getLogger( SolverApplication.class.getName() );
 		log.info( "Start application" );
 
 		if( cmd.hasOption( "j" ) ) {

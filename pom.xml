@@ -41,7 +41,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>de.hbrs.inf.Application</mainClass>
+                            <mainClass>de.hbrs.inf.SolverApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
