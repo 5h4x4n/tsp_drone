@@ -28,9 +28,13 @@ public class TspModelCsvResultsConverter{
 				Pdstsp pdstsp = (Pdstsp) tspModel;
 				resultList.add( Double.toString( pdstsp.getTruckSpeed() ) );
 				resultList.add( Double.toString( pdstsp.getDroneSpeed() ) );
-				resultList.add( Double.toString( pdstsp.getDroneFlightTime() ) );
+				double droneFlightRange = pdstsp.getDroneFlightRange() / 2;
+				resultList.add( Double.toString( droneFlightRange ) );
 				resultList.add( Integer.toString( pdstsp.getDroneFleetSize() ) );
 				resultList.add( Integer.toString( pdstsp.getDroneDeliveryPossibleAndInFlightRangeCounter() ) );
+				double maxDistance = pdstsp.getMaximumCustomerDistance();
+				resultList.add( Double.toString( maxDistance ) );
+				resultList.add( Double.toString( droneFlightRange / maxDistance ) );
 				break;
 		}
 
@@ -56,9 +60,11 @@ public class TspModelCsvResultsConverter{
 			case "PDSTSP":
 				parameterList.add( "Truck Speed" );
 				parameterList.add( "Drone Speed" );
-				parameterList.add( "Drone Flight Time" );
+				parameterList.add( "Drone Flight Range (DFR)" );
 				parameterList.add( "Drone Fleet Size" );
 				parameterList.add( "Drones Delivery Possible and in Flight Range" );
+				parameterList.add( "Maximum Customer Distance (MCD)" );
+				parameterList.add( "DFR/MCD" );
 				break;
 		}
 

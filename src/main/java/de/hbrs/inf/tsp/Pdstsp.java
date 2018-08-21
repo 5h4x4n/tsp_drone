@@ -270,4 +270,18 @@ public class Pdstsp extends Tsp {
 	public int getDroneDeliveryPossibleAndInFlightRangeCounter(){
 		return droneDeliveryPossibleAndInFlightRange.size();
 	}
+
+	public double getDroneFlightRange() {
+		return droneFlightTime * droneSpeed;
+	}
+
+	public double getMaximumCustomerDistance() {
+		double maxDistance = -1;
+		for( int i = 1; i < dimension; i++ ) {
+			if( distances[0][i] > maxDistance ) {
+				maxDistance = distances[0][i];
+			}
+		}
+		return maxDistance;
+	}
 }
