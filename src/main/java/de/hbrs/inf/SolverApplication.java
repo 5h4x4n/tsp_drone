@@ -82,9 +82,14 @@ public class SolverApplication{
 			}
 		}
 		String datetime = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss" ).format( new Date() );
-		outputPath.append( fileOrDir.getName() ).append( "_" ).append( datetime );
+		String fileOrDirName = fileOrDir.getName();
+		//Remove file extension for output directory
+		if( fileOrDir.isFile() ) {
+			fileOrDirName = fileOrDirName.substring( 0, fileOrDirName.lastIndexOf( '.' ) );
+		}
+		outputPath.append( fileOrDirName ).append( "_" ).append( datetime );
 		Configuration.setOutputDirectory( outputPath.toString() );
-		log.info( "Set csv directory: " + Configuration.getOutputDirectory() );
+		log.info( "Set output directory: " + Configuration.getOutputDirectory() );
 
 		//check if any output option is set and create output directory if necessary
 		if( cmd.hasOption( "c" ) || cmd.hasOption( "r" ) ) {
