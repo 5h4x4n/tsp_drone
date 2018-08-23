@@ -24,58 +24,8 @@ public class SolverApplication{
 
 	public static void main( String[] args ){
 
-		//create options for command lien arguments
-		Options options = new Options();
-
-		Option debug = Option.builder( "d" )
-						.longOpt( "debug" )
-						.required( false )
-						.desc( "set log level to debug" )
-						.build();
-		options.addOption( debug );
-
-		Option logFile = Option.builder( "l" )
-						.longOpt( "logFile" )
-						.argName( "file" )
-						.hasArg()
-						.required( false )
-						.desc( "use given file for log" )
-						.build();
-		options.addOption( logFile );
-
-		Option jsonFileOrDir = Option.builder( "j" )
-						.longOpt( "json" )
-						.argName( "file_or_directory" )
-						.hasArg()
-						.required( true )
-						.desc( "read tsp problem/s in json format from file or directory (required parameter)" )
-						.build();
-		options.addOption( jsonFileOrDir );
-
-		Option outputDir = Option.builder( "o" )
-						.longOpt( "outputDir" )
-						.argName( "directory" )
-						.hasArg()
-						.required( false )
-						.desc( "set directory for outputs like option -c and -r (default: tests)" )
-						.build();
-		options.addOption( outputDir );
-
-		Option csvDir = Option.builder( "c" )
-						.longOpt( "csv" )
-						.required( false )
-						.desc( "use output directory (option: -o) to create file/s with CSV result/s for each solved problem" )
-						.build();
-		options.addOption( csvDir );
-
-		Option jsonResults = Option.builder( "r" )
-						.longOpt( "results" )
-						.required( false )
-						.desc( "use output directory (option: -o) to create file/s with json results for each solved problem" )
-						.build();
-		options.addOption( jsonResults );
-
-		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
+		//create options for command line arguments
+		Options options = createOptions();
 
 		//parse the options passed as command line arguments
 		CommandLineParser parser = new DefaultParser();
@@ -222,6 +172,62 @@ public class SolverApplication{
 			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
+	}
+
+	private static Options createOptions(){
+		Options options = new Options();
+
+		Option debug = Option.builder( "d" )
+						.longOpt( "debug" )
+						.required( false )
+						.desc( "set log level to debug" )
+						.build();
+		options.addOption( debug );
+
+		Option logFile = Option.builder( "l" )
+						.longOpt( "logFile" )
+						.argName( "file" )
+						.hasArg()
+						.required( false )
+						.desc( "use given file for log" )
+						.build();
+		options.addOption( logFile );
+
+		Option jsonFileOrDir = Option.builder( "j" )
+						.longOpt( "json" )
+						.argName( "file_or_directory" )
+						.hasArg()
+						.required( true )
+						.desc( "read tsp problem/s in json format from file or directory (required parameter)" )
+						.build();
+		options.addOption( jsonFileOrDir );
+
+		Option outputDir = Option.builder( "o" )
+						.longOpt( "outputDir" )
+						.argName( "directory" )
+						.hasArg()
+						.required( false )
+						.desc( "set directory for outputs like option -c and -r (default: tests)" )
+						.build();
+		options.addOption( outputDir );
+
+		Option csvDir = Option.builder( "c" )
+						.longOpt( "csv" )
+						.required( false )
+						.desc( "use output directory (option: -o) to create file/s with CSV result/s for each solved problem" )
+						.build();
+		options.addOption( csvDir );
+
+		Option jsonResults = Option.builder( "r" )
+						.longOpt( "results" )
+						.required( false )
+						.desc( "use output directory (option: -o) to create file/s with json results for each solved problem" )
+						.build();
+		options.addOption( jsonResults );
+
+		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
+
+		return options;
 	}
 
 }
