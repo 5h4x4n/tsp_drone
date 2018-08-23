@@ -284,4 +284,9 @@ public class Pdstsp extends Tsp {
 		}
 		return maxDistance;
 	}
+
+	public double getDroneFlightRangePercentage() {
+		double droneFlightRangePercentage = getDroneFlightRange() / 2.0 / getMaximumCustomerDistance() * 100.0;
+		return Math.round( droneFlightRangePercentage * 10 ) / 10.0;
+	}
 }

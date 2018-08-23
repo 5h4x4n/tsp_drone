@@ -222,7 +222,7 @@ public class SolverApplication{
 							if( type.equals( Defines.PDSTSP ) ){
 								Pdstsp pdstsp = (Pdstsp)tspModel;
 								jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" )
-												.append( pdstsp.getDroneSpeed() ).append( "_dfr-" ).append( pdstsp.getDroneFlightRange() / 2 );
+												.append( pdstsp.getDroneSpeed() ).append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() );
 							}
 							jsonResultsFileName.append( ".results.json" );
 							File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
