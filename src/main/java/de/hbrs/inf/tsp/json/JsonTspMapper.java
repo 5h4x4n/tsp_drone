@@ -2,6 +2,7 @@ package de.hbrs.inf.tsp.json;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import de.hbrs.inf.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.Tsp;
 import de.hbrs.inf.tsp.TspModel;
@@ -43,12 +44,12 @@ public class JsonTspMapper{
 			log.info( "TSP Type: " + tspType );
 
 			switch( tspType ) {
-				case "TSP":
+				case Defines.TSP:
 					//convert TspLibJson to Tsp object
 					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspType, tspLibJson.getDimension(), nodes, distances );
 					break;
 
-				case "PDSTSP":
+				case Defines.PDSTSP:
 					reader = new JsonReader( new FileReader( fileName ) );
 					PdstspLibJson pdstspLibJson = gson.fromJson( reader, PdstspLibJson.class );
 

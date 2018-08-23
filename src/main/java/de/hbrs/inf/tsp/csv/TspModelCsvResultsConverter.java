@@ -1,5 +1,6 @@
 package de.hbrs.inf.tsp.csv;
 
+import de.hbrs.inf.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 
@@ -24,7 +25,7 @@ public class TspModelCsvResultsConverter{
 		String type = tspModel.getType();
 		//add additional results
 		switch( type ) {
-			case "PDSTSP":
+			case Defines.PDSTSP:
 				Pdstsp pdstsp = (Pdstsp) tspModel;
 				resultList.add( Double.toString( pdstsp.getTruckSpeed() ) );
 				resultList.add( Double.toString( pdstsp.getDroneSpeed() ) );
@@ -57,7 +58,7 @@ public class TspModelCsvResultsConverter{
 
 		//add additional parameters
 		switch( type ) {
-			case "PDSTSP":
+			case Defines.PDSTSP:
 				parameterList.add( "Truck Speed" );
 				parameterList.add( "Drone Speed" );
 				parameterList.add( "Drone Flight Range (DFR)" );
