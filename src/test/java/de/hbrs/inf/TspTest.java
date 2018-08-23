@@ -2,6 +2,7 @@ package de.hbrs.inf;
 
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
+import de.hbrs.inf.tsp.json.TspLibJson;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,12 +22,16 @@ public class TspTest{
 
 	@Test
 	public void testGetTSPFromJson() {
-		assertNotNull( JsonTspMapper.getObjectFromJson( "resources/test/tsp_test.json" ) );
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "resources/test/tsp_test.json" );
+		assertNotNull( tspLibJson );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assertNotNull( tspModel );
 	}
 
 	@Test
 	public void testGrbOptimize() {
-		TspModel tspModel = JsonTspMapper.getObjectFromJson( "resources/tsplib/wi29.json" );
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "resources/tsplib/wi29.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
 	}
