@@ -17,7 +17,7 @@ public class JsonTspMapper{
 
 	public static TspModel getObjectFromJson( String fileName ) {
 
-		TspModel tsp = null;
+		TspModel tspModel = null;
 		log.info( "Try to read json file '" + fileName + "' and convert it to corresponding tsp object." );
 		try{
 			TspLibJson tspLibJson;
@@ -46,7 +46,7 @@ public class JsonTspMapper{
 			switch( tspType ) {
 				case Defines.TSP:
 					//convert TspLibJson to Tsp object
-					tsp = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspType, tspLibJson.getDimension(), nodes, distances );
+					tspModel = new Tsp( tspLibJson.getName(), tspLibJson.getComment(), tspType, tspLibJson.getDimension(), nodes, distances );
 					break;
 
 				case Defines.PDSTSP:
@@ -62,7 +62,7 @@ public class JsonTspMapper{
 					double [][] truckTimes = TspModel.calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
 
 					//convert PdstspLibJson to Pdstsp object
-					tsp = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), tspType, pdstspLibJson.getDimension(),
+					tspModel = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), tspType, pdstspLibJson.getDimension(),
 									nodes, distances, pdstspLibJson.getTruck_speed(), truckTimes, pdstspLibJson.getDrone_speed(),
 									droneFlightTime, pdstspLibJson.getDrone_fleet_size(), droneTimes, pdstspLibJson.getDrone_delivery_possible() );
 					break;
@@ -81,8 +81,8 @@ public class JsonTspMapper{
 		}
 
 		log.info( "Created Tsp model from JSON file." );
-		log.debug( tsp );
-		return tsp;
+		log.debug( tspModel );
+		return tspModel;
 	}
 
 }
