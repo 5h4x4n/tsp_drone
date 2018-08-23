@@ -2,6 +2,7 @@ package de.hbrs.inf;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.TspResults;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
@@ -152,7 +153,17 @@ public class SolverApplication{
 				}
 
 				if( cmd.hasOption( "r" ) ){
-					File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + file.getName() + ".results" );
+					StringBuilder jsonResultsFileName = new StringBuilder( file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
+					String type = tspModel.getType();
+					jsonResultsFileName.append( "_" ).append( tspModel.getType() );
+					if( type.equals( Defines.PDSTSP ) ) {
+						Pdstsp pdstsp = (Pdstsp) tspModel;
+						jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() )
+										.append( "_ds-" ).append( pdstsp.getDroneSpeed() )
+										.append( "_dfr-" ).append( pdstsp.getDroneFlightRange() )
+										.append( ".results.json" );
+					}
+					File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
 					if( !jsonResultsFile.exists() ) {
 						try{
 							jsonResultsFile.createNewFile();
