@@ -6,7 +6,15 @@ class Configuration{
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
 	private static String outputDirectory = null;
+	private static boolean allCustomersByDrones = false;
+	private static double[] truckSpeeds = null;
+	private static double[] droneSpeeds = null;
+	private static int[] droneFlightRanges = null;
 
+	static void setSystemProperties() {
+		System.setProperty( "log4j.logLevel", logLevel );
+		System.setProperty( "log4j.logFile", logFile );
+	}
 
 	static void setJsonFileOrDir( String jsonFileOrDir ){
 		Configuration.jsonFileOrDir = jsonFileOrDir;
@@ -32,16 +40,43 @@ class Configuration{
 		Configuration.logLevel = logLevel;
 	}
 
-	static void setSystemProperties() {
-		System.setProperty( "log4j.logLevel", logLevel );
-		System.setProperty( "log4j.logFile", logFile );
-	}
-
 	static void setOutputDirectory( String csvDirectory ){
 		Configuration.outputDirectory = csvDirectory;
 	}
 
-	public static String getOutputDirectory(){
+	static String getOutputDirectory(){
 		return outputDirectory;
+	}
+
+	static boolean isAllCustomersByDrones(){
+		return allCustomersByDrones;
+	}
+
+	static void setAllCustomersByDrones( boolean allCustomersByDrones ){
+		Configuration.allCustomersByDrones = allCustomersByDrones;
+	}
+
+	static double[] getTruckSpeeds(){
+		return truckSpeeds;
+	}
+
+	static void setTruckSpeeds( double[] truckSpeeds ){
+		Configuration.truckSpeeds = truckSpeeds;
+	}
+
+	static double[] getDroneSpeeds(){
+		return droneSpeeds;
+	}
+
+	static void setDroneSpeeds( double[] droneSpeeds ){
+		Configuration.droneSpeeds = droneSpeeds;
+	}
+
+	static int[] getDroneFlightRanges(){
+		return droneFlightRanges;
+	}
+
+	static void setDroneFlightRanges( int[] droneFlightRanges ){
+		Configuration.droneFlightRanges = droneFlightRanges;
 	}
 }
