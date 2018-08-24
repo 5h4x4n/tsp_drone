@@ -29,7 +29,7 @@ public class TspModelCsvResultsConverter{
 				Pdstsp pdstsp = (Pdstsp) tspModel;
 				resultList.add( Double.toString( pdstsp.getTruckSpeed() ) );
 				resultList.add( Double.toString( pdstsp.getDroneSpeed() ) );
-				double droneFlightRange = pdstsp.getDroneFlightRange() / 2;
+				double droneFlightRange = pdstsp.getDroneFlightRange();
 				resultList.add( Double.toString( droneFlightRange ) );
 				resultList.add( Integer.toString( pdstsp.getDroneFleetSize() ) );
 				resultList.add( Integer.toString( pdstsp.getDroneDeliveryPossibleAndInFlightRangeCounter() ) );
