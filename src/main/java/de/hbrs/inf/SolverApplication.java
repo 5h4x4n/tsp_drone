@@ -161,11 +161,8 @@ public class SolverApplication{
 			}
 
 			for(int ts = 0; ts < truckSpeeds.length; ts++){
-				log.info( "TruckSpeed: " + truckSpeeds[ts] );
 				for(int ds = 0; ds < droneSpeeds.length; ds++){
-					log.info( "DroneSpeed: " + droneSpeeds[ds] );
 					for(int dfr = 0; dfr < droneFlightRanges.length; dfr++){
-						log.info( "DroneFlightRange: " + droneFlightRanges[dfr] + "%" );
 
 						tspModel = JsonTspMapper
 										.getTspModelFromJsonObject( tspLibJson, truckSpeeds[ts], droneSpeeds[ds], droneFlightRanges[dfr],

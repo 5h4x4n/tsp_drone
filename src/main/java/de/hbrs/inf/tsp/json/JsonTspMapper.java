@@ -98,6 +98,10 @@ public class JsonTspMapper{
 					}
 					pdstspLibJson.setDrone_delivery_possible( droneDeliveryPossible );
 				}
+				log.info( "TruckSpeed: " + truckSpeed );
+				log.info( "DroneSpeed: " + droneSpeed );
+				log.info( "DroneFlightRange: " + pdstspLibJson.getDrone_flight_range() + "%" );
+				log.info( "DroneDeliveryPossibleForAllCustomers: " + droneDeliveryPossibleForAllCustomers );
 
 				double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
 				log.debug( "Drone Flight Time: " + droneFlightTime );
