@@ -15,12 +15,12 @@ public class TspModelCsvResultsConverter{
 		resultList.add( tspModel.getName() );
 		resultList.add( tspModel.getType() );
 		resultList.add( Integer.toString( tspModel.getDimension() ) );
+		resultList.add( Double.toString( tspModel.getTspResults().getRuntime() ) );
+		resultList.add( Double.toString( tspModel.getTspResults().getObjective() ) );
 		resultList.add( Integer.toString( tspModel.getDecisionVariablesCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTotalConstraintsCounter() ) );
 		resultList.add( Integer.toString( tspModel.getAdditionalConstraintsCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTspResults().getIterationCounter() ) );
-		resultList.add( Double.toString( tspModel.getTspResults().getRuntime() ) );
-		resultList.add( Double.toString( tspModel.getTspResults().getObjective() ) );
 
 		String type = tspModel.getType();
 		//add additional results
@@ -29,13 +29,9 @@ public class TspModelCsvResultsConverter{
 				Pdstsp pdstsp = (Pdstsp) tspModel;
 				resultList.add( Double.toString( pdstsp.getTruckSpeed() ) );
 				resultList.add( Double.toString( pdstsp.getDroneSpeed() ) );
-				double droneFlightRange = pdstsp.getDroneFlightRange();
-				resultList.add( Double.toString( droneFlightRange ) );
 				resultList.add( Integer.toString( pdstsp.getDroneFleetSize() ) );
 				resultList.add( Integer.toString( pdstsp.getDroneDeliveryPossibleAndInFlightRangeCounter() ) );
-				double maxDistance = pdstsp.getMaximumCustomerDistance();
-				resultList.add( Double.toString( maxDistance ) );
-				resultList.add( Double.toString( droneFlightRange / maxDistance ) );
+				resultList.add( Double.toString( pdstsp.getDroneFlightRangePercentage() / 100.0 ) );
 				break;
 		}
 
@@ -49,23 +45,21 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( "Name" );
 		parameterList.add( "Type" );
 		parameterList.add( "Dimension" );
-		parameterList.add( "Decision Variables" );
-		parameterList.add( "Total Constraints" );
-		parameterList.add( "Additional Constraints" );
-		parameterList.add( "Iterations" );
 		parameterList.add( "Runtime [s]" );
 		parameterList.add( "Objective" );
+		parameterList.add( "DecisionVariables" );
+		parameterList.add( "TotalConstraints" );
+		parameterList.add( "AdditionalConstraints" );
+		parameterList.add( "Iterations" );
 
 		//add additional parameters
 		switch( type ) {
 			case Defines.PDSTSP:
-				parameterList.add( "Truck Speed" );
-				parameterList.add( "Drone Speed" );
-				parameterList.add( "Drone Flight Range (DFR)" );
-				parameterList.add( "Drone Fleet Size" );
-				parameterList.add( "Drones Delivery Possible and in Flight Range" );
-				parameterList.add( "Maximum Customer Distance (MCD)" );
-				parameterList.add( "DFR/MCD" );
+				parameterList.add( "TruckSpeed" );
+				parameterList.add( "DroneSpeed" );
+				parameterList.add( "DroneFleetSize" );
+				parameterList.add( "DronesDeliveryPossibleAndInFlightRange" );
+				parameterList.add( "DroneFlightRangePercentage" );
 				break;
 		}
 
