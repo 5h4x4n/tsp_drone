@@ -79,6 +79,12 @@ public class SolverApplication{
 			log.info( "DroneSpeeds set to: " + Arrays.toString( droneSpeeds ) );
 		}
 
+		if( cmd.hasOption( "dfs" ) ){
+			int[] droneFleetSizes = parseStringArrayToIntArray( cmd.getOptionValues( "dfs" ) );
+			Configuration.setDroneFleetSizes( droneFleetSizes );
+			log.info( "DroneFleetSizes set to: " + Arrays.toString( droneFleetSizes ) );
+		}
+
 		if( cmd.hasOption( "dfr" ) ){
 			int[] droneFlightRanges = parseStringArrayToIntArray( cmd.getOptionValues( "dfr" ) );
 			Configuration.setDroneFlightRanges( droneFlightRanges );
@@ -145,6 +151,7 @@ public class SolverApplication{
 
 			double[] truckSpeeds = { -1.0 };
 			double[] droneSpeeds = { -1.0 };
+			int[] droneFleetSizes = { -1 };
 			int[] droneFlightRanges = { -1 };
 
 			String type = tspLibJson.getType();
@@ -155,6 +162,9 @@ public class SolverApplication{
 				if( Configuration.getDroneSpeeds() != null ){
 					droneSpeeds = Configuration.getDroneSpeeds();
 				}
+				if( Configuration.getDroneFleetSizes() != null ){
+					droneFleetSizes = Configuration.getDroneFleetSizes();
+				}
 				if( Configuration.getDroneFlightRanges() != null ){
 					droneFlightRanges = Configuration.getDroneFlightRanges();
 				}
@@ -162,84 +172,84 @@ public class SolverApplication{
 
 			for(int ts = 0; ts < truckSpeeds.length; ts++){
 				for(int ds = 0; ds < droneSpeeds.length; ds++){
-					for(int dfr = 0; dfr < droneFlightRanges.length; dfr++){
+					for(int dfs = 0; dfs < droneFleetSizes.length; dfs++){
+						for(int dfr = 0; dfr < droneFlightRanges.length; dfr++){
 
-						tspModel = JsonTspMapper
-										.getTspModelFromJsonObject( tspLibJson, truckSpeeds[ts], droneSpeeds[ds], droneFlightRanges[dfr],
-														Configuration.isAllCustomersByDrones() );
+							tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson, truckSpeeds[ts], droneSpeeds[ds],
+											droneFleetSizes[dfs], droneFlightRanges[dfr], Configuration.isAllCustomersByDrones() );
 
-						if( tspModel == null ){
-							log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
-							continue;
-						}
-						TspResults tspResults = tspModel.grbOptimize();
-
-						if( cmd.hasOption( "c" ) ){
-							File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
-							if( !csvFile.exists() ){
-								try{
-									csvFile.createNewFile();
-									log.info( "Creation of csv result file '" + csvFile.getAbsolutePath() + "' was successful!" );
-								} catch(IOException e){
-									log.info( "Can not create csv result file '" + csvFile.getAbsolutePath() + "'!" );
-									log.info( "Error: " + e.getMessage() );
-									continue;
-								}
-
-								try{
-									StringBuilder headerString = new StringBuilder( TspModelCsvResultsConverter.getCsvHeaderString( type ) )
-													.append( System.lineSeparator() );
-									Files.write( Paths.get( csvFile.toURI() ), headerString.toString().getBytes() );
-									log.info( "Header written to csv result file '" + csvFile.getAbsolutePath() + "'!" );
-								} catch(IOException e){
-									log.info( "Can not write csv results header to file '" + csvFile.getAbsolutePath() + "'!" );
-									log.info( "Error: " + e.getMessage() );
-									continue;
-								}
-
-							}
-
-							try{
-								StringBuilder csvString = new StringBuilder( TspModelCsvResultsConverter.getCsvResultString( tspModel ) )
-												.append( System.lineSeparator() );
-								Files.write( Paths.get( csvFile.toURI() ), csvString.toString().getBytes(), StandardOpenOption.APPEND );
-								log.info( "Results written to results file '" + csvFile.getAbsolutePath() + "'!" );
-							} catch(IOException e){
-								log.info( "Can not write csv results to file '" + csvFile.getAbsolutePath() + "'!" );
-								log.info( "Error: " + e.getMessage() );
+							if( tspModel == null ){
+								log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
 								continue;
 							}
+							TspResults tspResults = tspModel.grbOptimize();
 
-						}
+							if( cmd.hasOption( "c" ) ){
+								File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
+								if( !csvFile.exists() ){
+									try{
+										csvFile.createNewFile();
+										log.info( "Creation of csv result file '" + csvFile.getAbsolutePath() + "' was successful!" );
+									} catch(IOException e){
+										log.info( "Can not create csv result file '" + csvFile.getAbsolutePath() + "'!" );
+										log.info( "Error: " + e.getMessage() );
+										continue;
+									}
 
-						if( cmd.hasOption( "r" ) ){
-							StringBuilder jsonResultsFileName = new StringBuilder(
-											file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
-							jsonResultsFileName.append( "_" ).append( tspModel.getType() );
-							if( type.equals( Defines.PDSTSP ) ){
-								Pdstsp pdstsp = (Pdstsp)tspModel;
-								jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" )
-												.append( pdstsp.getDroneSpeed() ).append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() );
-							}
-							jsonResultsFileName.append( ".results.json" );
-							File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
-							if( !jsonResultsFile.exists() ){
+									try{
+										StringBuilder headerString = new StringBuilder( TspModelCsvResultsConverter.getCsvHeaderString( type ) )
+														.append( System.lineSeparator() );
+										Files.write( Paths.get( csvFile.toURI() ), headerString.toString().getBytes() );
+										log.info( "Header written to csv result file '" + csvFile.getAbsolutePath() + "'!" );
+									} catch(IOException e){
+										log.info( "Can not write csv results header to file '" + csvFile.getAbsolutePath() + "'!" );
+										log.info( "Error: " + e.getMessage() );
+										continue;
+									}
+
+								}
+
 								try{
-									jsonResultsFile.createNewFile();
-									log.info( "Creation of json results file '" + jsonResultsFile.getAbsolutePath() + "' was successful!" );
+									StringBuilder csvString = new StringBuilder( TspModelCsvResultsConverter.getCsvResultString( tspModel ) )
+													.append( System.lineSeparator() );
+									Files.write( Paths.get( csvFile.toURI() ), csvString.toString().getBytes(), StandardOpenOption.APPEND );
+									log.info( "Results written to results file '" + csvFile.getAbsolutePath() + "'!" );
 								} catch(IOException e){
-									log.info( "Can not create json results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+									log.info( "Can not write csv results to file '" + csvFile.getAbsolutePath() + "'!" );
+									log.info( "Error: " + e.getMessage() );
+									continue;
+								}
+
+							}
+
+							if( cmd.hasOption( "r" ) ){
+								StringBuilder jsonResultsFileName = new StringBuilder( file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
+								jsonResultsFileName.append( "_" ).append( tspModel.getType() );
+								if( type.equals( Defines.PDSTSP ) ){
+									Pdstsp pdstsp = (Pdstsp)tspModel;
+									jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" ).append( pdstsp.getDroneSpeed() ).append( "_dfr-" )
+													.append( pdstsp.getDroneFlightRangePercentage() );
+								}
+								jsonResultsFileName.append( ".results.json" );
+								File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
+								if( !jsonResultsFile.exists() ){
+									try{
+										jsonResultsFile.createNewFile();
+										log.info( "Creation of json results file '" + jsonResultsFile.getAbsolutePath() + "' was successful!" );
+									} catch(IOException e){
+										log.info( "Can not create json results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+										log.info( "Error: " + e.getMessage() );
+									}
+								}
+								Gson gson = new GsonBuilder().setPrettyPrinting().create();
+								try{
+									Files.write( Paths.get( jsonResultsFile.toURI() ), gson.toJson( tspModel ).getBytes(),
+													StandardOpenOption.CREATE );
+									log.info( "JSON results written to results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+								} catch(IOException e){
+									log.info( "Can not write json results to file '" + jsonResultsFile.getAbsolutePath() + "'!" );
 									log.info( "Error: " + e.getMessage() );
 								}
-							}
-							Gson gson = new GsonBuilder().setPrettyPrinting().create();
-							try{
-								Files.write( Paths.get( jsonResultsFile.toURI() ), gson.toJson( tspModel ).getBytes(),
-												StandardOpenOption.CREATE );
-								log.info( "JSON results written to results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
-							} catch(IOException e){
-								log.info( "Can not write json results to file '" + jsonResultsFile.getAbsolutePath() + "'!" );
-								log.info( "Error: " + e.getMessage() );
 							}
 						}
 					}
@@ -292,10 +302,16 @@ public class SolverApplication{
 										+ " spaces (i.e. 1.0 2.0 5.0 10.0)" ).build();
 		options.addOption( droneSpeeds );
 
-		Option droneFlightRanges = Option.builder( "dfr" ).longOpt( "droneFlightRange" ).required( false ).argName( "speeds" )
+		Option droneFleetSize = Option.builder( "dfs" ).longOpt( "droneFleetSize" ).required( false ).argName( "sizes" )
+						.numberOfArgs( Option.UNLIMITED_VALUES )
+						.desc( "for tsp variants with drones the droneFleetSize will be iterative set to the given parameters separated by"
+										+ " spaces (i.e. 1 5 10)" ).build();
+		options.addOption( droneFleetSize );
+
+		Option droneFlightRanges = Option.builder( "dfr" ).longOpt( "droneFlightRange" ).required( false ).argName( "ranges" )
 						.numberOfArgs( Option.UNLIMITED_VALUES )
 						.desc( "for tsp variants with drones the droneFlightRange will iterative set to the given parameters separated by"
-										+ " spaces (i.e. 5.0 10.0 20.0). The parameters are given in percentage and they are in relation to the"
+										+ " spaces (i.e. 5 10 20). The parameters are given in percentage and they are in relation to the"
 										+ " furthest customer from the depot." ).build();
 		options.addOption( droneFlightRanges );
 

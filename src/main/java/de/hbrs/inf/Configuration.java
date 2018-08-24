@@ -9,6 +9,7 @@ class Configuration{
 	private static boolean allCustomersByDrones = false;
 	private static double[] truckSpeeds = null;
 	private static double[] droneSpeeds = null;
+	private static int[] droneFleetSizes = null;
 	private static int[] droneFlightRanges = null;
 
 	static void setSystemProperties() {
@@ -70,6 +71,14 @@ class Configuration{
 
 	static void setDroneSpeeds( double[] droneSpeeds ){
 		Configuration.droneSpeeds = droneSpeeds;
+	}
+
+	public static int[] getDroneFleetSizes(){
+		return droneFleetSizes;
+	}
+
+	public static void setDroneFleetSizes( int[] droneFleetSizes ){
+		Configuration.droneFleetSizes = droneFleetSizes;
 	}
 
 	static int[] getDroneFlightRanges(){

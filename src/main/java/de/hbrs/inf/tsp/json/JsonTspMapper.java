@@ -46,11 +46,11 @@ public class JsonTspMapper{
 		}
 	}
 	public static TspModel getTspModelFromJsonObject( TspLibJson tspLibJson ) {
-		return getTspModelFromJsonObject( tspLibJson, -1, -1, -1, false );
+		return getTspModelFromJsonObject( tspLibJson, -1, -1, -1, -1, false );
 	}
 
 	public static TspModel getTspModelFromJsonObject( TspLibJson tspLibJson, double truckSpeed, double droneSpeed,
-					int droneFlightRangePercentage, boolean droneDeliveryPossibleForAllCustomers ){
+					int droneFleetSize, int droneFlightRangePercentage, boolean droneDeliveryPossibleForAllCustomers ){
 
 		double[][] nodes = TspModel.calculateNodes( tspLibJson );
 		if( nodes == null && !tspLibJson.getEdge_weight_type().equals( "EXPLICIT" ) ){
@@ -80,6 +80,7 @@ public class JsonTspMapper{
 
 				if( truckSpeed > 0 ) pdstspLibJson.setTruck_speed( truckSpeed );
 				if( droneSpeed > 0 ) pdstspLibJson.setDrone_speed( droneSpeed );
+				if( droneFleetSize > 0 ) pdstspLibJson.setDrone_fleet_size( droneFleetSize );
 				if( droneFlightRangePercentage > 0 ) {
 					double maxDistance = -1;
 					for( int i = 1; i < tspLibJson.getDimension(); i++ ) {
@@ -101,6 +102,7 @@ public class JsonTspMapper{
 				log.info( "TruckSpeed: " + truckSpeed );
 				log.info( "DroneSpeed: " + droneSpeed );
 				log.info( "DroneFlightRange: " + pdstspLibJson.getDrone_flight_range() + "%" );
+				log.info( "DroneFleetSize: " + pdstspLibJson.getDrone_fleet_size() );
 				log.info( "DroneDeliveryPossibleForAllCustomers: " + droneDeliveryPossibleForAllCustomers );
 
 				double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
