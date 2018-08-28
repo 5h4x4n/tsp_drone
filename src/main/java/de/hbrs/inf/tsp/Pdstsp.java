@@ -211,6 +211,38 @@ public class Pdstsp extends Tsp {
 		}
 	}
 
+	@Override
+	protected boolean addViolatedConstraints() throws GRBException{
+
+		ArrayList<ArrayList<Integer>> subtours = tspResults.getLast().getTruckTours();
+		if( subtours.size() > 1 ){
+			log.info( "Found subtours: " + subtours.size() );
+			log.debug( "Subtours: " + subtours );
+
+			log.info( "Add violated subtour elimination constraints" );
+			for( ArrayList<Integer> subtour : subtours ){
+				double subtourVertexCounter = subtour.size();
+
+				ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
+				StringBuilder subtourEliminationConstraintString = new StringBuilder();
+				String subtourEliminationConstraintName = "sec_";
+				GRBLinExpr grbExpr = new GRBLinExpr();
+				for(int[] edge : edges){
+					subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
+					grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
+				}
+				subtourEliminationConstraintName += additionalConstraintsCounter;
+				log.debug( "Add subtour elimination constraint: " + subtourEliminationConstraintString
+								.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + (subtour.size() - 1) );
+				grbModel.addConstr( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, subtourEliminationConstraintName );
+				additionalConstraintsCounter++;
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public double getDroneFlightTime(){
 		return droneFlightTime;
 	}

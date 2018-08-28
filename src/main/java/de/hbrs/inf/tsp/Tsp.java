@@ -114,7 +114,7 @@ public class Tsp extends TspModel {
 		}
 	}
 
-	private ArrayList<int[]> createEdgesForSubtourEliminationConstraint(  ArrayList<Integer> subtour ) {
+	protected ArrayList<int[]> createEdgesForSubtourEliminationConstraint(  ArrayList<Integer> subtour ) {
 		ArrayList<int[]> edges = new ArrayList<>();
 		for( int i = 0; i < subtour.size() - 1; i++ ) {
 			for( int j = i + 1; j < subtour.size(); j++ ) {
