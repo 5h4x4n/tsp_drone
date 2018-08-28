@@ -3,6 +3,11 @@
     "comment" : "40 points in 2D, source: https://github.com/parano/GeneticAlgorithm-TSP",
     "type" : "TSP",
     "dimension" : 40,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "edge_weight_type" : "EUC_2D",
     "node_coordinates" :
     [
@@ -46,5 +51,6 @@
         [ 275, 593 ],
         [ 130, 196 ],
         [ 863,  35 ]
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

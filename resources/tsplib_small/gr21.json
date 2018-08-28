@@ -3,6 +3,11 @@
     "type" : "TSP",
     "comment" : "21-city problem (Groetschel)",
     "dimension" : 21,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "edge_weight_type" : "EXPLICIT",
     "edge_weight_format" : "LOWER_DIAG_ROW", 
     "edge_weights" :
@@ -28,5 +33,6 @@
 	    [  170,   445,   750,   160,   495,   265,   220,   240,   600,   235,   125,   170,   485,   525,   405,   375,    87,   315,     0 ],            
             [  240,   290,   590,   140,   480,   255,   205,   220,   515,   150,   100,   170,   390,   425,   255,   395,   205,   220,   155,     0 ],            
             [  380,   140,   495,   280,   480,   340,   350,   370,   505,   185,   240,   310,   345,   280,   105,   380,   280,   165,   305,   150,     0 ]                                                      
-        ]
+        ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

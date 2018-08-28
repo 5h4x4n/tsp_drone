@@ -3,6 +3,11 @@
     "type" : "TSP",
     "comment" : "58 cities in Brazil (Ferreira)",
     "dimension" : 58,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "edge_weight_type" : "EXPLICIT",
     "edge_weight_format" : "UPPER_ROW",
     "edge_weights" :
@@ -64,5 +69,6 @@
                                                                                                                                                                                                                                                                                                                                             [ 2076, 1057, 1408 ], 
                                                                                                                                                                                                                                                                                                                                                   [ 2328, 2986 ], 
                                                                                                                                                                                                                                                                                                                                                          [ 962 ] 
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

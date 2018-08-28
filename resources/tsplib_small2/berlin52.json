@@ -3,6 +3,11 @@
     "TYPE" : "TSP",
     "COMMENT" : "52 locations in Berlin (Groetschel)",
     "DIMENSION" : 52,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "EDGE_WEIGHT_TYPE" : "EUC_2D",
     "NODE_COORDINATES" :
     [
@@ -58,5 +63,6 @@
         [  595.0,  360.0 ],
         [ 1340.0,  725.0 ],
         [ 1740.0,  245.0 ]
-    ]
+    ],
+	"drone_delivery_possible" : [1, 2, 3]
 }

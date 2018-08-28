@@ -3,6 +3,11 @@
     "type" : "TSP",
     "comment" : "29 Cities in Bavaria, geographical distances (Groetschel,Juenger,Reinelt)",
     "dimension" : 29,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "edge_weight_type" : "EXPLICIT",
     "edge_weight_format" : "UPPER_ROW", 
     "display_data_type" : "TWOD_DISPLAY",
@@ -67,5 +72,6 @@
         [    1460.0,  1420.0 ],
         [    1260.0,  1910.0 ],
         [     360.0,  1980.0 ]
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

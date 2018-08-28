@@ -3,6 +3,11 @@
     "type" : "TSP",
     "comment" : "120 cities in Germany (Groetschel)",
     "dimension" : 120,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "edge_weight_type" : "EXPLICIT",
     "edge_weight_format" : "LOWER_DIAG_ROW",
     "display_data_type" : "TWOD_DISPLAY",
@@ -251,5 +256,6 @@
         [ 103.0, 176.0 ],
         [  84.0,  91.0 ],
         [  31.0, 140.0 ]
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

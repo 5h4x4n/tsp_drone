@@ -1,10 +1,17 @@
 {
-    "NAME" : "wi29",
-    "COMMENT" : "29 locations in Western Sahara, Derived from National Imagery and Mapping Agency data, see http://www.math.uwaterloo.ca/tsp/world/wi29.tsp",
-    "TYPE" : "TSP",
-    "DIMENSION" : 29,
-    "EDGE_WEIGHT_TYPE" : "EUC_2D",
-    "NODE_COORDINATES" : [
+    "name" : "wi29",
+	"type" : "TSP",
+    "comment" : "29 locations in Western Sahara, Derived from National Imagery and Mapping Agency data, see http://www.math.uwaterloo.ca/tsp/world/wi29.tsp",
+    "dimension" : 29,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
+    "edge_weight_type" : "EUC_2D",
+    "edge_weight_format" : "FUNCTION",
+    "display_data_type" : "COORD_DISPLAY",
+    "node_coordinates" : [
         [ 20833.3333, 17100.0000 ],
         [ 20900.0000, 17066.6667 ],
         [ 21300.0000, 13016.6667 ],
@@ -34,5 +41,6 @@
         [ 27266.6667, 10383.3333 ],
         [ 27433.3333, 12400.0000 ],
         [ 27462.5000, 12992.2222 ]
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }

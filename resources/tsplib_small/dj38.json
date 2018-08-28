@@ -3,6 +3,11 @@
     "COMMENT" : "38 locations in Djibouti, Derived from National Imagery and Mapping Agency data, see http://www.math.uwaterloo.ca/tsp/world/dj38.tsp",
     "TYPE": "TSP",
     "DIMENSION": 38,
+	"truck_speed" : 1.0,
+	"drone_flight_range" : 14000,
+    "drone_fleet_size" : 4,
+    "drone_speed" : 1,
+    "truck_speed" : 2,
     "EDGE_WEIGHT_TYPE": "EUC_2D",
     "NODE_COORDINATES" : [
         [ 11003.611100, 42102.500000 ],
@@ -43,5 +48,6 @@
         [ 12386.666700, 43334.722200 ],
         [ 12421.666700, 42895.555600 ],
         [ 12645.000000, 42973.333300 ]
-    ]
+    ],
+    "drone_delivery_possible" : [1, 2, 3]
 }
