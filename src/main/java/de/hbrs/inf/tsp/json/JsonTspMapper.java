@@ -102,6 +102,9 @@ public class JsonTspMapper{
 				log.info( "TruckSpeed: " + truckSpeed );
 				log.info( "DroneSpeed: " + droneSpeed );
 				log.info( "DroneFlightRange: " + pdstspLibJson.getDrone_flight_range() );
+				if( droneFlightRangePercentage > 0 ) {
+					log.info( "DroneFlightRangePercentage: " + droneFlightRangePercentage + "%" );
+				}
 				log.info( "DroneFleetSize: " + pdstspLibJson.getDrone_fleet_size() );
 				log.info( "DroneDeliveryPossibleForAllCustomers: " + droneDeliveryPossibleForAllCustomers );
 
