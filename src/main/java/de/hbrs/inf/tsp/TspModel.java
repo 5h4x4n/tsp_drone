@@ -229,12 +229,12 @@ public abstract class TspModel{
 						isSolutionOptimal = true;
 
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e9;
-						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "s" );
+						double currentIterationRuntimeSeconds = currentIterationRuntime / 1e9;
+						log.info( "Last iteration runtime: " + currentIterationRuntimeSeconds + "s" );
 
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 
-						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
+						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
 						tspResults.setRuntime( runtimeOptimization / 1e9 );
 						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
 						tspResults.setObjective( objval );
@@ -251,16 +251,16 @@ public abstract class TspModel{
 
 					} else {
 						currentIterationRuntime = System.nanoTime() - currentIterationRuntime;
-						double currentIterationRuntimeMilliseconds = currentIterationRuntime / 1e9;
+						double currentIterationRuntimeSeconds = currentIterationRuntime / 1e9;
 						long currentRuntimeOptimization = System.nanoTime() - runtimeOptimization;
-						double currentRuntimeOptimizationMilliseconds = currentRuntimeOptimization / 1e9;
+						double currentRuntimeOptimizationSeconds = currentRuntimeOptimization / 1e9;
 
 						log.debug( currentTspIterationResult.getSolutionString() );
-						log.info( "Last iteration runtime: " + currentIterationRuntimeMilliseconds + "s" );
-						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationMilliseconds + "s" );
+						log.info( "Last iteration runtime: " + currentIterationRuntimeSeconds + "s" );
+						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationSeconds + "s" );
 
-						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeMilliseconds );
-						tspResults.setRuntime( currentRuntimeOptimizationMilliseconds );
+						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
+						tspResults.setRuntime( currentRuntimeOptimizationSeconds );
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input
