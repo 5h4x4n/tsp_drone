@@ -1,5 +1,6 @@
 package de.hbrs.inf.tsp;
 ;
+import de.hbrs.inf.Configuration;
 import de.hbrs.inf.tsp.json.TspLibJson;
 import gurobi.*;
 import org.apache.log4j.Logger;
@@ -261,6 +262,12 @@ public abstract class TspModel{
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
 						tspResults.setRuntime( currentRuntimeOptimizationSeconds );
+
+						int maxOptimizationSeconds = Configuration.getMaxOptimizationSeconds();
+						if( maxOptimizationSeconds > 0 && currentRuntimeOptimizationSeconds > maxOptimizationSeconds ) {
+							log.warn( "Cancel optimization process. Runtime exceeds maxOptimizationSeconds of " + maxOptimizationSeconds + "s!" );
+							break;
+						}
 					}
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input

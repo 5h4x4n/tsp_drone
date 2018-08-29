@@ -91,6 +91,11 @@ public class SolverApplication{
 			log.info( "DroneFlightRanges set to: " + Arrays.toString( droneFlightRanges ) );
 		}
 
+		if( cmd.hasOption( "ms" ) ) {
+			Configuration.setMaxOptimizationSeconds( Integer.parseInt( cmd.getOptionValue( "ms" ) ) );
+			log.info( "MaxOptimizationSeconds set to: " + Configuration.getMaxOptimizationSeconds() );
+		}
+
 		//check if file or directory is given for tsp problem/s
 		File fileOrDir = new File( Configuration.getJsonFileOrDir() );
 		File[] jsonFiles;
@@ -230,7 +235,8 @@ public class SolverApplication{
 									jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() )
 													.append( "_ds-" ).append( pdstsp.getDroneSpeed() )
 													.append( "_dfs-" ).append( pdstsp.getDroneFleetSize() )
-													.append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() );
+													.append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() )
+													.append( "_ms-" ).append( Configuration.getMaxOptimizationSeconds() );
 								}
 								jsonResultsFileName.append( ".results.json" );
 								File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
@@ -316,6 +322,10 @@ public class SolverApplication{
 										+ " spaces (i.e. 5 10 20). The parameters are given in percentage and they are in relation to the"
 										+ " furthest customer from the depot." ).build();
 		options.addOption( droneFlightRanges );
+
+		Option maxOptimizationSeconds = Option.builder( "ms" ).longOpt( "maxSeconds" ).required( false ).argName( "seconds" ).hasArg()
+						.desc( "an optimization process will be canceled when the total runtime exceeds the given parameter in seconds." ).build();
+		options.addOption( maxOptimizationSeconds );
 
 		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
 

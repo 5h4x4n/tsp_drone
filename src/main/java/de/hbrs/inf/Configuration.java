@@ -1,6 +1,6 @@
 package de.hbrs.inf;
 
-class Configuration{
+public class Configuration{
 
 	private static String logFile = "tsp_drone.log";
 	private static String jsonFileOrDir = null;
@@ -11,6 +11,7 @@ class Configuration{
 	private static double[] droneSpeeds = null;
 	private static int[] droneFleetSizes = null;
 	private static int[] droneFlightRanges = null;
+	private static int maxOptimizationSeconds = 0;
 
 	static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
@@ -87,5 +88,13 @@ class Configuration{
 
 	static void setDroneFlightRanges( int[] droneFlightRanges ){
 		Configuration.droneFlightRanges = droneFlightRanges;
+	}
+
+	public static int getMaxOptimizationSeconds(){
+		return maxOptimizationSeconds;
+	}
+
+	public static void setMaxOptimizationSeconds( int maxOptimizationSeconds ){
+		Configuration.maxOptimizationSeconds = maxOptimizationSeconds;
 	}
 }
