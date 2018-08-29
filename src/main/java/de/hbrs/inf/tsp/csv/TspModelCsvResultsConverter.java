@@ -16,6 +16,7 @@ public class TspModelCsvResultsConverter{
 		resultList.add( tspModel.getType() );
 		resultList.add( Integer.toString( tspModel.getDimension() ) );
 		resultList.add( Double.toString( tspModel.getTspResults().getRuntime() ) );
+		resultList.add( Boolean.toString( tspModel.getTspResults().isOptimal() ) );
 		resultList.add( Double.toString( tspModel.getTspResults().getObjective() ) );
 		resultList.add( Integer.toString( tspModel.getDecisionVariablesCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTotalConstraintsCounter() ) );
@@ -46,6 +47,7 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( "Type" );
 		parameterList.add( "Dimension" );
 		parameterList.add( "Runtime [s]" );
+		parameterList.add( "IsOptimal" );
 		parameterList.add( "Objective" );
 		parameterList.add( "DecisionVariables" );
 		parameterList.add( "TotalConstraints" );
