@@ -223,7 +223,7 @@ public abstract class TspModel{
 					if( log.isDebugEnabled() ){
 						logIterationDebug();
 					}
-					TspIterationResult currentTspIterationResult = calculateTspIterationResult();
+					TspIterationResult currentTspIterationResult = calculateTspIterationResult( objval );
 					tspResults.getIterationResults().add( currentTspIterationResult );
 
 					if( !addViolatedConstraints() ){
@@ -298,7 +298,7 @@ public abstract class TspModel{
 
 	protected abstract void logIterationDebug() throws GRBException;
 
-	protected abstract TspIterationResult calculateTspIterationResult() throws GRBException;
+	protected abstract TspIterationResult calculateTspIterationResult( int objectiveValue ) throws GRBException;
 
 	public double[][] getNodes(){
 		return nodes;

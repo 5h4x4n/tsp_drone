@@ -8,7 +8,7 @@ public class TspResults{
 	private boolean isOptimal = false;
 	private double runtime;
 	private double runtimeGrbModelCalculation;
-	private double objective;
+	private int objective;
 	private ArrayList<TspIterationResult> iterationResults = new ArrayList<>();
 
 	public TspResults( String name ) {
@@ -63,11 +63,11 @@ public class TspResults{
 		return iterationResults.size();
 	}
 
-	public double getObjective(){
+	public int getObjective(){
 		return objective;
 	}
 
-	public void setObjective( double objective ){
+	public void setObjective( int objective ){
 		this.objective = objective;
 	}
 }

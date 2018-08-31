@@ -8,6 +8,7 @@ public class TspIterationResult{
 
 	private static Logger log = Logger.getLogger( TspIterationResult.class.getName() );
 
+	private int objective;
 	private double iterationRuntime;
 	private ArrayList<ArrayList<Integer>> truckTours;
 
@@ -25,6 +26,14 @@ public class TspIterationResult{
 
 	public void setTruckTours( ArrayList<ArrayList<Integer>> truckTours ){
 		this.truckTours = truckTours;
+	}
+
+	public int getObjective() {
+		return objective;
+	}
+
+	public void setObjective( int objective ) {
+		this.objective = objective;
 	}
 
 	public String getSolutionString(){
