@@ -187,6 +187,8 @@ public class SolverApplication{
 								log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
 								continue;
 							}
+
+							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspResults tspResults = tspModel.grbOptimize();
 
 							if( cmd.hasOption( "c" ) ){
