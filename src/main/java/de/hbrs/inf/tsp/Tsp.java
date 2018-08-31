@@ -8,6 +8,8 @@ public class Tsp extends TspModel {
 
 	private ArrayList<Integer> truckTspTour;
 
+	public Tsp() {}
+
 	public Tsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		super(name, comment, type, dimension, nodes, distances );
 	}
@@ -198,5 +200,13 @@ public class Tsp extends TspModel {
 
 	public void setDistances( int[][] distances ){
 		this.distances = distances;
+	}
+
+	public ArrayList<Integer> getTruckTspTour() {
+		return truckTspTour;
+	}
+
+	public void setTruckTspTour(ArrayList<Integer> truckTspTour) {
+		this.truckTspTour = truckTspTour;
 	}
 }

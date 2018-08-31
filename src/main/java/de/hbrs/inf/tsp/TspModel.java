@@ -24,6 +24,8 @@ public abstract class TspModel{
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
 
+	public TspModel() {}
+
 	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		this.name = name;
 		this.comment = comment;

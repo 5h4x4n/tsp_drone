@@ -20,6 +20,8 @@ public class Pdstsp extends Tsp {
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
+	public Pdstsp() {}
+
 	public Pdstsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double truckSpeed,
 					double[][] truckTimes, double droneSpeed, double droneFlightTime, int droneFleetSize, double[][] droneTimes,
 					int[] droneDeliveryPossible ){
@@ -298,6 +300,22 @@ public class Pdstsp extends Tsp {
 
 	public void setDroneSpeed( int droneSpeed ){
 		this.droneSpeed = droneSpeed;
+	}
+
+	public void setDroneSpeed(double droneSpeed) {
+		this.droneSpeed = droneSpeed;
+	}
+
+	public void setDroneFlightTime(double droneFlightTime) {
+		this.droneFlightTime = droneFlightTime;
+	}
+
+	public ArrayList<Integer> getDroneDeliveryPossibleAndInFlightRange() {
+		return droneDeliveryPossibleAndInFlightRange;
+	}
+
+	public void setDroneDeliveryPossibleAndInFlightRange(ArrayList<Integer> droneDeliveryPossibleAndInFlightRange) {
+		this.droneDeliveryPossibleAndInFlightRange = droneDeliveryPossibleAndInFlightRange;
 	}
 
 	public int getDroneDeliveryPossibleAndInFlightRangeCounter(){
