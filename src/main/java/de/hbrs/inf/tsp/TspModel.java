@@ -16,6 +16,7 @@ public abstract class TspModel{
 	protected transient GRBModel grbModel;
 	protected transient GRBEnv grbEnv;
 	protected transient GRBVar[][] grbTruckEdgeVars;
+	protected transient GRBCallback grbCallback;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected TspResults tspResults;
@@ -190,6 +191,9 @@ public abstract class TspModel{
 
 			log.info( "Start optimization process" );
 			long runtimeOptimization = System.nanoTime();
+			grbCallback = new TspGrbCallback( grbModel, runtimeOptimization );
+			grbModel.setCallback( grbCallback );
+
 			long currentIterationRuntime;
 			do{
 				currentIterationRuntime = System.nanoTime();
@@ -204,13 +208,13 @@ public abstract class TspModel{
 				}
 
 				if( optimizationStatus == GRB.Status.OPTIMAL ){
-					int objval = (int) ( grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d );
+					int objval = (int)(grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d);
 					log.info( "Found objective: " + objval );
 
 					GRBVar[] vars = grbModel.getVars();
 					String[] varNames = grbModel.get( GRB.StringAttr.VarName, vars );
 					double[] x = grbModel.get( GRB.DoubleAttr.X, vars );
-					StringBuilder solutionString = new StringBuilder(  );
+					StringBuilder solutionString = new StringBuilder();
 
 					for(int i = 0; i < vars.length; i++){
 						if( (int)(x[i] + 0.5d) != 0 ){
@@ -263,12 +267,11 @@ public abstract class TspModel{
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
 						tspResults.setRuntime( currentRuntimeOptimizationSeconds );
 
-						int maxOptimizationSeconds = Configuration.getMaxOptimizationSeconds();
-						if( maxOptimizationSeconds > 0 && currentRuntimeOptimizationSeconds > maxOptimizationSeconds ) {
-							log.warn( "Cancel optimization process. Runtime exceeds maxOptimizationSeconds of " + maxOptimizationSeconds + "s!" );
-							break;
-						}
 					}
+				} else if( optimizationStatus == GRB.Status.INTERRUPTED ) {
+					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds of " +
+									Configuration.getMaxOptimizationSeconds() + "s!" );
+					break;
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input
 					log.info( "Model is infeasible" );
