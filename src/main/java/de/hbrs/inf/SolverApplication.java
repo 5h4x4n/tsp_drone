@@ -2,6 +2,7 @@ package de.hbrs.inf;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.TspResults;

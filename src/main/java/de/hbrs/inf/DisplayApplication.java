@@ -2,11 +2,12 @@ package de.hbrs.inf;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.Tsp;
 import de.hbrs.inf.tsp.TspModel;
-import de.hbrs.inf.tsp.graphics.Edge;
-import de.hbrs.inf.tsp.graphics.Node;
+import de.hbrs.inf.graphics.Edge;
+import de.hbrs.inf.graphics.Node;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Group;
@@ -28,8 +29,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static de.hbrs.inf.tsp.graphics.Node.NodeType.*;
 
 public class DisplayApplication extends Application{
 

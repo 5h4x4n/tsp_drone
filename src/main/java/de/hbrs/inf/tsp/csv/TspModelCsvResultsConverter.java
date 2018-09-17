@@ -1,6 +1,6 @@
 package de.hbrs.inf.tsp.csv;
 
-import de.hbrs.inf.Defines;
+import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 
