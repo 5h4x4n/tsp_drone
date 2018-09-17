@@ -1,4 +1,4 @@
-package de.hbrs.inf.tsp.graphics;
+package de.hbrs.inf.graphics;
 
 public class Edge {
 
