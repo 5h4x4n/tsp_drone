@@ -1,6 +1,5 @@
 package de.hbrs.inf.tsp;
-;
-import de.hbrs.inf.Configuration;
+
 import de.hbrs.inf.tsp.json.TspLibJson;
 import gurobi.*;
 import org.apache.log4j.Logger;
@@ -20,6 +19,7 @@ public abstract class TspModel{
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected TspResults tspResults;
+	protected int maxOptimizationSeconds = -1;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -193,7 +193,7 @@ public abstract class TspModel{
 
 			log.info( "Start optimization process" );
 			long runtimeOptimization = System.nanoTime();
-			grbCallback = new TspGrbCallback( grbModel, runtimeOptimization );
+			grbCallback = new TspGrbCallback( grbModel, runtimeOptimization, maxOptimizationSeconds );
 			grbModel.setCallback( grbCallback );
 
 			long currentIterationRuntime;
@@ -271,8 +271,7 @@ public abstract class TspModel{
 
 					}
 				} else if( optimizationStatus == GRB.Status.INTERRUPTED ) {
-					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds of " +
-									Configuration.getMaxOptimizationSeconds() + "s!" );
+					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds!" );
 					break;
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input
@@ -351,6 +350,10 @@ public abstract class TspModel{
 
 	public int getTotalConstraintsCounter() {
 		return calculatedConstraintsCounter + additionalConstraintsCounter;
+	}
+
+	public void setMaxOptimizationSeconds( int maxOptimizationSeconds ){
+		this.maxOptimizationSeconds = maxOptimizationSeconds;
 	}
 }
 

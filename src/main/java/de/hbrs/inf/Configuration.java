@@ -11,7 +11,7 @@ public class Configuration{
 	private static double[] droneSpeeds = null;
 	private static int[] droneFleetSizes = null;
 	private static int[] droneFlightRanges = null;
-	private static int maxOptimizationSeconds = 0;
+	private static int maxOptimizationSeconds = -1;
 
 	static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );

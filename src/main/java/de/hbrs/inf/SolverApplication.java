@@ -189,6 +189,10 @@ public class SolverApplication{
 								continue;
 							}
 
+							if( Configuration.getMaxOptimizationSeconds() > 0 ) {
+								tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
+							}
+
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspResults tspResults = tspModel.grbOptimize();
 
