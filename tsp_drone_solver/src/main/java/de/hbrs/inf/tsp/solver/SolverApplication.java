@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.solver;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -38,7 +38,7 @@ public class SolverApplication{
 		} catch(ParseException e){
 			System.out.println( "Error while parsing parameters! Error message: " + e.getMessage() );
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "tsp_drone", options );
+			formatter.printHelp( "tsp_drone_solver", options );
 			return;
 		}
 
@@ -101,7 +101,7 @@ public class SolverApplication{
 		File fileOrDir = new File( Configuration.getJsonFileOrDir() );
 		File[] jsonFiles;
 		if( !fileOrDir.exists() ){
-			log.info( "Given json parameter '" + Configuration.getJsonFileOrDir() + "' is no existing file or directory!" );
+			log.warn( "Given json parameter '" + Configuration.getJsonFileOrDir() + "' is no existing file or directory!" );
 			return;
 		}
 		if( fileOrDir.isFile() ){

@@ -1,8 +1,8 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.solver;
 
 public class Configuration{
 
-	private static String logFile = "tsp_drone.log";
+	private static String logFile = "tsp_drone_solver.log";
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
 	private static String outputDirectory = null;
@@ -13,64 +13,64 @@ public class Configuration{
 	private static int[] droneFlightRanges = null;
 	private static int maxOptimizationSeconds = -1;
 
-	static void setSystemProperties() {
+	public static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
 		System.setProperty( "log4j.logFile", logFile );
 	}
 
-	static void setJsonFileOrDir( String jsonFileOrDir ){
+	public static void setJsonFileOrDir( String jsonFileOrDir ){
 		Configuration.jsonFileOrDir = jsonFileOrDir;
 	}
 
-	static String getJsonFileOrDir(){
+	public static String getJsonFileOrDir(){
 		return jsonFileOrDir;
 	}
 
-	static String getLogFile(){
+	public static String getLogFile(){
 		return logFile;
 	}
 
-	static void setLogFile( String logFile ){
+	public static void setLogFile( String logFile ){
 		Configuration.logFile = logFile;
 	}
 
-	static String getLogLevel(){
+	public static String getLogLevel(){
 		return logLevel;
 	}
 
-	static void setLogLevel( String logLevel ){
+	public static void setLogLevel( String logLevel ){
 		Configuration.logLevel = logLevel;
 	}
 
-	static void setOutputDirectory( String csvDirectory ){
+	public static void setOutputDirectory( String csvDirectory ){
 		Configuration.outputDirectory = csvDirectory;
 	}
 
-	static String getOutputDirectory(){
+	public static String getOutputDirectory(){
 		return outputDirectory;
 	}
 
-	static boolean isAllCustomersByDrones(){
+	public static boolean isAllCustomersByDrones(){
 		return allCustomersByDrones;
 	}
 
-	static void setAllCustomersByDrones( boolean allCustomersByDrones ){
+	public static void setAllCustomersByDrones( boolean allCustomersByDrones ){
 		Configuration.allCustomersByDrones = allCustomersByDrones;
 	}
 
-	static double[] getTruckSpeeds(){
+	public static double[] getTruckSpeeds(){
 		return truckSpeeds;
 	}
 
-	static void setTruckSpeeds( double[] truckSpeeds ){
+	public static void setTruckSpeeds( double[] truckSpeeds ){
 		Configuration.truckSpeeds = truckSpeeds;
 	}
 
-	static double[] getDroneSpeeds(){
+	public static double[] getDroneSpeeds(){
 		return droneSpeeds;
 	}
 
-	static void setDroneSpeeds( double[] droneSpeeds ){
+	public static void setDroneSpeeds( double[] droneSpeeds ){
 		Configuration.droneSpeeds = droneSpeeds;
 	}
 
@@ -82,11 +82,11 @@ public class Configuration{
 		Configuration.droneFleetSizes = droneFleetSizes;
 	}
 
-	static int[] getDroneFlightRanges(){
+	public static int[] getDroneFlightRanges(){
 		return droneFlightRanges;
 	}
 
-	static void setDroneFlightRanges( int[] droneFlightRanges ){
+	public static void setDroneFlightRanges( int[] droneFlightRanges ){
 		Configuration.droneFlightRanges = droneFlightRanges;
 	}
 

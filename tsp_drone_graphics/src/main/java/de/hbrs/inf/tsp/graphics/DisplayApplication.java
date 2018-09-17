@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp.graphics;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -6,8 +6,6 @@ import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.Tsp;
 import de.hbrs.inf.tsp.TspModel;
-import de.hbrs.inf.graphics.Edge;
-import de.hbrs.inf.graphics.Node;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Group;
@@ -52,7 +50,7 @@ public class DisplayApplication extends Application{
 		Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 
-		Configuration.setLogFile("tsp_drone_display.log");
+		//TODO add debug option for debug level
 		Configuration.setSystemProperties();
 		log = Logger.getLogger(DisplayApplication.class.getName());
 

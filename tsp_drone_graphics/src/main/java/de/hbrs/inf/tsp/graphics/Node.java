@@ -1,4 +1,4 @@
-package de.hbrs.inf.graphics;
+package de.hbrs.inf.tsp.graphics;
 
 public class Node {
 
