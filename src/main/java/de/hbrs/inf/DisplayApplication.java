@@ -9,7 +9,6 @@ import de.hbrs.inf.tsp.graphics.Edge;
 import de.hbrs.inf.tsp.graphics.Node;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -26,7 +25,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static de.hbrs.inf.tsp.graphics.Node.NodeType.*;
 
@@ -46,94 +47,141 @@ public class DisplayApplication extends Application{
 	}
 
 	@Override
-	public void start( Stage stage ) throws Exception{
-		stage.setTitle( "TSP Drone - Display Application" );
+	public void start( Stage stage ) throws Exception {
+		stage.setTitle("TSP Drone - Display Application");
 		Group root = new Group();
 		Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 
-		Configuration.setLogFile( "tsp_drone_display.log" );
+		Configuration.setLogFile("tsp_drone_display.log");
 		Configuration.setSystemProperties();
-		log = Logger.getLogger( DisplayApplication.class.getName() );
+		log = Logger.getLogger(DisplayApplication.class.getName());
 
-		FileChooser fileChooser = new FileChooser();
-		FileChooser.ExtensionFilter extFilter =
-				new FileChooser.ExtensionFilter("tsp json result files (*.results.json)", "*.results.json");
-		fileChooser.getExtensionFilters().add( extFilter );
-		File jsonFile = fileChooser.showOpenDialog( stage );
+		List<File> jsonFiles = new ArrayList<>();
+		Parameters params = getParameters();
+		List<String> arguments = params.getRaw();
+		if( arguments.size() > 0 ) {
+			log.info("Application arguments:");
+			for( String argument : arguments ) {
+				File fileOrDir = new File( argument );
+				if( fileOrDir.exists() ) {
+					if( fileOrDir.isFile() ) {
+						if( argument.endsWith( ".results.json" ) ) {
+							jsonFiles.add( fileOrDir );
+							log.info( "Add file '" + fileOrDir.getAbsolutePath() + "' to json results list!" );
+						} else {
+							log.info( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
+						}
+					} else {
+						log.info( "Directory '" + fileOrDir.getAbsolutePath() + "' will be browsed to search for json result files!" );
+						File[] files = fileOrDir.listFiles();
+						for( File file : files ) {
+							if( file.isFile() && file.getName().endsWith( ".results.json" ) ) {
+								jsonFiles.add( file );
+								log.info( "Add file '" + fileOrDir.getAbsolutePath() + "' to json results list!" );
+							} else {
+								log.info( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
+							}
+						}
+					}
+				} else {
+					log.info( "Argument '" + argument + "' is no file or directory. It will be skipped! ");
+				}
+			}
+		} else {
+			log.info("No application arguments. Start file chooser!");
 
-		if( jsonFile == null ) {
-			log.info( "No json result file selected. Exit!" );
-			System.exit( 0 );
+			FileChooser fileChooser = new FileChooser();
+			FileChooser.ExtensionFilter extFilter =
+					new FileChooser.ExtensionFilter("tsp json result files (*.results.json)", "*.results.json" );
+			fileChooser.getExtensionFilters().add( extFilter );
+			File jsonFile = fileChooser.showOpenDialog( stage );
+
+			if( jsonFile == null ) {
+				log.info( "No json result file selected. Exit!" );
+				System.exit(0);
+			} else {
+				jsonFiles.add( jsonFile );
+			}
 		}
 
+		log.info( "The following json result files will be used to display and save the iterations of the according TSP results:" );
+		for ( File jsonFile : jsonFiles ) {
+			log.info( jsonFile.getAbsolutePath() );
+		}
 
-		TspModel tspModel = null;
-		try{
-			Gson gson = new Gson();
-			JsonReader reader = new JsonReader( new FileReader( jsonFile ) );
-			tspModel = gson.fromJson( reader, Tsp.class );
-			log.info( "TspModel successfully read: " + tspModel.getName() );
+		for( File jsonFile : jsonFiles ) {
+
+			TspModel tspModel = null;
+			try {
+				Gson gson = new Gson();
+				JsonReader reader = new JsonReader( new FileReader( jsonFile ) );
+				tspModel = gson.fromJson(reader, Tsp.class);
+				log.info( "TspModel successfully read: " + tspModel.getName() );
+
+				String tspType = tspModel.getType().toUpperCase();
+				log.info( "TSP Type: " + tspType );
+
+				switch( tspType ) {
+					case Defines.TSP:
+						reader = new JsonReader( new FileReader( jsonFile ) );
+						tspModel = gson.fromJson(reader, Tsp.class);
+						break;
+					case Defines.PDSTSP:
+						reader = new JsonReader( new FileReader( jsonFile ) );
+						tspModel = gson.fromJson(reader, Pdstsp.class);
+						break;
+					default:
+						log.info( "TSP Type '" + tspType + "' not supported yet." );
+						tspModel = null;
+				}
+			} catch( FileNotFoundException e ) {
+				log.error( "File not found '" + jsonFile + "'." );
+			} catch( Exception e ) {
+				log.error( "Something went wrong while reading json result File! Error message: " + e.getMessage() );
+			}
+
+			if( tspModel == null ) {
+				log.error( "tspModel is null! Exit!" );
+				System.exit(0);
+			}
+
+
+
+
+
+			double[][] nodeCoordinates = tspModel.getNodes();
+			if( nodeCoordinates == null ) {
+				log.warn( "Can not display result files without node coordinates! Exit!" );
+				System.exit(0);
+			}
+			log.info( "nodes: \n" + Arrays.deepToString( nodeCoordinates ) );
+
+			//TODO add coordinates transformation for CANVAS_WIDTH and CANVAS_HEIGHT and turn y-coordinate
+
+			Node[] nodes = new Node[tspModel.getDimension()];
+
+			for( int i = 0; i < nodes.length; i++ ) {
+				Node.NodeType type = null;
+
+				if( i == 0 ) {
+					type = Node.NodeType.DEPOT;
+				} else {
+					//TODO check which type when not depot
+					type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
+
+
+				}
+
+				nodes[i] = new Node( nodeCoordinates[i][0], nodeCoordinates[i][1], type );
+			}
 
 			String tspType = tspModel.getType().toUpperCase();
-			log.info( "TSP Type: " + tspType );
-
-			switch( tspType ){
-				case Defines.TSP:
-					reader = new JsonReader( new FileReader( jsonFile ) );
-					tspModel = gson.fromJson( reader, Tsp.class );
-					break;
-				case Defines.PDSTSP:
-					reader = new JsonReader( new FileReader( jsonFile ) );
-					tspModel = gson.fromJson( reader, Pdstsp.class );
-					break;
-				default:
-					log.info( "TSP Type '" + tspType + "' not supported yet." );
-					tspModel = null;
-			}
-		} catch( FileNotFoundException e ){
-			log.error( "File not found '" + jsonFile + "'." );
-		} catch( Exception e ){
-			log.error( "Something went wrong while reading json result File! Error message: " + e.getMessage() );
-		}
-
-		if( tspModel == null ) {
-			log.error( "tspModel is null! Exit!" );
-			System.exit( 0 );
-		}
-
-		double[][] nodeCoordinates = tspModel.getNodes();
-		if( nodeCoordinates == null ) {
-			log.warn( "Can not display result files without node coordinates! Exit!" );
-			System.exit( 0 );
-		}
-		log.info( "nodes: \n" + Arrays.deepToString( nodeCoordinates ) );
-
-		//TODO add coordinates transformation for CANVAS_WIDTH and CANVAS_HEIGHT and turn y-coordinate
-
-		Node[] nodes = new Node[tspModel.getDimension()];
-
-		for( int i = 0; i < nodes.length; i++ ) {
-			Node.NodeType type = null;
-
-			if( i == 0 ) {
-				type = Node.NodeType.DEPOT;
-			} else {
-				//TODO check which type when not depot
-				type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
-
-
+			if ( tspType.equals( Defines.PDSTSP ) ) {
+				drawDroneFlightRange(gc, nodes[0], ( (Pdstsp) tspModel ).getDroneFlightRange() );
 			}
 
-			nodes[i] = new Node( nodeCoordinates[i][0], nodeCoordinates[i][1], type );
-		}
-
-		String tspType = tspModel.getType().toUpperCase();
-		if( tspType.equals( Defines.PDSTSP ) ) {
-			drawDroneFlightRange(gc, nodes[0], ((Pdstsp)tspModel).getDroneFlightRange() );
-		}
-
-		//TODO draw edges
+			//TODO draw edges
 		/*
 		drawEdge( gc, nodesPoints[0], nodesPoints[2], EdgeType.DRONE );
 		drawEdge( gc, nodesPoints[0], nodesPoints[20], EdgeType.TRUCK );
@@ -141,34 +189,34 @@ public class DisplayApplication extends Application{
 		drawEdge( gc, nodesPoints[3], nodesPoints[0], EdgeType.TRUCK );
  		*/
 
-		for( Node node : nodes ) {
-			drawNode( gc, node );
-		}
+			for( Node node : nodes ) {
+				drawNode( gc, node );
+			}
 
-		root.getChildren().add( canvas );
-		stage.setScene( new Scene( root ) );
-		stage.show();
+			root.getChildren().add( canvas );
+			stage.setScene( new Scene( root ) );
+			stage.show();
 
 
+			File resultDir = new File(jsonFile.getAbsolutePath().replace(".results.json", "" ) + "/" );
+			resultDir.mkdirs();
 
-		File resultDir = new File( jsonFile.getAbsolutePath().replace( ".results.json", "" ) + "/" );
-		resultDir.mkdirs();
-
-		File imageFile = new File( resultDir.getAbsolutePath()+ "/" + "test" + ".png" );
-		imageFile.createNewFile();
-		if( imageFile != null ){
-			try {
-				WritableImage writableImage = new WritableImage( CANVAS_WIDTH, CANVAS_HEIGHT );
-				canvas.snapshot(null, writableImage );
-				RenderedImage renderedImage = SwingFXUtils.fromFXImage( writableImage, null );
-				ImageIO.write( renderedImage, "png", imageFile );
-			} catch ( IOException ex ) {
-				log.error( "Error while writing image: " + ex.getMessage() );
+			File imageFile = new File(resultDir.getAbsolutePath() + "/" + "test" + ".png" );
+			imageFile.createNewFile();
+			if( imageFile != null ) {
+				try {
+					WritableImage writableImage = new WritableImage( CANVAS_WIDTH, CANVAS_HEIGHT );
+					canvas.snapshot(null, writableImage );
+					RenderedImage renderedImage = SwingFXUtils.fromFXImage( writableImage, null );
+					ImageIO.write( renderedImage, "png", imageFile );
+				} catch( IOException ex ) {
+					log.error( "Error while writing image: " + ex.getMessage() );
+				}
 			}
 		}
 	}
 
-	private void drawDroneFlightRange(GraphicsContext gc, Node depot, double droneFlightRange ) {
+	private void drawDroneFlightRange( GraphicsContext gc, Node depot, double droneFlightRange ) {
 		gc.setStroke( Color.GREEN );
 		gc.setFill( Color.LIGHTGREEN );
 		gc.setLineWidth( DRONE_FLIGHT_RANGE_LINE_WIDTH );
@@ -211,7 +259,7 @@ public class DisplayApplication extends Application{
 
 	}
 
-	private void drawEdge(GraphicsContext gc, Edge edge ) {
+	private void drawEdge( GraphicsContext gc, Edge edge ) {
 		gc.setLineWidth( EDGE_LINE_WIDTH );
 		Color stroke = Color.BLACK;
 
