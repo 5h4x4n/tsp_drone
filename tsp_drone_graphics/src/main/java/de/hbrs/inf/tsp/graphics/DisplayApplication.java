@@ -16,6 +16,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 
 import javax.imageio.ImageIO;
@@ -45,25 +46,45 @@ public class DisplayApplication extends Application{
 
 	@Override
 	public void start( Stage stage ) throws Exception {
-		stage.setTitle("TSP Drone - Display Application");
-		Group root = new Group();
-		Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-		GraphicsContext gc = canvas.getGraphicsContext2D();
 
-		//TODO add debug option for debug level
+		//create options for command line arguments
+		Options options = createOptions();
+
+		//parse the options passed as command line arguments
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmd;
+		Parameters params = getParameters();
+		Object[] argumentsAsObjectArray = params.getRaw().toArray();
+		String[] arguments = Arrays.copyOf( argumentsAsObjectArray, argumentsAsObjectArray.length, String[].class );
+		try{
+			cmd = parser.parse( options, arguments );
+		} catch(ParseException e){
+			System.out.println( "Error while parsing parameters! Error message: " + e.getMessage() );
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "tsp_drone_graphics", options );
+			return;
+		}
+
+		//read options and prepare configuration for the application
+		if( cmd.hasOption( "l" ) ){
+			Configuration.setLogFile( cmd.getOptionValue( "l" ) );
+		}
+
+		if( cmd.hasOption( "d" ) ){
+			Configuration.setLogLevel( "DEBUG" );
+		}
 		Configuration.setSystemProperties();
-		log = Logger.getLogger(DisplayApplication.class.getName());
+		log = Logger.getLogger( DisplayApplication.class.getName() );
 
 		List<File> jsonFiles = new ArrayList<>();
-		Parameters params = getParameters();
-		List<String> arguments = params.getRaw();
-		if( arguments.size() > 0 ) {
-			log.info("Application arguments:");
-			for( String argument : arguments ) {
-				File fileOrDir = new File( argument );
+		if( cmd.hasOption( "j" ) ) {
+			String[] filesAndDirectories = cmd.getOptionValues( "j" );
+			log.info( "Given arguments for json result files and directories:" );
+			for( String fileOrDirectory : filesAndDirectories ) {
+				File fileOrDir = new File( fileOrDirectory );
 				if( fileOrDir.exists() ) {
 					if( fileOrDir.isFile() ) {
-						if( argument.endsWith( ".results.json" ) ) {
+						if( fileOrDirectory.endsWith( ".results.json" ) ) {
 							jsonFiles.add( fileOrDir );
 							log.info( "Add file '" + fileOrDir.getAbsolutePath() + "' to json results list!" );
 						} else {
@@ -82,11 +103,11 @@ public class DisplayApplication extends Application{
 						}
 					}
 				} else {
-					log.info( "Argument '" + argument + "' is no file or directory. It will be skipped! ");
+					log.info( "Given argument '" + fileOrDirectory + "' is no file or directory. It will be skipped! ");
 				}
 			}
 		} else {
-			log.info("No application arguments. Start file chooser!");
+			log.info( "No json result files or directories are given in program arguments. Start file chooser!" );
 
 			FileChooser fileChooser = new FileChooser();
 			FileChooser.ExtensionFilter extFilter =
@@ -173,6 +194,11 @@ public class DisplayApplication extends Application{
 				nodes[i] = new Node( nodeCoordinates[i][0], nodeCoordinates[i][1], type );
 			}
 
+			stage.setTitle("TSP Drone - Display Application");
+			Group root = new Group();
+			Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+			GraphicsContext gc = canvas.getGraphicsContext2D();
+
 			String tspType = tspModel.getType().toUpperCase();
 			if ( tspType.equals( Defines.PDSTSP ) ) {
 				drawDroneFlightRange(gc, nodes[0], ( (Pdstsp) tspModel ).getDroneFlightRange() );
@@ -211,6 +237,25 @@ public class DisplayApplication extends Application{
 				}
 			}
 		}
+	}
+
+	private Options createOptions(){
+		Options options = new Options();
+
+		Option debug = Option.builder( "d" ).longOpt( "debug" ).required( false ).desc( "set log level to debug" ).build();
+		options.addOption( debug );
+
+		Option logFile = Option.builder( "l" ).longOpt( "logFile" ).argName( "file" ).hasArg().required( false )
+						.desc( "use given file for log" ).build();
+		options.addOption( logFile );
+
+		Option jsonResultFilesAndDirs = Option.builder( "j" ).longOpt( "json" ).argName( "files_and_directories" ).hasArg().required( false )
+						.numberOfArgs( Option.UNLIMITED_VALUES )
+						.desc( "read json result files from all given files and directories separated by spaces "
+										+ "(i.e. ../tests/tsp1.result.json /Users/username/results_directory)" ).build();
+		options.addOption( jsonResultFilesAndDirs );
+
+		return options;
 	}
 
 	private void drawDroneFlightRange( GraphicsContext gc, Node depot, double droneFlightRange ) {
