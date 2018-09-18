@@ -62,6 +62,7 @@ public class DisplayApplication extends Application{
 			System.out.println( "Error while parsing parameters! Error message: " + e.getMessage() );
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp( "tsp_drone_graphics", options );
+			System.exit( 0 );
 			return;
 		}
 
