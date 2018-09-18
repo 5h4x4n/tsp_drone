@@ -2,10 +2,7 @@ package de.hbrs.inf.tsp.graphics;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import de.hbrs.inf.tsp.Defines;
-import de.hbrs.inf.tsp.Pdstsp;
-import de.hbrs.inf.tsp.Tsp;
-import de.hbrs.inf.tsp.TspModel;
+import de.hbrs.inf.tsp.*;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Group;
@@ -36,7 +33,7 @@ public class DisplayApplication extends Application{
 	private static final double NODE_SIZE = 8.0;
 	private static final double DEPOT_SIZE = 1.5 * NODE_SIZE;
 	private static final int DRONE_FLIGHT_RANGE_LINE_WIDTH = 2;
-	private static final int EDGE_LINE_WIDTH = 2;
+	private static final int EDGE_LINE_WIDTH = 1;
 
 	private static Logger log;
 
@@ -145,11 +142,11 @@ public class DisplayApplication extends Application{
 				switch( tspType ) {
 					case Defines.TSP:
 						reader = new JsonReader( new FileReader( jsonFile ) );
-						tspModel = gson.fromJson(reader, Tsp.class);
+						tspModel = gson.fromJson( reader, Tsp.class );
 						break;
 					case Defines.PDSTSP:
 						reader = new JsonReader( new FileReader( jsonFile ) );
-						tspModel = gson.fromJson(reader, Pdstsp.class);
+						tspModel = gson.fromJson( reader, Pdstsp.class );
 						break;
 					default:
 						log.info( "TSP Type '" + tspType + "' not supported yet." );
@@ -168,10 +165,6 @@ public class DisplayApplication extends Application{
 				log.error( "tspModel for '" + jsonFile + "' is null! Skip to next json result file if existing!" );
 				continue;
 			}
-
-
-
-
 
 			double[][] nodeCoordinates = tspModel.getNodes();
 			if( nodeCoordinates == null ) {
@@ -225,13 +218,35 @@ public class DisplayApplication extends Application{
 				drawDroneFlightRange(gc, nodes[0], ( (Pdstsp) tspModel ).getDroneFlightRange() );
 			}
 
-			//TODO draw edges
+			//TODO add loop here for each iteration
+			ArrayList<TspIterationResult> tspIterationResults = tspModel.getTspResults().getIterationResults();
+			int i = 0;
+			TspIterationResult tspIterationResult = tspIterationResults.get( i );
+
+
+			//TODO
 			/*
-			drawEdge( gc, nodesPoints[0], nodesPoints[2], EdgeType.DRONE );
-			drawEdge( gc, nodesPoints[0], nodesPoints[20], EdgeType.TRUCK );
-			drawEdge( gc, nodesPoints[20], nodesPoints[3], EdgeType.TRUCK );
-			drawEdge( gc, nodesPoints[3], nodesPoints[0], EdgeType.TRUCK );
+			if( tspType.equals( Defines.PDSTSP ) ) {
+				PdstspIterationResult pdstspIterationResult = (PdstspIterationResult) tspIterationResults.get( i );
+				ArrayList<Integer>[] dronesCustomers = pdstspIterationResult.getDronesCustomers();
+				for( int v = 0; v < dronesCustomers.length; v++ ) {
+					//TODO draw drone edges in different colors?! For each drone different color?!
+					for( int droneCustomer : dronesCustomers[v] ){
+						drawEdge( gc, new Edge( nodes[0], nodes[dronesCustomers[v].get( droneCustomer )], Edge.EdgeType.DRONE ) );
+					}
+				}
+			}
 			*/
+
+			for( ArrayList<Integer> truckTour : tspIterationResult.getTruckTours() ){
+				for( int j = 0; j < truckTour.size(); j++ ) {
+					if( j < truckTour.size() - 1 ) {
+						drawEdge( gc, new Edge( nodes[j], nodes[j+1], Edge.EdgeType.TRUCK ) );
+					} else {
+						drawEdge( gc, new Edge( nodes[j], nodes[0], Edge.EdgeType.TRUCK ) );
+					}
+				}
+			}
 
 			for( Node node : nodes ) {
 				drawNode( gc, node );
@@ -282,7 +297,7 @@ public class DisplayApplication extends Application{
 
 	private void drawDroneFlightRange( GraphicsContext gc, Node depot, double droneFlightRange ) {
 		gc.setStroke( Color.GREEN );
-		gc.setFill( Color.LIGHTGREEN );
+		gc.setFill( Color.LIGHTGRAY );
 		gc.setLineWidth( DRONE_FLIGHT_RANGE_LINE_WIDTH );
 		gc.fillOval( depot.getX() - 0.5 * droneFlightRange, depot.getY() - 0.5 * droneFlightRange, droneFlightRange, droneFlightRange );
 		gc.strokeOval( depot.getX() - 0.5 * droneFlightRange, depot.getY() - 0.5 * droneFlightRange, droneFlightRange, droneFlightRange );
@@ -337,7 +352,6 @@ public class DisplayApplication extends Application{
 		}
 
 		gc.setStroke( stroke );
-
 		gc.strokeLine( edge.getNode1().getX(), edge.getNode1().getY(), edge.getNode2().getX(), edge.getNode2().getY() );
 	}
 
