@@ -132,13 +132,14 @@ public class DisplayApplication extends Application{
 		for( File jsonFile : jsonFiles ) {
 
 			TspModel tspModel = null;
+			String tspType = null;
 			try {
 				Gson gson = new Gson();
 				JsonReader reader = new JsonReader( new FileReader( jsonFile ) );
 				tspModel = gson.fromJson(reader, Tsp.class);
 				log.info( "TspModel successfully read: " + tspModel.getName() );
 
-				String tspType = tspModel.getType().toUpperCase();
+				tspType = tspModel.getType().toUpperCase();
 				log.info( "TSP Type: " + tspType );
 
 				switch( tspType ) {
@@ -155,14 +156,17 @@ public class DisplayApplication extends Application{
 						tspModel = null;
 				}
 			} catch( FileNotFoundException e ) {
-				log.error( "File not found '" + jsonFile + "'." );
+				log.error( "File not found '" + jsonFile + "'. Skip to next json result file if existing! Error message: " + e.getMessage() );
+				continue;
 			} catch( Exception e ) {
-				log.error( "Something went wrong while reading json result File! Error message: " + e.getMessage() );
+				log.error( "Something went wrong while reading json result File '" + jsonFile + "'! Skip to next json result file if existing! "
+								+ "Error message: " + e.getMessage() );
+				continue;
 			}
 
 			if( tspModel == null ) {
-				log.error( "tspModel is null! Exit!" );
-				System.exit(0);
+				log.error( "tspModel for '" + jsonFile + "' is null! Skip to next json result file if existing!" );
+				continue;
 			}
 
 
@@ -171,47 +175,63 @@ public class DisplayApplication extends Application{
 
 			double[][] nodeCoordinates = tspModel.getNodes();
 			if( nodeCoordinates == null ) {
-				log.warn( "Can not display result files without node coordinates! Exit!" );
-				System.exit(0);
+				log.warn( "The json result file '" + jsonFile + "' has no node coordinates so it can not be visualized! "
+								+ "Skip to next json result file if existing!" );
+				continue;
 			}
-			log.info( "nodes: \n" + Arrays.deepToString( nodeCoordinates ) );
+			log.debug( "node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
 
 			//TODO add coordinates transformation for CANVAS_WIDTH and CANVAS_HEIGHT and turn y-coordinate
 
 			Node[] nodes = new Node[tspModel.getDimension()];
+			int[][] distances = tspModel.getDistances();
 
 			for( int i = 0; i < nodes.length; i++ ) {
 				Node.NodeType type = null;
+				switch( tspType ) {
+					case Defines.TSP:
+						type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
+						break;
+					case Defines.PDSTSP:
+						Pdstsp pdstsp = (Pdstsp) tspModel;
+						int[] droneDeliveryPossible = pdstsp.getDroneDeliveryPossible();
+						ArrayList<Integer> droneDeliveryPossibleAndInFlightRange = pdstsp.getDroneDeliveryPossibleAndInFlightRange();
+						if( i == 0 ) {
+							type = Node.NodeType.DEPOT;
+						} else {
+							type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
 
-				if( i == 0 ) {
-					type = Node.NodeType.DEPOT;
-				} else {
-					//TODO check which type when not depot
-					type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
+							for( int j : droneDeliveryPossible ){
+								if( i == j ) {
+									type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_BUT_NOT_IN_FLIGHT_RANGE;
+								}
+							}
 
-
+							if( droneDeliveryPossibleAndInFlightRange.contains( new Integer( i ) ) ) {
+								type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE;
+							}
+						}
+						break;
 				}
-
 				nodes[i] = new Node( nodeCoordinates[i][0], nodeCoordinates[i][1], type );
 			}
 
 			stage.setTitle("TSP Drone - Display Application");
 			Group root = new Group();
-			Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+			Canvas canvas = new Canvas( CANVAS_WIDTH, CANVAS_HEIGHT );
 			GraphicsContext gc = canvas.getGraphicsContext2D();
 
-			String tspType = tspModel.getType().toUpperCase();
 			if ( tspType.equals( Defines.PDSTSP ) ) {
 				drawDroneFlightRange(gc, nodes[0], ( (Pdstsp) tspModel ).getDroneFlightRange() );
 			}
 
 			//TODO draw edges
-		/*
-		drawEdge( gc, nodesPoints[0], nodesPoints[2], EdgeType.DRONE );
-		drawEdge( gc, nodesPoints[0], nodesPoints[20], EdgeType.TRUCK );
-		drawEdge( gc, nodesPoints[20], nodesPoints[3], EdgeType.TRUCK );
-		drawEdge( gc, nodesPoints[3], nodesPoints[0], EdgeType.TRUCK );
- 		*/
+			/*
+			drawEdge( gc, nodesPoints[0], nodesPoints[2], EdgeType.DRONE );
+			drawEdge( gc, nodesPoints[0], nodesPoints[20], EdgeType.TRUCK );
+			drawEdge( gc, nodesPoints[20], nodesPoints[3], EdgeType.TRUCK );
+			drawEdge( gc, nodesPoints[3], nodesPoints[0], EdgeType.TRUCK );
+			*/
 
 			for( Node node : nodes ) {
 				drawNode( gc, node );
@@ -222,6 +242,7 @@ public class DisplayApplication extends Application{
 			stage.show();
 
 
+			//TODO add option for saving images
 			File resultDir = new File(jsonFile.getAbsolutePath().replace(".results.json", "" ) + "/" );
 			resultDir.mkdirs();
 
