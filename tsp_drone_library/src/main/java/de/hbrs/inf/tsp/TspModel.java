@@ -4,6 +4,9 @@ import de.hbrs.inf.tsp.json.TspLibJson;
 import gurobi.*;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Stack;
+
 public abstract class TspModel{
 
 	protected String name;
@@ -18,7 +21,6 @@ public abstract class TspModel{
 	protected transient GRBCallback grbCallback;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
-	protected TspResults tspResults;
 	protected int maxOptimizationSeconds = -1;
 
 	private static final double EARTH_RADIUS = 6378.388;
@@ -180,8 +182,7 @@ public abstract class TspModel{
 
 	protected abstract boolean addViolatedConstraints() throws GRBException;
 
-	public TspResults grbOptimize(){
-		tspResults = new TspResults( name );
+	public TspModelResult grbOptimize(){
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
@@ -229,8 +230,7 @@ public abstract class TspModel{
 					if( log.isDebugEnabled() ){
 						logIterationDebug();
 					}
-					TspIterationResult currentTspIterationResult = calculateTspIterationResult( objval );
-					tspResults.getIterationResults().add( currentTspIterationResult );
+					TspModelIterationResult currentTspIterationResult = calculateAndAddIterationResult( objval );
 
 					if( !addViolatedConstraints() ){
 						isSolutionOptimal = true;
@@ -242,17 +242,17 @@ public abstract class TspModel{
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
-						tspResults.setRuntime( runtimeOptimization / 1e9 );
-						tspResults.setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
-						tspResults.setObjective( objval );
-						tspResults.setOptimal( true );
+						getResult().setRuntime( runtimeOptimization / 1e9 );
+						getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
+						getResult().setObjective( objval );
+						getResult().setOptimal( true );
 
 						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );
 						log.info( currentTspIterationResult.getSolutionString() );
 						log.info( "Optimal objective: " + objval );
 
-						log.info( "Total optimization runtime: " + tspResults.getRuntime() + "s" );
-						log.debug( "Runtime of GRB Model calculation: " + tspResults.getRuntimeGrbModelCalculation() + "s" );
+						log.info( "Total optimization runtime: " + getResult().getRuntime() + "s" );
+						log.debug( "Runtime of GRB Model calculation: " + getResult().getRuntimeGrbModelCalculation() + "s" );
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
@@ -267,7 +267,7 @@ public abstract class TspModel{
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationSeconds + "s" );
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
-						tspResults.setRuntime( currentRuntimeOptimizationSeconds );
+						getResult().setRuntime( currentRuntimeOptimizationSeconds );
 
 					}
 				} else if( optimizationStatus == GRB.Status.INTERRUPTED ) {
@@ -297,12 +297,94 @@ public abstract class TspModel{
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
 
-		return tspResults;
+		return getResult();
 	}
 
-	protected abstract void logIterationDebug() throws GRBException;
+	protected ArrayList<ArrayList<Integer>> findSubtours() throws GRBException{
+		log.debug( "Starting find subtours" );
 
-	protected abstract TspIterationResult calculateTspIterationResult( int objectiveValue ) throws GRBException;
+		ArrayList<ArrayList<Integer>> subtours = new ArrayList<>();
+		Stack<Integer> unvisitedVertices = new Stack<>();
+
+		//this prevents to search subtours for vertices which are not currently in the solution
+		//needed for e.g. pdstsp
+		for( int i = dimension - 1; i >= 0; i-- ){
+			for( int j = dimension - 1; j >= 0; j-- ){
+				if( i != j ){
+					if( ( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ) == 1 ){
+						unvisitedVertices.add( i );
+						break;
+					}
+				}
+			}
+		}
+
+		while( !unvisitedVertices.isEmpty() ){
+			int currentVertex = unvisitedVertices.pop();
+			log.debug( "currentVertex: " + currentVertex );
+			log.debug( "unvisitedVertices: " + unvisitedVertices );
+			ArrayList<Integer> subtour = new ArrayList<>();
+			subtours.add( subtour );
+			Stack<Integer> unvisitedVerticesForSubtour = new Stack<>();
+			unvisitedVerticesForSubtour.add( currentVertex );
+			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
+
+			while( !unvisitedVerticesForSubtour.isEmpty() ){
+				Integer currentSubtourVertex = unvisitedVerticesForSubtour.pop();
+				log.debug( "currentSubtourVertex: " + currentSubtourVertex );
+				log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
+				subtour.add( currentSubtourVertex );
+				log.debug( "subtour: " + subtour );
+				unvisitedVertices.remove( currentSubtourVertex );
+				for(int i = 0; i < dimension; i++){
+					if( i != currentSubtourVertex ){
+						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
+						if( ( (int)( grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) + 0.5d ) ) == 1
+										&& !subtour.contains( i )
+										&& !unvisitedVerticesForSubtour.contains( i ) ){
+							unvisitedVerticesForSubtour.add( i );
+							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
+						}
+					}
+				}
+			}
+			log.debug( "subtour: " + subtour );
+		}
+		log.debug( "Ending find subtours" );
+		return subtours;
+
+	}
+
+	protected void logIterationDebug() throws GRBException{
+		log.debug( "Adjacency matrix of solution:" );
+		for(int i = 0; i < dimension; i++){
+			StringBuilder rowString = new StringBuilder();
+			for(int j = 0; j < dimension; j++){
+				if( i == j ){
+					rowString.append( "-, " );
+				} else {
+					rowString.append( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ).append( ", " );
+				}
+			}
+			log.debug( rowString.substring( 0, rowString.length() - 2 ) );
+		}
+	}
+
+	protected ArrayList<int[]> createEdgesForSubtourEliminationConstraint(  ArrayList<Integer> subtour ) {
+		ArrayList<int[]> edges = new ArrayList<>();
+		for( int i = 0; i < subtour.size() - 1; i++ ) {
+			for( int j = i + 1; j < subtour.size(); j++ ) {
+				int[] edge = new int[2];
+				edge[0] = subtour.get( i );
+				edge[1] = subtour.get( j );
+				edges.add( edge );
+
+			}
+		}
+		return edges;
+	}
+
+	protected abstract TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException;
 
 	public double[][] getNodes(){
 		return nodes;
@@ -340,9 +422,7 @@ public abstract class TspModel{
 		return additionalConstraintsCounter;
 	}
 
-	public TspResults getTspResults(){
-		return tspResults;
-	}
+	public abstract TspModelResult getResult();
 
 	public int getDecisionVariablesCounter(){
 		return grbModel.getVars().length;

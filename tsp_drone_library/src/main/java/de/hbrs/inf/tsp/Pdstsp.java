@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 
-public class Pdstsp extends Tsp {
+public class Pdstsp extends TspModel {
 
 	private double truckSpeed;
 	private transient double[][] truckTimes;
@@ -17,6 +17,7 @@ public class Pdstsp extends Tsp {
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private transient GRBVar[][] grbDronesCustomersVars;
 	private transient GRBVar grbObjectiveVar;
+	private PdstspResult result;
 
 	private static Logger log = Logger.getLogger( Pdstsp.class.getName() );
 
@@ -39,6 +40,7 @@ public class Pdstsp extends Tsp {
 				droneDeliveryPossibleAndInFlightRange.add( i );
 			}
 		}
+		this.result = new PdstspResult( name );
 	}
 
 	public String toString() {
@@ -176,7 +178,7 @@ public class Pdstsp extends Tsp {
 	}
 
 	@Override
-	protected TspIterationResult calculateTspIterationResult( int objectiveValue ) throws GRBException{
+	protected TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException{
 		PdstspIterationResult pdstspIterationResult = new PdstspIterationResult();
 		pdstspIterationResult.setTruckTours( findSubtours() );
 		pdstspIterationResult.setObjective( objectiveValue );
@@ -193,8 +195,14 @@ public class Pdstsp extends Tsp {
 			}
 		}
 		pdstspIterationResult.setDronesCustomers( dronesCustomers );
+		result.getPdstspIterationResults().add( pdstspIterationResult );
 
 		return pdstspIterationResult;
+	}
+
+	@Override
+	public TspModelResult getResult(){
+		return result;
 	}
 
 	@Override
@@ -217,7 +225,7 @@ public class Pdstsp extends Tsp {
 	@Override
 	protected boolean addViolatedConstraints() throws GRBException{
 
-		ArrayList<ArrayList<Integer>> subtours = tspResults.getLast().getTruckTours();
+		ArrayList<ArrayList<Integer>> subtours = result.getLast().getTruckTours();
 		if( subtours.size() > 1 ){
 			log.info( "Found subtours: " + subtours.size() );
 			log.debug( "Subtours: " + subtours );
@@ -340,4 +348,5 @@ public class Pdstsp extends Tsp {
 		double droneFlightRangePercentage = ( getDroneFlightRange() / getMaximumCustomerDistance() ) * 100.0;
 		return Math.round( droneFlightRangePercentage ) / 2.0;
 	}
+
 }

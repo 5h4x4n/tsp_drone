@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
-import de.hbrs.inf.tsp.TspResults;
+import de.hbrs.inf.tsp.TspModelResult;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
@@ -194,7 +194,7 @@ public class SolverApplication{
 							}
 
 							log.info( "Start Optimization for: " + tspModel.getName() );
-							TspResults tspResults = tspModel.grbOptimize();
+							TspModelResult tspResults = tspModel.grbOptimize();
 
 							if( cmd.hasOption( "c" ) ){
 								File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );

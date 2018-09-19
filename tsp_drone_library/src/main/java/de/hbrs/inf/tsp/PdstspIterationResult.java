@@ -2,7 +2,7 @@ package de.hbrs.inf.tsp;
 
 import java.util.ArrayList;
 
-public class PdstspIterationResult extends TspIterationResult {
+public class PdstspIterationResult extends TspModelIterationResult {
 
 	private ArrayList<Integer>[] dronesCustomers;
 
@@ -14,6 +14,7 @@ public class PdstspIterationResult extends TspIterationResult {
 		this.dronesCustomers = dronesCustomers;
 	}
 
+	@Override
 	public String getSolutionString(){
 		StringBuilder solutionString = new StringBuilder( super.getSolutionString() ).append( "\n" );
 		for(int v = 0; v < dronesCustomers.length; v++){
@@ -23,7 +24,7 @@ public class PdstspIterationResult extends TspIterationResult {
 				for(int i = 0; i < dronesCustomers[v].size(); i++){
 					solutionString.append( dronesCustomers[v].get( i ) ).append( ", " );
 				}
-				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) ).append( "\n" );
+				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 1 ) ).append( "\n" );
 			}
 		}
 		return solutionString.substring( 0, solutionString.length() - 2 );

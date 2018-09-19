@@ -15,13 +15,13 @@ public class TspModelCsvResultsConverter{
 		resultList.add( tspModel.getName() );
 		resultList.add( tspModel.getType() );
 		resultList.add( Integer.toString( tspModel.getDimension() ) );
-		resultList.add( Double.toString( tspModel.getTspResults().getRuntime() ) );
-		resultList.add( Boolean.toString( tspModel.getTspResults().isOptimal() ) );
-		resultList.add( Double.toString( tspModel.getTspResults().getObjective() ) );
+		resultList.add( Double.toString( tspModel.getResult().getRuntime() ) );
+		resultList.add( Boolean.toString( tspModel.getResult().isOptimal() ) );
+		resultList.add( Double.toString( tspModel.getResult().getObjective() ) );
 		resultList.add( Integer.toString( tspModel.getDecisionVariablesCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTotalConstraintsCounter() ) );
 		resultList.add( Integer.toString( tspModel.getAdditionalConstraintsCounter() ) );
-		resultList.add( Integer.toString( tspModel.getTspResults().getIterationCounter() ) );
+		resultList.add( Integer.toString( tspModel.getResult().getIterationCounter() ) );
 
 		String type = tspModel.getType();
 		//add additional results

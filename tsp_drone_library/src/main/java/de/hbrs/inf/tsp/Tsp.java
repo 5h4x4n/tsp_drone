@@ -7,11 +7,13 @@ import java.util.*;
 public class Tsp extends TspModel {
 
 	private ArrayList<Integer> truckTspTour;
+	private TspResult result;
 
 	public Tsp() {}
 
 	public Tsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		super(name, comment, type, dimension, nodes, distances );
+		this.result = new TspResult( name );
 	}
 
 	public String toString(){
@@ -57,17 +59,18 @@ public class Tsp extends TspModel {
 	}
 
 	@Override
-	protected TspIterationResult calculateTspIterationResult( int objectiveValue ) throws GRBException{
+	protected TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException{
 		TspIterationResult tspIterationResult = new TspIterationResult();
 		tspIterationResult.setTruckTours( findSubtours() );
 		tspIterationResult.setObjective( objectiveValue );
+		result.getTspIterationResults().add( tspIterationResult );
 		return tspIterationResult;
 	}
 
 	@Override
 	protected boolean addViolatedConstraints() throws GRBException{
 
-		ArrayList<ArrayList<Integer>> subtours = tspResults.getLast().getTruckTours();
+		ArrayList<ArrayList<Integer>> subtours = result.getLast().getTruckTours();
 		if( subtours.size() > 1 ){
 			log.info( "Found subtours: " + subtours.size() );
 			log.debug( "Subtours: " + subtours );
@@ -101,91 +104,6 @@ public class Tsp extends TspModel {
 		}
 	}
 
-	@Override
-	protected void logIterationDebug() throws GRBException{
-		log.debug( "Adjacency matrix of solution:" );
-		for(int i = 0; i < dimension; i++){
-			StringBuilder rowString = new StringBuilder();
-			for(int j = 0; j < dimension; j++){
-				if( i == j ){
-					rowString.append( "-, " );
-				} else {
-					rowString.append( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ).append( ", " );
-				}
-			}
-			log.debug( rowString.substring( 0, rowString.length() - 2 ) );
-		}
-	}
-
-	protected ArrayList<int[]> createEdgesForSubtourEliminationConstraint(  ArrayList<Integer> subtour ) {
-		ArrayList<int[]> edges = new ArrayList<>();
-		for( int i = 0; i < subtour.size() - 1; i++ ) {
-			for( int j = i + 1; j < subtour.size(); j++ ) {
-				int[] edge = new int[2];
-				edge[0] = subtour.get( i );
-				edge[1] = subtour.get( j );
-				edges.add( edge );
-
-			}
-		}
-		return edges;
-	}
-
-	ArrayList<ArrayList<Integer>> findSubtours() throws GRBException{
-		log.debug( "Starting find subtours" );
-
-		ArrayList<ArrayList<Integer>> subtours = new ArrayList<>();
-		Stack<Integer> unvisitedVertices = new Stack<>();
-
-		//this prevents to search subtours for vertices which are not currently in the solution
-		//needed for e.g. pdstsp
-		for( int i = dimension - 1; i >= 0; i-- ){
-			for( int j = dimension - 1; j >= 0; j-- ){
-				if( i != j ){
-					if( ( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ) == 1 ){
-						unvisitedVertices.add( i );
-						break;
-					}
-				}
-			}
-		}
-
-		while( !unvisitedVertices.isEmpty() ){
-			int currentVertex = unvisitedVertices.pop();
-			log.debug( "currentVertex: " + currentVertex );
-			log.debug( "unvisitedVertices: " + unvisitedVertices );
-			ArrayList<Integer> subtour = new ArrayList<>();
-			subtours.add( subtour );
-			Stack<Integer> unvisitedVerticesForSubtour = new Stack<>();
-			unvisitedVerticesForSubtour.add( currentVertex );
-			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-
-			while( !unvisitedVerticesForSubtour.isEmpty() ){
-				Integer currentSubtourVertex = unvisitedVerticesForSubtour.pop();
-				log.debug( "currentSubtourVertex: " + currentSubtourVertex );
-				log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-				subtour.add( currentSubtourVertex );
-				log.debug( "subtour: " + subtour );
-				unvisitedVertices.remove( currentSubtourVertex );
-				for(int i = 0; i < dimension; i++){
-					if( i != currentSubtourVertex ){
-						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) + 0.5d ) ) == 1
-										&& !subtour.contains( i )
-										&& !unvisitedVerticesForSubtour.contains( i ) ){
-							unvisitedVerticesForSubtour.add( i );
-							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-						}
-					}
-				}
-			}
-			log.debug( "subtour: " + subtour );
-		}
-		log.debug( "Ending find subtours" );
-		return subtours;
-
-	}
-
 	public double[][] getNodes(){
 		return nodes;
 	}
@@ -200,6 +118,11 @@ public class Tsp extends TspModel {
 
 	public void setDistances( int[][] distances ){
 		this.distances = distances;
+	}
+
+	@Override
+	public TspModelResult getResult(){
+		return result;
 	}
 
 	public ArrayList<Integer> getTruckTspTour() {

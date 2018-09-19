@@ -2,16 +2,15 @@ package de.hbrs.inf.tsp;
 
 import java.util.ArrayList;
 
-public class TspResults{
+public abstract class TspModelResult {
 
 	private String name;
 	private boolean isOptimal = false;
 	private double runtime;
 	private double runtimeGrbModelCalculation;
 	private int objective;
-	private ArrayList<TspIterationResult> iterationResults = new ArrayList<>();
 
-	public TspResults( String name ) {
+	public TspModelResult( String name ) {
 		this. name = name;
 	}
 
@@ -39,16 +38,10 @@ public class TspResults{
 		this.runtime = runtime;
 	}
 
-	public ArrayList<TspIterationResult> getIterationResults(){
-		return iterationResults;
-	}
+	public abstract ArrayList<? extends TspModelIterationResult> getIterationResults();
 
-	public void setIterationResults( ArrayList<TspIterationResult> iterationResults ){
-		this.iterationResults = iterationResults;
-	}
-
-	public TspIterationResult getLast() {
-		return iterationResults.get( iterationResults.size() - 1 );
+	public TspModelIterationResult getLast() {
+		return getIterationResults().get( getIterationResults().size() - 1 );
 	}
 
 	public double getRuntimeGrbModelCalculation(){
@@ -60,7 +53,7 @@ public class TspResults{
 	}
 
 	public int getIterationCounter() {
-		return iterationResults.size();
+		return getIterationResults().size();
 	}
 
 	public int getObjective(){
