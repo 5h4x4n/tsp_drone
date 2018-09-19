@@ -86,7 +86,7 @@ public class DisplayApplication extends Application{
 							jsonFiles.add( fileOrDir );
 							log.info( "Add file '" + fileOrDir.getAbsolutePath() + "' to json results list!" );
 						} else {
-							log.info( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
+							log.warn( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
 						}
 					} else {
 						log.info( "Directory '" + fileOrDir.getAbsolutePath() + "' will be browsed to search for json result files!" );
@@ -96,12 +96,12 @@ public class DisplayApplication extends Application{
 								jsonFiles.add( file );
 								log.info( "Add file '" + fileOrDir.getAbsolutePath() + "' to json results list!" );
 							} else {
-								log.info( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
+								log.warn( "File '" + fileOrDir.getAbsolutePath() + "' is not from type '.results.json'. It will be skipped!" );
 							}
 						}
 					}
 				} else {
-					log.info( "Given argument '" + fileOrDirectory + "' is no file or directory. It will be skipped! ");
+					log.warn( "Given argument '" + fileOrDirectory + "' is no file or directory. It will be skipped! ");
 				}
 			}
 		} else {
@@ -128,6 +128,7 @@ public class DisplayApplication extends Application{
 
 		for( File jsonFile : jsonFiles ) {
 
+			log.info( "##################### Start: " + jsonFile.getName() + " #####################" );
 			TspModel tspModel = null;
 			String tspType = null;
 			try {
@@ -167,6 +168,7 @@ public class DisplayApplication extends Application{
 			}
 
 			double[][] nodeCoordinates = tspModel.getNodes();
+			//TODO generalize log warnings
 			if( nodeCoordinates == null ) {
 				log.warn( "The json result file '" + jsonFile + "' has no node coordinates so it can not be visualized! "
 								+ "Skip to next json result file if existing!" );
@@ -219,34 +221,45 @@ public class DisplayApplication extends Application{
 			}
 
 			//TODO add loop here for each iteration
-			ArrayList<TspIterationResult> tspIterationResults = tspModel.getTspResults().getIterationResults();
-			int i = 0;
-			TspIterationResult tspIterationResult = tspIterationResults.get( i );
+			TspModelResult result = tspModel.getResult();
+			if( result == null ) {
+				log.warn( "The json result file '" + jsonFile + "' has no results so it can not be visualized! "
+								+ "Skip to next json result file if existing!" );
+				continue;
+			}
+			ArrayList<?> iterationResults = result.getIterationResults();
+			if( iterationResults == null || iterationResults.size() < 1 ) {
+				log.warn( "The json result file '" + jsonFile + "' has no iteration results so it can not be visualized! "
+								+ "Skip to next json result file if existing!" );
+				continue;
+			}
+			//int iterationCount = 0;
+			int iterationCount = iterationResults.size() - 1;
 
+			TspModelIterationResult iterationResult = (TspModelIterationResult)iterationResults.get( iterationCount );
+			log.debug( "Iteration " + iterationCount + ": " + iterationResult.getSolutionString() );
 
-			//TODO
-			/*
 			if( tspType.equals( Defines.PDSTSP ) ) {
-				PdstspIterationResult pdstspIterationResult = (PdstspIterationResult) tspIterationResults.get( i );
+				PdstspIterationResult pdstspIterationResult = (PdstspIterationResult) iterationResult;
 				ArrayList<Integer>[] dronesCustomers = pdstspIterationResult.getDronesCustomers();
 				for( int v = 0; v < dronesCustomers.length; v++ ) {
 					//TODO draw drone edges in different colors?! For each drone different color?!
 					for( int droneCustomer : dronesCustomers[v] ){
-						drawEdge( gc, new Edge( nodes[0], nodes[dronesCustomers[v].get( droneCustomer )], Edge.EdgeType.DRONE ) );
+						drawEdge( gc, new Edge( nodes[0], nodes[droneCustomer], Edge.EdgeType.DRONE ) );
 					}
 				}
 			}
-			*/
 
-			for( ArrayList<Integer> truckTour : tspIterationResult.getTruckTours() ){
+			for( ArrayList<Integer> truckTour : iterationResult.getTruckTours() ){
 				for( int j = 0; j < truckTour.size(); j++ ) {
 					if( j < truckTour.size() - 1 ) {
-						drawEdge( gc, new Edge( nodes[j], nodes[j+1], Edge.EdgeType.TRUCK ) );
+						drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( j + 1 )], Edge.EdgeType.TRUCK ) );
 					} else {
-						drawEdge( gc, new Edge( nodes[j], nodes[0], Edge.EdgeType.TRUCK ) );
+						drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( 0 )], Edge.EdgeType.TRUCK ) );
 					}
 				}
 			}
+
 
 			for( Node node : nodes ) {
 				drawNode( gc, node );
@@ -274,6 +287,7 @@ public class DisplayApplication extends Application{
 				}
 			}
 		}
+		//TODO exit when "error"
 	}
 
 	private Options createOptions(){
