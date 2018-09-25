@@ -25,15 +25,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 public class DisplayApplication extends Application{
 
-	private static final int CANVAS_WIDTH = 1000;
-	private static final int CANVAS_HEIGHT = 1000;
-	private static final double NODE_SIZE = 8.0;
+	private static final int CANVAS_SIZE = 500;
+	private static final double NODE_SIZE = 6.0;
 	private static final double DEPOT_SIZE = 1.5 * NODE_SIZE;
-	private static final int DRONE_FLIGHT_RANGE_LINE_WIDTH = 2;
+	private static final int DRONE_FLIGHT_RANGE_LINE_WIDTH = 1;
 	private static final int EDGE_LINE_WIDTH = 1;
+	private static final double MAXIMUM_NODE_COORDINATE_RATIO = 0.98;
 
 	private static Logger log;
 
@@ -126,21 +127,21 @@ public class DisplayApplication extends Application{
 			log.info( jsonFile.getAbsolutePath() );
 		}
 
-		for( File jsonFile : jsonFiles ) {
+		for( File jsonFile : jsonFiles ){
 
 			log.info( "##################### Start: " + jsonFile.getName() + " #####################" );
 			TspModel tspModel = null;
 			String tspType = null;
-			try {
+			try{
 				Gson gson = new Gson();
 				JsonReader reader = new JsonReader( new FileReader( jsonFile ) );
-				tspModel = gson.fromJson(reader, Tsp.class);
+				tspModel = gson.fromJson( reader, Tsp.class );
 				log.info( "TspModel successfully read: " + tspModel.getName() );
 
 				tspType = tspModel.getType().toUpperCase();
 				log.info( "TSP Type: " + tspType );
 
-				switch( tspType ) {
+				switch(tspType){
 					case Defines.TSP:
 						reader = new JsonReader( new FileReader( jsonFile ) );
 						tspModel = gson.fromJson( reader, Tsp.class );
@@ -153,56 +154,74 @@ public class DisplayApplication extends Application{
 						log.info( "TSP Type '" + tspType + "' not supported yet." );
 						tspModel = null;
 				}
-			} catch( FileNotFoundException e ) {
+			} catch(FileNotFoundException e){
 				log.error( "File not found '" + jsonFile + "'. Skip to next json result file if existing! Error message: " + e.getMessage() );
 				continue;
-			} catch( Exception e ) {
+			} catch(Exception e){
 				log.error( "Something went wrong while reading json result File '" + jsonFile + "'! Skip to next json result file if existing! "
 								+ "Error message: " + e.getMessage() );
 				continue;
 			}
 
-			if( tspModel == null ) {
+			if( tspModel == null ){
 				log.error( "tspModel for '" + jsonFile + "' is null! Skip to next json result file if existing!" );
 				continue;
 			}
 
 			double[][] nodeCoordinates = tspModel.getNodes();
 			//TODO generalize log warnings
-			if( nodeCoordinates == null ) {
+			if( nodeCoordinates == null ){
 				log.warn( "The json result file '" + jsonFile + "' has no node coordinates so it can not be visualized! "
 								+ "Skip to next json result file if existing!" );
 				continue;
 			}
 			log.debug( "node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
 
-			//TODO add coordinates transformation for CANVAS_WIDTH and CANVAS_HEIGHT and turn y-coordinate
+			//transform/normalize coordinates for CANVAS_SIZE
+			double maxNodeCoordinate = 0;
+			for(double[] node : nodeCoordinates){
+				if( node[0] > maxNodeCoordinate )
+					maxNodeCoordinate = node[0];
+				if( node[1] > maxNodeCoordinate )
+					maxNodeCoordinate = node[1];
+			}
+			double normalizeFactor = (MAXIMUM_NODE_COORDINATE_RATIO * CANVAS_SIZE) / maxNodeCoordinate;
+
+			//normalize and round to one decimal point
+			for(double[] node : nodeCoordinates){
+				node[0] = Math.round( (normalizeFactor * node[0]) * 10.0 ) / 10.0;
+				node[1] = Math.round( (normalizeFactor * node[1]) * 10.0 ) / 10.0;
+			}
+			log.debug( "normalized node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
+			//calculate new y-coordinates, cause the coordinate origin should be at the bottom instead of top
+			for(double[] node : nodeCoordinates){
+				node[1] = CANVAS_SIZE - node[1];
+			}
 
 			Node[] nodes = new Node[tspModel.getDimension()];
-			int[][] distances = tspModel.getDistances();
 
-			for( int i = 0; i < nodes.length; i++ ) {
+			for(int i = 0; i < nodes.length; i++){
 				Node.NodeType type = null;
-				switch( tspType ) {
+				switch(tspType){
 					case Defines.TSP:
 						type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
 						break;
 					case Defines.PDSTSP:
-						Pdstsp pdstsp = (Pdstsp) tspModel;
+						Pdstsp pdstsp = (Pdstsp)tspModel;
 						int[] droneDeliveryPossible = pdstsp.getDroneDeliveryPossible();
 						ArrayList<Integer> droneDeliveryPossibleAndInFlightRange = pdstsp.getDroneDeliveryPossibleAndInFlightRange();
-						if( i == 0 ) {
+						if( i == 0 ){
 							type = Node.NodeType.DEPOT;
 						} else {
 							type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
 
-							for( int j : droneDeliveryPossible ){
-								if( i == j ) {
+							for(int j : droneDeliveryPossible){
+								if( i == j ){
 									type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_BUT_NOT_IN_FLIGHT_RANGE;
 								}
 							}
 
-							if( droneDeliveryPossibleAndInFlightRange.contains( new Integer( i ) ) ) {
+							if( droneDeliveryPossibleAndInFlightRange.contains( new Integer( i ) ) ){
 								type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE;
 							}
 						}
@@ -211,81 +230,96 @@ public class DisplayApplication extends Application{
 				nodes[i] = new Node( nodeCoordinates[i][0], nodeCoordinates[i][1], type );
 			}
 
-			stage.setTitle("TSP Drone - Display Application");
-			Group root = new Group();
-			Canvas canvas = new Canvas( CANVAS_WIDTH, CANVAS_HEIGHT );
-			GraphicsContext gc = canvas.getGraphicsContext2D();
-
-			if ( tspType.equals( Defines.PDSTSP ) ) {
-				drawDroneFlightRange(gc, nodes[0], ( (Pdstsp) tspModel ).getDroneFlightRange() );
-			}
-
-			//TODO add loop here for each iteration
 			TspModelResult result = tspModel.getResult();
-			if( result == null ) {
+			if( result == null ){
 				log.warn( "The json result file '" + jsonFile + "' has no results so it can not be visualized! "
 								+ "Skip to next json result file if existing!" );
 				continue;
 			}
 			ArrayList<?> iterationResults = result.getIterationResults();
-			if( iterationResults == null || iterationResults.size() < 1 ) {
+			if( iterationResults == null || iterationResults.size() < 1 ){
 				log.warn( "The json result file '" + jsonFile + "' has no iteration results so it can not be visualized! "
 								+ "Skip to next json result file if existing!" );
 				continue;
 			}
-			//int iterationCount = 0;
-			int iterationCount = iterationResults.size() - 1;
 
-			TspModelIterationResult iterationResult = (TspModelIterationResult)iterationResults.get( iterationCount );
-			log.debug( "Iteration " + iterationCount + ": " + iterationResult.getSolutionString() );
+			//TODO add loop here for each iteration
+			int iterationCount = 0;
+			do{
+				Group root = new Group();
+				Canvas canvas = new Canvas( CANVAS_SIZE, CANVAS_SIZE );
+				GraphicsContext gc = canvas.getGraphicsContext2D();
+				root.getChildren().add( canvas );
+				stage.setScene( new Scene( root ) );
+				//stage.setTitle( "TSP Drone - Display Application - " + tspType + ": " + tspModel.getName() + " - Iteration " + iterationCount + "/"
+				//				+ iterationResults.size() );
 
-			if( tspType.equals( Defines.PDSTSP ) ) {
-				PdstspIterationResult pdstspIterationResult = (PdstspIterationResult) iterationResult;
-				ArrayList<Integer>[] dronesCustomers = pdstspIterationResult.getDronesCustomers();
-				for( int v = 0; v < dronesCustomers.length; v++ ) {
-					//TODO draw drone edges in different colors?! For each drone different color?!
-					for( int droneCustomer : dronesCustomers[v] ){
-						drawEdge( gc, new Edge( nodes[0], nodes[droneCustomer], Edge.EdgeType.DRONE ) );
+				if( tspType.equals( Defines.PDSTSP ) ){
+					drawDroneFlightRange( gc, nodes[0], ((Pdstsp)tspModel).getDroneFlightRange() * normalizeFactor );
+				}
+
+				TspModelIterationResult iterationResult;
+				if( iterationCount == 0 ) {
+					iterationResult = (TspModelIterationResult)iterationResults.get( 1 );
+				} else {
+					iterationResult = (TspModelIterationResult)iterationResults.get( iterationCount - 1 );
+				}
+				log.debug( "Iteration " + iterationCount + "/" + iterationResults.size() + ": " + iterationResult.getSolutionString() );
+
+				if( iterationCount > 0 ){
+					if( tspType.equals( Defines.PDSTSP ) ){
+						PdstspIterationResult pdstspIterationResult = (PdstspIterationResult)iterationResult;
+						ArrayList<Integer>[] dronesCustomers = pdstspIterationResult.getDronesCustomers();
+						for (int v = 0; v < dronesCustomers.length; v++){
+							//TODO draw drone edges in different colors?! For each drone different color?!
+							for(int droneCustomer : dronesCustomers[v]){
+								drawEdge( gc, new Edge( nodes[0], nodes[droneCustomer], Edge.EdgeType.DRONE ) );
+							}
+						}
+					}
+
+					for(ArrayList<Integer> truckTour : iterationResult.getTruckTours()){
+						for(int j = 0; j < truckTour.size(); j++){
+							if( j < truckTour.size() - 1 ){
+								drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( j + 1 )], Edge.EdgeType.TRUCK ) );
+							} else {
+								drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( 0 )], Edge.EdgeType.TRUCK ) );
+							}
+						}
 					}
 				}
-			}
 
-			for( ArrayList<Integer> truckTour : iterationResult.getTruckTours() ){
-				for( int j = 0; j < truckTour.size(); j++ ) {
-					if( j < truckTour.size() - 1 ) {
-						drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( j + 1 )], Edge.EdgeType.TRUCK ) );
-					} else {
-						drawEdge( gc, new Edge( nodes[truckTour.get( j )], nodes[truckTour.get( 0 )], Edge.EdgeType.TRUCK ) );
+				for( Node node : nodes ){
+					drawNode( gc, node );
+				}
+
+				//TODO add option for saving images
+				File resultDir = new File( jsonFile.getAbsolutePath().replace( ".results.json", "" ) + "/" );
+				resultDir.mkdirs();
+				String resultName = resultDir.getName();
+
+				File imageFile = new File( resultDir.getAbsolutePath() + "/" + resultName + "_" + iterationCount + ".png" );
+				if( imageFile.exists() ) {
+					imageFile.delete();
+				}
+				if( imageFile.createNewFile() ){
+					try{
+						WritableImage writableImage = new WritableImage( CANVAS_SIZE, CANVAS_SIZE );
+						canvas.snapshot( null, writableImage );
+						RenderedImage renderedImage = SwingFXUtils.fromFXImage( writableImage, null );
+						ImageIO.write( renderedImage, "png", imageFile );
+						log.info( "Created image: " + imageFile.getAbsolutePath() );
+					} catch(IOException ex){
+						log.error( "Error while writing image: " + ex.getMessage() );
 					}
 				}
-			}
+				//TODO add possibility to show each iteration and navigate through them
+				//stage.show();
 
-
-			for( Node node : nodes ) {
-				drawNode( gc, node );
-			}
-
-			root.getChildren().add( canvas );
-			stage.setScene( new Scene( root ) );
-			stage.show();
-
-
-			//TODO add option for saving images
-			File resultDir = new File(jsonFile.getAbsolutePath().replace(".results.json", "" ) + "/" );
-			resultDir.mkdirs();
-
-			File imageFile = new File(resultDir.getAbsolutePath() + "/" + "test" + ".png" );
-			imageFile.createNewFile();
-			if( imageFile != null ) {
-				try {
-					WritableImage writableImage = new WritableImage( CANVAS_WIDTH, CANVAS_HEIGHT );
-					canvas.snapshot(null, writableImage );
-					RenderedImage renderedImage = SwingFXUtils.fromFXImage( writableImage, null );
-					ImageIO.write( renderedImage, "png", imageFile );
-				} catch( IOException ex ) {
-					log.error( "Error while writing image: " + ex.getMessage() );
-				}
-			}
+				iterationCount++;
+			} while( iterationCount <= iterationResults.size() && iterationCount > 0 );
+			//stage.close();
+			System.exit( 0 );
 		}
 		//TODO exit when "error"
 	}
