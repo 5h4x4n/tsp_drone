@@ -88,6 +88,7 @@ public class JsonTspMapper{
 							maxDistance = distances[0][i];
 						}
 					}
+					log.info( "MaxDistance: " + maxDistance );
 					int droneFlightRange = (int)Math.ceil( ( (double)droneFlightRangePercentage / 100 * maxDistance ) * 2 );
 					pdstspLibJson.setDrone_flight_range( droneFlightRange );
 				}
