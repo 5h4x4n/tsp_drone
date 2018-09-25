@@ -260,7 +260,7 @@ public class DisplayApplication extends Application{
 
 				TspModelIterationResult iterationResult;
 				if( iterationCount == 0 ) {
-					iterationResult = (TspModelIterationResult)iterationResults.get( 1 );
+					iterationResult = (TspModelIterationResult)iterationResults.get( 0 );
 				} else {
 					iterationResult = (TspModelIterationResult)iterationResults.get( iterationCount - 1 );
 				}
@@ -319,9 +319,8 @@ public class DisplayApplication extends Application{
 				iterationCount++;
 			} while( iterationCount <= iterationResults.size() && iterationCount > 0 );
 			//stage.close();
-			System.exit( 0 );
 		}
-		//TODO exit when "error"
+		System.exit( 0 );
 	}
 
 	private Options createOptions(){
