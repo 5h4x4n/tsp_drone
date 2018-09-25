@@ -168,13 +168,14 @@ public class DisplayApplication extends Application{
 				continue;
 			}
 
-			double[][] nodeCoordinates = tspModel.getNodes();
+
 			//TODO generalize log warnings
-			if( nodeCoordinates == null ){
+			if( tspModel.getNodes() == null ){
 				log.warn( "The json result file '" + jsonFile + "' has no node coordinates so it can not be visualized! "
 								+ "Skip to next json result file if existing!" );
 				continue;
 			}
+			double[][] nodeCoordinates = tspModel.getNodes().clone();
 			log.debug( "node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
 
 			//transform/normalize coordinates for CANVAS_SIZE
