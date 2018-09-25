@@ -34,7 +34,7 @@ public class DisplayApplication extends Application{
 	private static final double DEPOT_SIZE = 1.5 * NODE_SIZE;
 	private static final int DRONE_FLIGHT_RANGE_LINE_WIDTH = 1;
 	private static final int EDGE_LINE_WIDTH = 1;
-	private static final double MAXIMUM_NODE_COORDINATE_RATIO = 0.98;
+	private static final double NODE_MARGIN_DISTANCE_RATIO = 0.02;
 
 	private static Logger log;
 
@@ -179,20 +179,8 @@ public class DisplayApplication extends Application{
 			log.debug( "node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
 
 			//transform/normalize coordinates for CANVAS_SIZE
-			double maxNodeCoordinate = 0;
-			for(double[] node : nodeCoordinates){
-				if( node[0] > maxNodeCoordinate )
-					maxNodeCoordinate = node[0];
-				if( node[1] > maxNodeCoordinate )
-					maxNodeCoordinate = node[1];
-			}
-			double normalizeFactor = (MAXIMUM_NODE_COORDINATE_RATIO * CANVAS_SIZE) / maxNodeCoordinate;
-
-			//normalize and round to one decimal point
-			for(double[] node : nodeCoordinates){
-				node[0] = Math.round( (normalizeFactor * node[0]) * 10.0 ) / 10.0;
-				node[1] = Math.round( (normalizeFactor * node[1]) * 10.0 ) / 10.0;
-			}
+			double normalizeFactor = normalizeCoordinates( nodeCoordinates );
+			log.debug( "normalize factor: " + normalizeFactor );
 			log.debug( "normalized node coordinates: " + Arrays.deepToString( nodeCoordinates ) );
 			//calculate new y-coordinates, cause the coordinate origin should be at the bottom instead of top
 			for(double[] node : nodeCoordinates){
@@ -256,7 +244,9 @@ public class DisplayApplication extends Application{
 				//				+ iterationResults.size() );
 
 				if( tspType.equals( Defines.PDSTSP ) ){
-					drawDroneFlightRange( gc, nodes[0], ((Pdstsp)tspModel).getDroneFlightRange() * normalizeFactor );
+					double droneFlightRange = ((Pdstsp)tspModel).getDroneFlightRange();
+					log.info( "drone flight range: " + droneFlightRange );
+					drawDroneFlightRange( gc, nodes[0], droneFlightRange * normalizeFactor );
 				}
 
 				TspModelIterationResult iterationResult;
@@ -403,4 +393,55 @@ public class DisplayApplication extends Application{
 		gc.strokeLine( edge.getNode1().getX(), edge.getNode1().getY(), edge.getNode2().getX(), edge.getNode2().getY() );
 	}
 
+	private double normalizeCoordinates( double[][] nodeCoordinates ) {
+		final double minCoordinate = CANVAS_SIZE * NODE_MARGIN_DISTANCE_RATIO;
+		final double maxTmpCoordinate = CANVAS_SIZE * ( 1.0 - ( 2 * NODE_MARGIN_DISTANCE_RATIO ) );
+
+		log.debug( "minCoordinate: " + minCoordinate );
+		log.debug( "maxTmpCoordinate: " + maxTmpCoordinate );
+
+		double minXNodeCoordinate = nodeCoordinates[0][0];
+		double minYNodeCoordinate = nodeCoordinates[0][1];
+		for( double[] node : nodeCoordinates ){
+			if( node[0] < minXNodeCoordinate )
+				minXNodeCoordinate = node[0];
+			if( node[1] < minYNodeCoordinate )
+				minYNodeCoordinate = node[1];
+		}
+
+		log.debug( "minXNodeCoordinate: " + minXNodeCoordinate );
+		log.debug( "minYNodeCoordinate: " + minYNodeCoordinate );
+
+		for( double[] node : nodeCoordinates ){
+			node[0] = node[0] - minXNodeCoordinate;
+			node[1] = node[1] - minYNodeCoordinate;
+		}
+
+		log.debug( "transformend node coordinates to zero: " + Arrays.deepToString( nodeCoordinates ) );
+
+		double maxNodeCoordinate = 0;
+		for( double[] node : nodeCoordinates ){
+			if( node[0] > maxNodeCoordinate )
+				maxNodeCoordinate = node[0];
+			if( node[1] > maxNodeCoordinate )
+				maxNodeCoordinate = node[1];
+		}
+		log.debug( "maxNodeCoordinate: " + maxNodeCoordinate );
+		double normalizeFactor = maxTmpCoordinate / maxNodeCoordinate;
+
+		//normalize and round to one decimal point
+		for(double[] node : nodeCoordinates){
+			node[0] = Math.round( (normalizeFactor * node[0]) * 10.0 ) / 10.0;
+			node[1] = Math.round( (normalizeFactor * node[1]) * 10.0 ) / 10.0;
+		}
+
+		log.debug( "normalized node coordinates but not moved: " + Arrays.deepToString( nodeCoordinates ) );
+
+		for( double[] node : nodeCoordinates ){
+			node[0] += minCoordinate;
+			node[1] += minCoordinate;
+		}
+
+		return normalizeFactor;
+	}
 }
