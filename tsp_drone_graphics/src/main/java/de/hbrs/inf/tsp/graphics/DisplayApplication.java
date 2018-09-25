@@ -244,9 +244,42 @@ public class DisplayApplication extends Application{
 				//				+ iterationResults.size() );
 
 				if( tspType.equals( Defines.PDSTSP ) ){
-					double droneFlightRange = ((Pdstsp)tspModel).getDroneFlightRange();
-					log.info( "drone flight range: " + droneFlightRange );
-					drawDroneFlightRange( gc, nodes[0], droneFlightRange * normalizeFactor );
+					double normalizedDroneFlightRange = ((Pdstsp)tspModel).getDroneFlightRange() * normalizeFactor;
+					log.info( "normalized drone flight range: " + normalizedDroneFlightRange );
+					log.info( "check if normalized drone flight range can be correct. This can be the case if the node coordinates differs from the "
+									+ "real coordinates or something like that." );
+					boolean changeDroneFlightRange = false;
+					double maxNodeFlightRange = 0;
+					//change droneFlightRange when normalizedDroneFlightRange smaller than it should be
+					for( int i : ((Pdstsp)tspModel).getDroneDeliveryPossibleAndInFlightRange() ) {
+						double nodeFlightRange = calculateDistance( nodes[0], nodes[i] );
+						log.debug( "node flight range for node " + i + ": " + nodeFlightRange );
+						if( nodeFlightRange > maxNodeFlightRange ) {
+							maxNodeFlightRange = nodeFlightRange;
+						}
+					}
+					if( maxNodeFlightRange * 2.0 > normalizedDroneFlightRange ) {
+						changeDroneFlightRange = true;
+					} else {
+						//change droneFlightRange when normalizedDroneFlightRange greater than it should be
+						for( int i : ((Pdstsp)tspModel).getDroneDeliveryPossible() ){
+							if( !((Pdstsp)tspModel).getDroneDeliveryPossibleAndInFlightRange().contains( i ) ){
+								double distanceToDepot = calculateDistance( nodes[0], nodes[i] );
+								if( distanceToDepot * 2.0 < normalizedDroneFlightRange ){
+									changeDroneFlightRange = true;
+									break;
+								}
+							}
+						}
+					}
+					if( changeDroneFlightRange ) {
+						normalizedDroneFlightRange = maxNodeFlightRange * 2.0;
+						log.info( "Adjust normalized drone flight range to: " + normalizedDroneFlightRange );
+					} else {
+						log.info( "No adjustment for the normalized drone flight range necessary." );
+					}
+
+					drawDroneFlightRange( gc, nodes[0], normalizedDroneFlightRange );
 				}
 
 				TspModelIterationResult iterationResult;
@@ -443,5 +476,9 @@ public class DisplayApplication extends Application{
 		}
 
 		return normalizeFactor;
+	}
+
+	private double calculateDistance( Node n1, Node n2 ) {
+		return Math.sqrt( Math.pow( ( n1.getX() - n2.getX() ), 2 ) + Math.pow( ( n1.getY() - n2.getY() ) , 2 ) );
 	}
 }
