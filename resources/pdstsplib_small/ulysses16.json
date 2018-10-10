@@ -7,7 +7,6 @@
 	"drone_flight_range" : 14000,
     "drone_fleet_size" : 4,
     "drone_speed" : 1,
-    "truck_speed" : 2,
     "edge_weight_type" : "GEO",
     "display_data_type" : "COORD_DISPLAY",
     "node_coordinates" :
