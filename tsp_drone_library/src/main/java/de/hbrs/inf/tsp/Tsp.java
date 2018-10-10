@@ -59,10 +59,9 @@ public class Tsp extends TspModel {
 	}
 
 	@Override
-	protected TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException{
+	protected TspModelIterationResult calculateAndAddIterationResult( ) throws GRBException{
 		TspIterationResult tspIterationResult = new TspIterationResult();
 		tspIterationResult.setTruckTours( findSubtours() );
-		tspIterationResult.setObjective( objectiveValue );
 		result.getTspIterationResults().add( tspIterationResult );
 		return tspIterationResult;
 	}

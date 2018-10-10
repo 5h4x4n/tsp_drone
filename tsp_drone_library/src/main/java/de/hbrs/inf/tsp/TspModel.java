@@ -230,7 +230,8 @@ public abstract class TspModel{
 					if( log.isDebugEnabled() ){
 						logIterationDebug();
 					}
-					TspModelIterationResult currentTspIterationResult = calculateAndAddIterationResult( objval );
+					TspModelIterationResult currentTspIterationResult = calculateAndAddIterationResult();
+					currentTspIterationResult.setObjective( objval );
 
 					if( !addViolatedConstraints() ){
 						isSolutionOptimal = true;
@@ -384,7 +385,7 @@ public abstract class TspModel{
 		return edges;
 	}
 
-	protected abstract TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException;
+	protected abstract TspModelIterationResult calculateAndAddIterationResult() throws GRBException;
 
 	public double[][] getNodes(){
 		return nodes;

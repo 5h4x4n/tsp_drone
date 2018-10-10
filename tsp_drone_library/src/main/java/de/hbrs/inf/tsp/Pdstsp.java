@@ -178,10 +178,9 @@ public class Pdstsp extends TspModel {
 	}
 
 	@Override
-	protected TspModelIterationResult calculateAndAddIterationResult( int objectiveValue ) throws GRBException{
+	protected TspModelIterationResult calculateAndAddIterationResult() throws GRBException{
 		PdstspIterationResult pdstspIterationResult = new PdstspIterationResult();
 		pdstspIterationResult.setTruckTours( findSubtours() );
-		pdstspIterationResult.setObjective( objectiveValue );
 
 		ArrayList<Integer>[] dronesCustomers = new ArrayList[droneFleetSize];
 		for( int v = 0; v < droneFleetSize; v++ ) {
