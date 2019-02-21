@@ -1,3 +1,0 @@
-Name;Type;Dimension;Decision Variables;Additional Constraints;Iterations;Runtime [s];Objective
-TSP Test;TSP;14;91;3;3;0.013766379;3323.0
-TSP Test 2;TSP;11;55;2;3;0.02470675;3359.0

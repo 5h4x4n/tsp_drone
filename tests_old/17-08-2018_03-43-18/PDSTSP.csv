@@ -1,7 +1,0 @@
-Name;Type;Dimension;Decision Variables;Additional Constraints;Iterations;Runtime [s];Objective;Truck Speed;Drone Speed;Drone Flight Time;Drone Fleet Size;Drones Delivery Possible and in Flight Range
-gr120;PDSTSP;120;7337;27;6;33.045259424;2939.0;2.0;1.0;1200.0;4;49
-a280;PDSTSP;280;39157;64;10;112.545501787;1224.0;2.0;1.0;200.0;4;24
-eil101;PDSTSP;101;5191;71;19;10689.026549706;258.0;2.0;1.0;70.0;4;35
-eil51;PDSTSP;51;1356;7;6;4.300105579;164.0;2.0;1.0;80.0;4;20
-wi29;PDSTSP;29;419;16;6;0.157098142;12888.0;2.0;1.0;14000.0;4;3
-gr48;PDSTSP;48;1173;30;12;2.252477767;2283.0;2.0;1.0;800.0;4;11
