@@ -24,7 +24,7 @@
             <artifactId>gurobi</artifactId>
             <version>8.1.0</version>
             <scope>system</scope>
-            <systemPath>/Library/gurobi810/mac64/lib/gurobi.jar</systemPath>
+            <systemPath>${project.basedir}/../gurobi.jar</systemPath>
         </dependency>
 
     </dependencies>
