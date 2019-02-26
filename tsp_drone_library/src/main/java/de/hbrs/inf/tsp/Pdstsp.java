@@ -99,7 +99,7 @@ public class Pdstsp extends TspModel {
 		grbLinExpr = new GRBLinExpr();
 		StringBuilder logString = new StringBuilder(  );
 		for( int i = 0; i < dimension; i++ ) {
-			for( int j = i + 1; j < dimension; j++ ) {
+			for( int j = i ; j < dimension; j++ ) {
 				if( i != j ) {
 					logString.append( "trucktimes_" ).append( i ).append( "_" ).append( j ).append( " * x" ).append( i ).append( "_" )
 									.append( j ).append( " + " );
@@ -107,6 +107,9 @@ public class Pdstsp extends TspModel {
 					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
 					log.debug( "Add decision var x" + i + "_" + j + " with factor " + truckTimes[i][j] );
 					grbLinExpr.addTerm( truckTimes[i][j], grbTruckEdgeVars[i][j] );
+				} else {
+					//TODO test if nothing goes wrong now
+					grbTruckEdgeVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "x" + i + "_" + i );
 				}
 
 			}
@@ -180,7 +183,8 @@ public class Pdstsp extends TspModel {
 	@Override
 	protected TspModelIterationResult calculateAndAddIterationResult() throws GRBException{
 		PdstspIterationResult pdstspIterationResult = new PdstspIterationResult();
-		pdstspIterationResult.setTruckTours( findSubtours() );
+		double[][] truckEdgeVars = grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeVars );
+		pdstspIterationResult.setTruckTours( findSubtours( truckEdgeVars ) );
 
 		ArrayList<Integer>[] dronesCustomers = new ArrayList[droneFleetSize];
 		for( int v = 0; v < droneFleetSize; v++ ) {
@@ -231,25 +235,80 @@ public class Pdstsp extends TspModel {
 
 			log.info( "Add violated subtour elimination constraints" );
 			for( ArrayList<Integer> subtour : subtours ){
-				double subtourVertexCounter = subtour.size();
 
-				ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
-				StringBuilder subtourEliminationConstraintString = new StringBuilder();
-				String subtourEliminationConstraintName = "sec_";
-				GRBLinExpr grbExpr = new GRBLinExpr();
-				for(int[] edge : edges){
-					subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
-					grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
+				if( subtour.contains( 0 ) ) {
+					log.info( "Skip subtour with depot, cause it is a possible solution for the PDSTSP." );
+				} else {
+					double subtourVertexCounter = subtour.size();
+
+					ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
+					StringBuilder subtourEliminationConstraintString = new StringBuilder();
+					String subtourEliminationConstraintName = "sec_";
+					GRBLinExpr grbExpr = new GRBLinExpr();
+					for( int[] edge : edges ){
+						subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
+						grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
+					}
+					subtourEliminationConstraintName += additionalConstraintsCounter;
+					log.debug( "Add subtour elimination constraint: " + subtourEliminationConstraintString
+									.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + ( subtour.size() - 1 ) );
+					grbModel.addConstr( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, subtourEliminationConstraintName );
+					additionalConstraintsCounter++;
 				}
-				subtourEliminationConstraintName += additionalConstraintsCounter;
-				log.debug( "Add subtour elimination constraint: " + subtourEliminationConstraintString
-								.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + (subtour.size() - 1) );
-				grbModel.addConstr( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, subtourEliminationConstraintName );
-				additionalConstraintsCounter++;
 			}
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	@Override
+	protected void callback(){
+		super.callback();
+		if( isLazyActive ){
+			if( where == GRB.CB_MIPSOL ){
+				log.info( "MIP Solution found. Look for subtours and add lazy constraints." );
+
+				ArrayList<ArrayList<Integer>> subtours = null;
+				double[][] truckEdgeVars;
+				try{
+					truckEdgeVars = getSolution( grbTruckEdgeVars );
+					subtours = findSubtours( truckEdgeVars );
+
+					if( subtours.size() > 1 ){
+						log.info( "Found subtours: " + subtours.size() );
+						log.debug( "Subtours: " + subtours );
+
+						log.info( "Add violated subtour elimination constraints as lazy constraints" );
+						for( ArrayList<Integer> subtour : subtours ){
+
+							if( subtour.contains( 0 ) ) {
+								log.info( "Skip subtour with depot, cause it is a possible solution for the PDSTSP." );
+							} else {
+								double subtourVertexCounter = subtour.size();
+
+								ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
+								StringBuilder subtourEliminationConstraintString = new StringBuilder();
+								GRBLinExpr grbExpr = new GRBLinExpr();
+								for( int[] edge : edges ){
+									subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
+									grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
+								}
+								log.debug( "Add (lazy) subtour elimination constraint: " + subtourEliminationConstraintString
+												.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + ( subtour.size()
+												- 1 ) );
+								addLazy( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1 );
+								additionalConstraintsCounter++;
+							}
+						}
+					}
+				} catch( GRBException e ){
+					e.printStackTrace();
+					log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
+					//TODO implement other solution when exception is thrown - cause termination will look like time exceed
+					grbModel.terminate();
+				}
+			}
 		}
 	}
 

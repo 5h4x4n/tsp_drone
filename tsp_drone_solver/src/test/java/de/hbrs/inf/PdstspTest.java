@@ -4,6 +4,7 @@ import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
 import de.hbrs.inf.tsp.solver.Configuration;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -30,6 +31,7 @@ public class PdstspTest{
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 49 );
 	}
 
 }

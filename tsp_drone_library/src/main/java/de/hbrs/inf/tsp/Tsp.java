@@ -30,10 +30,14 @@ public class Tsp extends TspModel {
 		// create decision variables
 		grbTruckEdgeVars = new GRBVar[dimension][dimension];
 		for(int i = 0; i < dimension; i++){
-			for(int j = i + 1; j < dimension; j++){
-				log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][j] );
-				grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][j], GRB.BINARY, "x" + i  + "_" + j );
-				grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
+			for(int j = i; j < dimension; j++){
+				if( i == j ) {
+					grbTruckEdgeVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "x" + i + "_" + i );
+				} else {
+					log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][j] );
+					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][j], GRB.BINARY, "x" + i + "_" + j );
+					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
+				}
 			}
 		}
 
@@ -61,7 +65,8 @@ public class Tsp extends TspModel {
 	@Override
 	protected TspModelIterationResult calculateAndAddIterationResult( ) throws GRBException{
 		TspIterationResult tspIterationResult = new TspIterationResult();
-		tspIterationResult.setTruckTours( findSubtours() );
+		double[][] truckEdgeVars = grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeVars );
+		tspIterationResult.setTruckTours( findSubtours( truckEdgeVars ) );
 		result.getTspIterationResults().add( tspIterationResult );
 		return tspIterationResult;
 	}
@@ -100,6 +105,56 @@ public class Tsp extends TspModel {
 			return true;
 		} else {
 			return false;
+		}
+	}
+
+	@Override
+	protected void callback(){
+		super.callback();
+		if( isLazyActive ){
+			if( where == GRB.CB_MIPSOL ){
+				log.info( "MIP Solution found. Look for subtours and add lazy constraints." );
+
+				ArrayList<ArrayList<Integer>> subtours = null;
+				double[][] truckEdgeVars;
+				try{
+					truckEdgeVars = getSolution( grbTruckEdgeVars );
+					subtours = findSubtours( truckEdgeVars );
+
+					if( subtours.size() > 1 ){
+						log.info( "Found subtours: " + subtours.size() );
+						log.debug( "Subtours: " + subtours );
+
+						log.info( "Add violated subtour elimination constraints as lazy constraints" );
+						for( ArrayList<Integer> subtour : subtours ){
+							double subtourVertexCounter = subtour.size();
+
+							//skip subtours with bigger size than half of the dimension, cause it is not needed
+							if( subtourVertexCounter > dimension / 2 ){
+								log.debug( "Skip subtour cause it's bigger than half the dimension: " + subtour );
+								continue;
+							}
+							ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
+							StringBuilder subtourEliminationConstraintString = new StringBuilder();
+							GRBLinExpr grbExpr = new GRBLinExpr();
+							for( int[] edge : edges ){
+								subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
+								grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
+							}
+							log.debug( "Add (lazy) subtour elimination constraint: " + subtourEliminationConstraintString
+											.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + ( subtour.size()
+											- 1 ) );
+							addLazy( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1 );
+							additionalConstraintsCounter++;
+						}
+					}
+				} catch( GRBException e ){
+					e.printStackTrace();
+					log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
+					//TODO implement other solution when exception is thrown - cause termination will look like time exceed
+					grbModel.terminate();
+				}
+			}
 		}
 	}
 

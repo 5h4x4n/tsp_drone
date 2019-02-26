@@ -7,6 +7,7 @@ public class Configuration{
 	private static String logLevel = "INFO";
 	private static String outputDirectory = null;
 	private static boolean allCustomersByDrones = false;
+	private static boolean isLazyActive = true;
 	private static double[] truckSpeeds = null;
 	private static double[] droneSpeeds = null;
 	private static int[] droneFleetSizes = null;
@@ -96,5 +97,13 @@ public class Configuration{
 
 	public static void setMaxOptimizationSeconds( int maxOptimizationSeconds ){
 		Configuration.maxOptimizationSeconds = maxOptimizationSeconds;
+	}
+
+	public static boolean isIsLazyActive(){
+		return isLazyActive;
+	}
+
+	public static void setIsLazyActive( boolean isLazyActive ){
+		Configuration.isLazyActive = isLazyActive;
 	}
 }

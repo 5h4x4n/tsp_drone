@@ -52,6 +52,10 @@ public class SolverApplication{
 		}
 		Configuration.setSystemProperties();
 
+		if( cmd.hasOption( "nl" ) ){
+			Configuration.setIsLazyActive( false );
+		}
+
 		log = Logger.getLogger( SolverApplication.class.getName() );
 		log.info( "Start application" );
 
@@ -193,6 +197,8 @@ public class SolverApplication{
 								tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
 							}
 
+							tspModel.setLazyActive( Configuration.isIsLazyActive() );
+
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspModelResult tspResults = tspModel.grbOptimize();
 
@@ -280,6 +286,10 @@ public class SolverApplication{
 
 		Option debug = Option.builder( "d" ).longOpt( "debug" ).required( false ).desc( "set log level to debug" ).build();
 		options.addOption( debug );
+
+		Option noLazy = Option.builder( "nl" ).longOpt( "noLazy" ).required( false ).desc( "deactivate lazy constraints and"
+						+ "activate iterative solving" ).build();
+		options.addOption( noLazy );
 
 		Option logFile = Option.builder( "l" ).longOpt( "logFile" ).argName( "file" ).hasArg().required( false )
 						.desc( "use given file for log" ).build();

@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public abstract class TspModel{
+public abstract class TspModel extends GRBCallback {
 
 	protected String name;
 	protected String comment;
@@ -18,10 +18,11 @@ public abstract class TspModel{
 	protected transient GRBModel grbModel;
 	protected transient GRBEnv grbEnv;
 	protected transient GRBVar[][] grbTruckEdgeVars;
-	protected transient GRBCallback grbCallback;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected int maxOptimizationSeconds = -1;
+	protected transient long startOptimizationTime = -1;
+	protected boolean isLazyActive = true;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -186,20 +187,32 @@ public abstract class TspModel{
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
+			//TODO changeable with parameter
 			grbEnv.set( GRB.IntParam.LogToConsole, 0 );
 			grbModel = calcGrbModel();
+
+			if( isLazyActive ){
+				grbModel.set( GRB.IntParam.LazyConstraints, 1 );
+			}
+
 			runtimeCalcGrbModel = System.nanoTime() - runtimeCalcGrbModel;
 			boolean isSolutionOptimal = false;
 			int iterationCounter = 1;
 
 			log.info( "Start optimization process" );
 			long runtimeOptimization = System.nanoTime();
-			grbCallback = new TspGrbCallback( grbModel, runtimeOptimization, maxOptimizationSeconds );
-			grbModel.setCallback( grbCallback );
+			startOptimizationTime = runtimeOptimization;
+			grbModel.setCallback( this );
 
 			long currentIterationRuntime;
 			do{
 				currentIterationRuntime = System.nanoTime();
+				/* TODO Add option for resetting grb model
+				if( iterationCounter > 1 ) {
+					grbModel.reset();
+					log.info( "Reset old optimization status/infos for clean optimization without warm start!" );
+				}
+				*/
 				log.info( "IterationCounter: " + iterationCounter++ );
 				grbModel.optimize();
 				int optimizationStatus = grbModel.get( GRB.IntAttr.Status );
@@ -301,7 +314,17 @@ public abstract class TspModel{
 		return getResult();
 	}
 
-	protected ArrayList<ArrayList<Integer>> findSubtours() throws GRBException{
+	@Override
+	protected void callback(){
+		if ( where == GRB.CB_MIP ) {
+			double currentRuntimeSeconds = ( System.nanoTime() - startOptimizationTime ) / 1e9 ;
+			if( maxOptimizationSeconds > 0 && currentRuntimeSeconds > maxOptimizationSeconds ) {
+				grbModel.terminate();
+			}
+		}
+	}
+
+	protected ArrayList<ArrayList<Integer>> findSubtours( double[][] edgeVars ) throws GRBException{
 		log.debug( "Starting find subtours" );
 
 		ArrayList<ArrayList<Integer>> subtours = new ArrayList<>();
@@ -312,7 +335,7 @@ public abstract class TspModel{
 		for( int i = dimension - 1; i >= 0; i-- ){
 			for( int j = dimension - 1; j >= 0; j-- ){
 				if( i != j ){
-					if( ( (int)grbTruckEdgeVars[i][j].get( GRB.DoubleAttr.X ) ) == 1 ){
+					if( ( (int)edgeVars[i][j] ) == 1 ){
 						unvisitedVertices.add( i );
 						break;
 					}
@@ -340,7 +363,7 @@ public abstract class TspModel{
 				for(int i = 0; i < dimension; i++){
 					if( i != currentSubtourVertex ){
 						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) + 0.5d ) ) == 1
+						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) == 1
 										&& !subtour.contains( i )
 										&& !unvisitedVerticesForSubtour.contains( i ) ){
 							unvisitedVerticesForSubtour.add( i );
@@ -435,6 +458,14 @@ public abstract class TspModel{
 
 	public void setMaxOptimizationSeconds( int maxOptimizationSeconds ){
 		this.maxOptimizationSeconds = maxOptimizationSeconds;
+	}
+
+	public boolean isLazyActive(){
+		return isLazyActive;
+	}
+
+	public void setLazyActive( boolean lazyActive ){
+		isLazyActive = lazyActive;
 	}
 }
 
