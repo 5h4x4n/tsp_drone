@@ -24,6 +24,7 @@ public abstract class TspModel extends GRBCallback {
 	protected transient long startOptimizationTime = -1;
 	protected boolean isLazyActive = true;
 	protected String hostname;
+	protected int threadCount = 0;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -195,6 +196,8 @@ public abstract class TspModel extends GRBCallback {
 			if( isLazyActive ){
 				grbModel.set( GRB.IntParam.LazyConstraints, 1 );
 			}
+
+			grbModel.set( GRB.IntParam.Threads, threadCount );
 
 			runtimeCalcGrbModel = System.nanoTime() - runtimeCalcGrbModel;
 			boolean isSolutionOptimal = false;
@@ -476,6 +479,15 @@ public abstract class TspModel extends GRBCallback {
 	public void setHostname( String hostname ){
 		this.hostname = hostname;
 	}
+
+	public int getThreadCount(){
+		return threadCount;
+	}
+
+	public void setThreadCount( int threadCount ){
+		this.threadCount = threadCount;
+	}
+
 }
 
 

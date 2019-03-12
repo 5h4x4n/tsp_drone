@@ -14,6 +14,7 @@ public class Configuration{
 	private static int[] droneFlightRanges = null;
 	private static int maxOptimizationSeconds = -1;
 	private static String hostname = null;
+	private static int threadCount = 0;
 
 	public static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
@@ -114,5 +115,13 @@ public class Configuration{
 
 	public static void setHostname( String hostname ){
 		Configuration.hostname = hostname;
+	}
+
+	public static int getThreadCount(){
+		return threadCount;
+	}
+
+	public static void setThreadCount( int threadCount ){
+		Configuration.threadCount = threadCount;
 	}
 }

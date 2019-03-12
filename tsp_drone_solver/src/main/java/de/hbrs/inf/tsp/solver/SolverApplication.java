@@ -9,6 +9,7 @@ import de.hbrs.inf.tsp.TspModelResult;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
+import gurobi.GRB;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 
@@ -54,17 +55,25 @@ public class SolverApplication{
 		}
 		Configuration.setSystemProperties();
 
-		if( cmd.hasOption( "nl" ) ){
-			Configuration.setIsLazyActive( false );
-		}
-
 		log = Logger.getLogger( SolverApplication.class.getName() );
 		log.info( "Start application" );
+
 
 		if( cmd.hasOption( "j" ) ){
 			Configuration.setJsonFileOrDir( cmd.getOptionValue( "j" ) );
 			log.info( "Set json file/directory: " + Configuration.getJsonFileOrDir() );
 		}
+
+		if( cmd.hasOption( "nl" ) ){
+			Configuration.setIsLazyActive( false );
+		}
+		log.info( "IsLazyActive set to: " + Configuration.isLazyActive() );
+
+		if( cmd.hasOption( "tc" ) ) {
+			Configuration.setThreadCount( Integer.parseInt( cmd.getOptionValue( "tc" ) ) );
+		}
+		log.info( "ThreadCount set to: " + Configuration.getThreadCount() );
+
 
 		log.info( "Set log level: " + System.getProperty( "log4j.logLevel" ) );
 		log.info( "Set log file: " + Configuration.getLogFile() );
@@ -133,14 +142,19 @@ public class SolverApplication{
 		outputPath.append( fileOrDirName ).append( "_" ).append( datetime );
 
 		//Add hostname (if available) to output dir
+		String hostname;
 		try{
-			String hostname = InetAddress.getLocalHost().getHostName();
-			Configuration.setHostname( hostname );
+			hostname = InetAddress.getLocalHost().getHostName();
 		} catch( UnknownHostException e ){
 			log.warn( "Could not get hostname of local machine!" );
-			Configuration.setHostname( "Unknown" );
+			hostname = "Unknown";
 		}
+		log.info( "Set hostname to '" + hostname + "'." );
+		Configuration.setHostname( hostname );
 		outputPath.append( "_" ).append( Configuration.getHostname() );
+
+		//Add threadCount to output dir
+		outputPath.append( "_tc-" ).append( Configuration.getThreadCount() );
 
 		//Add if lazy constraints or iterative mode is active to output dir
 		outputPath.append( "_" );
@@ -219,8 +233,8 @@ public class SolverApplication{
 							}
 
 							tspModel.setLazyActive( Configuration.isLazyActive() );
-
 							tspModel.setHostname( Configuration.getHostname() );
+							tspModel.setThreadCount( Configuration.getThreadCount() );
 
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspModelResult tspResults = tspModel.grbOptimize();
@@ -366,6 +380,10 @@ public class SolverApplication{
 		Option maxOptimizationSeconds = Option.builder( "ms" ).longOpt( "maxSeconds" ).required( false ).argName( "seconds" ).hasArg()
 						.desc( "an optimization process will be canceled when the total runtime exceeds the given parameter in seconds." ).build();
 		options.addOption( maxOptimizationSeconds );
+
+		Option threadCount = Option.builder( "tc" ).longOpt( "threadCount" ).required( false ).argName( "number of threads to use" ).hasArg()
+											  .desc( "the optimization process will use this number of threads for parallelism." ).build();
+		options.addOption( threadCount );
 
 		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
 
