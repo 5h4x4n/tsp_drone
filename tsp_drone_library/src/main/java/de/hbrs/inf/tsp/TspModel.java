@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public abstract class TspModel extends GRBCallback {
+public abstract class TspModel extends GRBCallback{
 
 	protected String name;
 	protected String comment;
@@ -25,11 +25,13 @@ public abstract class TspModel extends GRBCallback {
 	protected boolean isLazyActive = true;
 	protected String hostname;
 	protected int threadCount = 0;
+	protected double heuristicValue = -1.0;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
 
-	public TspModel() {}
+	public TspModel(){
+	}
 
 	public TspModel( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances ){
 		this.name = name;
@@ -53,34 +55,34 @@ public abstract class TspModel extends GRBCallback {
 		return null;
 	}
 
-	public static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension, String edge_weight_type,
-					String edge_weight_format ){
+	public static int[][] calculateTravelDistances( double[][] node_coordinates, int[][] edge_weights, int dimension,
+					String edge_weight_type, String edge_weight_format ){
 
 		//calculate travel distances dependent on the distance type
-		switch(edge_weight_type){
+		switch( edge_weight_type ){
 			case "GEO":{
 				double[] latitude = new double[dimension];
 				double[] longitude = new double[dimension];
 				int[][] distances = new int[dimension][dimension];
 
-				for(int i = 0; i < dimension; i++){
+				for( int i = 0; i < dimension; i++ ){
 					int degX = (int)node_coordinates[i][0];
 					int degY = (int)node_coordinates[i][1];
 					double minX = node_coordinates[i][0] - degX;
 					double minY = node_coordinates[i][1] - degY;
-					latitude[i] = Math.PI * (degX + 5.0 * minX / 3.0) / 180.0;
-					longitude[i] = Math.PI * (degY + 5.0 * minY / 3.0) / 180.0;
+					latitude[i] = Math.PI * ( degX + 5.0 * minX / 3.0 ) / 180.0;
+					longitude[i] = Math.PI * ( degY + 5.0 * minY / 3.0 ) / 180.0;
 				}
 
-				for(int i = 0; i < dimension; i++){
-					for(int j = 0; j < dimension; j++){
+				for( int i = 0; i < dimension; i++ ){
+					for( int j = 0; j < dimension; j++ ){
 						if( i == j ){
 							distances[i][j] = 0;
 						} else {
 							double q1 = Math.cos( longitude[i] - longitude[j] );
 							double q2 = Math.cos( latitude[i] - latitude[j] );
 							double q3 = Math.cos( latitude[i] + latitude[j] );
-							distances[i][j] = (int)( EARTH_RADIUS * Math.acos( 0.5 * ((1.0 + q1) * q2 - (1.0 - q1) * q3) ) + 1.0 );
+							distances[i][j] = (int)( EARTH_RADIUS * Math.acos( 0.5 * ( ( 1.0 + q1 ) * q2 - ( 1.0 - q1 ) * q3 ) ) + 1.0 );
 						}
 					}
 				}
@@ -90,14 +92,14 @@ public abstract class TspModel extends GRBCallback {
 			case "EUC_2D":{
 				int[][] distances = new int[dimension][dimension];
 
-				for(int i = 0; i < dimension; i++){
-					for(int j = 0; j < dimension; j++){
+				for( int i = 0; i < dimension; i++ ){
+					for( int j = 0; j < dimension; j++ ){
 						if( i == j ){
 							distances[i][j] = 0;
 						} else {
 							double deltaX = node_coordinates[i][0] - node_coordinates[j][0];
 							double deltaY = node_coordinates[i][1] - node_coordinates[j][1];
-							distances[i][j] = (int)(Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5);
+							distances[i][j] = (int)( Math.sqrt( deltaX * deltaX + deltaY * deltaY ) + 0.5 );
 						}
 					}
 				}
@@ -105,11 +107,11 @@ public abstract class TspModel extends GRBCallback {
 
 			}
 			case "EXPLICIT":
-				switch(edge_weight_format){
+				switch( edge_weight_format ){
 					case "LOWER_DIAG_ROW":{
 						int[][] distances = new int[dimension][dimension];
-						for(int i = 0; i < dimension; i++){
-							for(int j = i; j < dimension; j++){
+						for( int i = 0; i < dimension; i++ ){
+							for( int j = i; j < dimension; j++ ){
 								if( i == j ){
 									distances[i][j] = 0;
 								} else {
@@ -122,9 +124,9 @@ public abstract class TspModel extends GRBCallback {
 					}
 					case "UPPER_ROW":{
 						int[][] distances = new int[dimension][dimension];
-						for(int i = 0; i < dimension; i++){
+						for( int i = 0; i < dimension; i++ ){
 							distances[i][i] = 0;
-							for(int j = 0; j < dimension - i - 1; j++){
+							for( int j = 0; j < dimension - i - 1; j++ ){
 								distances[i][j + i + 1] = edge_weights[i][j];
 								distances[j + i + 1][i] = edge_weights[i][j];
 							}
@@ -133,8 +135,8 @@ public abstract class TspModel extends GRBCallback {
 					}
 					case "FULL_MATRIX":{
 						int[][] distances = new int[dimension][dimension];
-						for(int i = 0; i < dimension; i++){
-							for(int j = 0; j < dimension; j++){
+						for( int i = 0; i < dimension; i++ ){
+							for( int j = 0; j < dimension; j++ ){
 								distances[i][j] = edge_weights[i][j];
 							}
 						}
@@ -156,8 +158,8 @@ public abstract class TspModel extends GRBCallback {
 
 		//calculate times with distances and speed
 		double[][] travelTimes = new double[dimension][dimension];
-		for(int i = 0; i < dimension; i++){
-			for(int j = 0; j < dimension; j++){
+		for( int i = 0; i < dimension; i++ ){
+			for( int j = 0; j < dimension; j++ ){
 				travelTimes[i][j] = distances[i][j] / speed;
 			}
 		}
@@ -228,7 +230,7 @@ public abstract class TspModel extends GRBCallback {
 				}
 
 				if( optimizationStatus == GRB.Status.OPTIMAL ){
-					int objval = (int)(grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d);
+					int objval = (int)( grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d );
 					log.info( "Found objective: " + objval );
 
 					GRBVar[] vars = grbModel.getVars();
@@ -236,8 +238,8 @@ public abstract class TspModel extends GRBCallback {
 					double[] x = grbModel.get( GRB.DoubleAttr.X, vars );
 					StringBuilder solutionString = new StringBuilder();
 
-					for(int i = 0; i < vars.length; i++){
-						if( (int)(x[i] + 0.5d) != 0 ){
+					for( int i = 0; i < vars.length; i++ ){
+						if( (int)( x[i] + 0.5d ) != 0 ){
 							solutionString.append( varNames[i] ).append( ", " );
 						}
 					}
@@ -288,7 +290,7 @@ public abstract class TspModel extends GRBCallback {
 						getResult().setRuntime( currentRuntimeOptimizationSeconds );
 
 					}
-				} else if( optimizationStatus == GRB.Status.INTERRUPTED ) {
+				} else if( optimizationStatus == GRB.Status.INTERRUPTED ){
 					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds!" );
 					break;
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
@@ -305,13 +307,13 @@ public abstract class TspModel extends GRBCallback {
 					log.info( "Optimization was stopped with status = " + optimizationStatus );
 					break;
 				}
-			} while(!isSolutionOptimal);
+			} while( !isSolutionOptimal );
 
 			// Dispose of model and environment
 			grbModel.dispose();
 			grbEnv.dispose();
 
-		} catch(GRBException e){
+		} catch( GRBException e ){
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
 
@@ -320,13 +322,52 @@ public abstract class TspModel extends GRBCallback {
 
 	@Override
 	protected void callback(){
-		if ( where == GRB.CB_MIP ) {
-			double currentRuntimeSeconds = ( System.nanoTime() - startOptimizationTime ) / 1e9 ;
-			if( maxOptimizationSeconds > 0 && currentRuntimeSeconds > maxOptimizationSeconds ) {
-				grbModel.terminate();
+		try{
+			if( where == GRB.CB_MIP ){
+				double currentRuntimeSeconds = ( System.nanoTime() - startOptimizationTime ) / 1e9;
+				if( maxOptimizationSeconds > 0 && currentRuntimeSeconds > maxOptimizationSeconds ){
+					grbModel.terminate();
+				}
+			} else if( where == GRB.CB_MIPSOL ){
+				if( isLazyActive ){
+
+					log.info( "MIP Solution found." );
+
+					double objValue = getDoubleInfo( GRB.CB_MIPSOL_OBJ );
+					double bestObjValue = getDoubleInfo( GRB.CB_MIPSOL_OBJBST );
+					double bestObjBound = getDoubleInfo( GRB.CB_MIPSOL_OBJBND );
+					double exploredNodeCount = getDoubleInfo( GRB.CB_MIPSOL_NODCNT );
+					int feasableSolutionsFoundCount = getIntInfo( GRB.CB_MIPSOL_SOLCNT );
+
+					log.info( "Objective value for new solution: " + objValue );
+					log.info( "Current best objective: " + bestObjValue );
+					log.info( "Current best objective bound: " + bestObjBound );
+					log.info( "Current explored node count: " + exploredNodeCount );
+					log.info( "Current count of feasible solutions found: " + feasableSolutionsFoundCount );
+
+					//TODO Remove after tests
+					//heuristicValue = 550.0;
+
+					//only add lazy constraints if current objective value is lower-equals than the given heuristic (maybe optimal) value
+					//cause an other branch will find a better solution or the according solution for the given value
+					if( heuristicValue < 0.0 || objValue <= heuristicValue ){
+						addViolatedLazyConstraints();
+					} else {
+						log.info( "Do not look for violated constraints here, cause current solution is lower than given "
+										+ "'heuristic' value: " + heuristicValue );
+					}
+				}
 			}
+
+		} catch( GRBException e ){
+			e.printStackTrace();
+			log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
+			//TODO implement other solution when exception is thrown - cause termination will look like time exceed
+			grbModel.terminate();
 		}
 	}
+
+	protected abstract void addViolatedLazyConstraints() throws GRBException;
 
 	protected ArrayList<ArrayList<Integer>> findSubtours( double[][] edgeVars ) throws GRBException{
 		log.debug( "Starting find subtours" );
@@ -364,11 +405,10 @@ public abstract class TspModel extends GRBCallback {
 				subtour.add( currentSubtourVertex );
 				log.debug( "subtour: " + subtour );
 				unvisitedVertices.remove( currentSubtourVertex );
-				for(int i = 0; i < dimension; i++){
+				for( int i = 0; i < dimension; i++ ){
 					if( i != currentSubtourVertex ){
 						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) == 1
-										&& !subtour.contains( i )
+						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) == 1 && !subtour.contains( i )
 										&& !unvisitedVerticesForSubtour.contains( i ) ){
 							unvisitedVerticesForSubtour.add( i );
 							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
@@ -385,9 +425,9 @@ public abstract class TspModel extends GRBCallback {
 
 	protected void logIterationDebug() throws GRBException{
 		log.debug( "Adjacency matrix of solution:" );
-		for(int i = 0; i < dimension; i++){
+		for( int i = 0; i < dimension; i++ ){
 			StringBuilder rowString = new StringBuilder();
-			for(int j = 0; j < dimension; j++){
+			for( int j = 0; j < dimension; j++ ){
 				if( i == j ){
 					rowString.append( "-, " );
 				} else {
@@ -398,10 +438,10 @@ public abstract class TspModel extends GRBCallback {
 		}
 	}
 
-	protected ArrayList<int[]> createEdgesForSubtourEliminationConstraint(  ArrayList<Integer> subtour ) {
+	protected ArrayList<int[]> createEdgesForSubtourEliminationConstraint( ArrayList<Integer> subtour ){
 		ArrayList<int[]> edges = new ArrayList<>();
-		for( int i = 0; i < subtour.size() - 1; i++ ) {
-			for( int j = i + 1; j < subtour.size(); j++ ) {
+		for( int i = 0; i < subtour.size() - 1; i++ ){
+			for( int j = i + 1; j < subtour.size(); j++ ){
 				int[] edge = new int[2];
 				edge[0] = subtour.get( i );
 				edge[1] = subtour.get( j );
@@ -456,7 +496,7 @@ public abstract class TspModel extends GRBCallback {
 		return grbModel.getVars().length;
 	}
 
-	public int getTotalConstraintsCounter() {
+	public int getTotalConstraintsCounter(){
 		return calculatedConstraintsCounter + additionalConstraintsCounter;
 	}
 
@@ -488,6 +528,13 @@ public abstract class TspModel extends GRBCallback {
 		this.threadCount = threadCount;
 	}
 
+	public double getHeuristicValue(){
+		return heuristicValue;
+	}
+
+	public void setHeuristicValue( double heuristicValue ){
+		this.heuristicValue = heuristicValue;
+	}
 }
 
 
