@@ -14,6 +14,8 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -129,6 +131,25 @@ public class SolverApplication{
 			fileOrDirName = fileOrDirName.substring( 0, fileOrDirName.lastIndexOf( '.' ) );
 		}
 		outputPath.append( fileOrDirName ).append( "_" ).append( datetime );
+
+		//Add hostname (if available) to output dir
+		try{
+			String hostname = InetAddress.getLocalHost().getHostName();
+			Configuration.setHostname( hostname );
+		} catch( UnknownHostException e ){
+			log.warn( "Could not get hostname of local machine!" );
+			Configuration.setHostname( "Unknown" );
+		}
+		outputPath.append( "_" ).append( Configuration.getHostname() );
+
+		//Add if lazy constraints or iterative mode is active to output dir
+		outputPath.append( "_" );
+		if( Configuration.isLazyActive() ) {
+			outputPath.append( "lazy" );
+		} else {
+			outputPath.append( "iterative" );
+		}
+
 		Configuration.setOutputDirectory( outputPath.toString() );
 		log.info( "Set output directory: " + Configuration.getOutputDirectory() );
 
@@ -197,7 +218,9 @@ public class SolverApplication{
 								tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
 							}
 
-							tspModel.setLazyActive( Configuration.isIsLazyActive() );
+							tspModel.setLazyActive( Configuration.isLazyActive() );
+
+							tspModel.setHostname( Configuration.getHostname() );
 
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspModelResult tspResults = tspModel.grbOptimize();

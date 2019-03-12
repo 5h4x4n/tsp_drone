@@ -13,6 +13,7 @@ public class Configuration{
 	private static int[] droneFleetSizes = null;
 	private static int[] droneFlightRanges = null;
 	private static int maxOptimizationSeconds = -1;
+	private static String hostname = null;
 
 	public static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
@@ -99,11 +100,19 @@ public class Configuration{
 		Configuration.maxOptimizationSeconds = maxOptimizationSeconds;
 	}
 
-	public static boolean isIsLazyActive(){
+	public static boolean isLazyActive(){
 		return isLazyActive;
 	}
 
 	public static void setIsLazyActive( boolean isLazyActive ){
 		Configuration.isLazyActive = isLazyActive;
+	}
+
+	public static String getHostname(){
+		return hostname;
+	}
+
+	public static void setHostname( String hostname ){
+		Configuration.hostname = hostname;
 	}
 }

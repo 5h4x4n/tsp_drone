@@ -23,6 +23,7 @@ public abstract class TspModel extends GRBCallback {
 	protected int maxOptimizationSeconds = -1;
 	protected transient long startOptimizationTime = -1;
 	protected boolean isLazyActive = true;
+	protected String hostname;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -466,6 +467,14 @@ public abstract class TspModel extends GRBCallback {
 
 	public void setLazyActive( boolean lazyActive ){
 		isLazyActive = lazyActive;
+	}
+
+	public String getHostname(){
+		return hostname;
+	}
+
+	public void setHostname( String hostname ){
+		this.hostname = hostname;
 	}
 }
 

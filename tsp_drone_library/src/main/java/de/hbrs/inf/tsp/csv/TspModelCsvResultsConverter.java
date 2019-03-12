@@ -15,6 +15,7 @@ public class TspModelCsvResultsConverter{
 		resultList.add( tspModel.getName() );
 		resultList.add( tspModel.getType() );
 		resultList.add( Boolean.toString( tspModel.isLazyActive() ) );
+		resultList.add( tspModel.getHostname() );
 		resultList.add( Integer.toString( tspModel.getDimension() ) );
 		resultList.add( Double.toString( tspModel.getResult().getRuntime() ) );
 		resultList.add( Boolean.toString( tspModel.getResult().isOptimal() ) );
@@ -47,6 +48,7 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( "Name" );
 		parameterList.add( "Type" );
 		parameterList.add( "IsLazyActive" );
+		parameterList.add( "Hostname" );
 		parameterList.add( "Dimension" );
 		parameterList.add( "Runtime [s]" );
 		parameterList.add( "IsOptimal" );
