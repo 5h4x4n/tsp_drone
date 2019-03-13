@@ -37,6 +37,12 @@ public class TspTest{
 		assert tspModel != null;
 		tspModel.grbOptimize();
 		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 27603 );
+
+		Configuration.setIsLazyActive( false );
+		tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assert tspModel != null;
+		tspModel.grbOptimize();
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 27603 );
 	}
 
 }
