@@ -63,9 +63,6 @@
                         <manifest>
                             <mainClass>de.hbrs.inf.tsp.solver.SolverApplication</mainClass>
                         </manifest>
-                        <manifestEntries>
-                            <Class-Path>./lib/</Class-Path>
-                        </manifestEntries>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
