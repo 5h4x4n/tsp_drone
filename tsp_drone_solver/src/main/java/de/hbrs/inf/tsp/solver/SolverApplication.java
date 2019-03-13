@@ -316,8 +316,8 @@ public class SolverApplication{
 				}
 
 			} catch( Throwable t ) {
-				log.info( "Throwable: " + t.getMessage() );
-				log.info( t.getStackTrace() );
+				log.info( "Throwable: " + t.getClass().getName() + ": " + t.getMessage() );
+				t.printStackTrace();
 			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
