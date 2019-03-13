@@ -185,135 +185,140 @@ public class SolverApplication{
 		//iterate over all given json files
 		for(File file : jsonFiles){
 			log.info( "##################### Start: " + file.getName() + " #####################" );
-			TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( file.getPath() );
 
-			if( tspLibJson == null ){
-				log.error( "Could not convert JSON Object '" + file.getName() + "' to TSP Model!" );
-				continue;
-			}
+			try{
 
-			double[] truckSpeeds = { -1.0 };
-			double[] droneSpeeds = { -1.0 };
-			int[] droneFleetSizes = { -1 };
-			int[] droneFlightRanges = { -1 };
+				TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( file.getPath() );
 
-			String type = tspLibJson.getType();
-			if( type.equals( Defines.PDSTSP ) ){
-				if( Configuration.getTruckSpeeds() != null ){
-					truckSpeeds = Configuration.getTruckSpeeds();
+				if( tspLibJson == null ){
+					log.error( "Could not convert JSON Object '" + file.getName() + "' to TSP Model!" );
+					continue;
 				}
-				if( Configuration.getDroneSpeeds() != null ){
-					droneSpeeds = Configuration.getDroneSpeeds();
+
+				double[] truckSpeeds = { -1.0 };
+				double[] droneSpeeds = { -1.0 };
+				int[] droneFleetSizes = { -1 };
+				int[] droneFlightRanges = { -1 };
+
+				String type = tspLibJson.getType();
+				if( type.equals( Defines.PDSTSP ) ){
+					if( Configuration.getTruckSpeeds() != null ){
+						truckSpeeds = Configuration.getTruckSpeeds();
+					}
+					if( Configuration.getDroneSpeeds() != null ){
+						droneSpeeds = Configuration.getDroneSpeeds();
+					}
+					if( Configuration.getDroneFleetSizes() != null ){
+						droneFleetSizes = Configuration.getDroneFleetSizes();
+					}
+					if( Configuration.getDroneFlightRanges() != null ){
+						droneFlightRanges = Configuration.getDroneFlightRanges();
+					}
 				}
-				if( Configuration.getDroneFleetSizes() != null ){
-					droneFleetSizes = Configuration.getDroneFleetSizes();
-				}
-				if( Configuration.getDroneFlightRanges() != null ){
-					droneFlightRanges = Configuration.getDroneFlightRanges();
-				}
-			}
 
-			TspModel tspModel = null;
+				TspModel tspModel = null;
 
-			for(int ts = 0; ts < truckSpeeds.length; ts++){
-				for(int ds = 0; ds < droneSpeeds.length; ds++){
-					for(int dfs = 0; dfs < droneFleetSizes.length; dfs++){
-						for(int dfr = 0; dfr < droneFlightRanges.length; dfr++){
+				for( int ts = 0; ts < truckSpeeds.length; ts++ ){
+					for( int ds = 0; ds < droneSpeeds.length; ds++ ){
+						for( int dfs = 0; dfs < droneFleetSizes.length; dfs++ ){
+							for( int dfr = 0; dfr < droneFlightRanges.length; dfr++ ){
 
-							tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson, truckSpeeds[ts], droneSpeeds[ds],
-											droneFleetSizes[dfs], droneFlightRanges[dfr], Configuration.isAllCustomersByDrones() );
+								tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson, truckSpeeds[ts], droneSpeeds[ds],
+												droneFleetSizes[dfs], droneFlightRanges[dfr], Configuration.isAllCustomersByDrones() );
 
-							if( tspModel == null ){
-								log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
-								continue;
-							}
-
-							if( Configuration.getMaxOptimizationSeconds() > 0 ) {
-								tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
-							}
-
-							tspModel.setLazyActive( Configuration.isLazyActive() );
-							tspModel.setHostname( Configuration.getHostname() );
-							tspModel.setThreadCount( Configuration.getThreadCount() );
-
-							log.info( "Start Optimization for: " + tspModel.getName() );
-							TspModelResult tspResults = tspModel.grbOptimize();
-
-							if( cmd.hasOption( "c" ) ){
-								File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
-								if( !csvFile.exists() ){
-									try{
-										csvFile.createNewFile();
-										log.info( "Creation of csv result file '" + csvFile.getAbsolutePath() + "' was successful!" );
-									} catch(IOException e){
-										log.info( "Can not create csv result file '" + csvFile.getAbsolutePath() + "'!" );
-										log.info( "Error: " + e.getMessage() );
-										continue;
-									}
-
-									try{
-										StringBuilder headerString = new StringBuilder( TspModelCsvResultsConverter.getCsvHeaderString( type ) )
-														.append( System.lineSeparator() );
-										Files.write( Paths.get( csvFile.toURI() ), headerString.toString().getBytes() );
-										log.info( "Header written to csv result file '" + csvFile.getAbsolutePath() + "'!" );
-									} catch(IOException e){
-										log.info( "Can not write csv results header to file '" + csvFile.getAbsolutePath() + "'!" );
-										log.info( "Error: " + e.getMessage() );
-										continue;
-									}
-
-								}
-
-								try{
-									StringBuilder csvString = new StringBuilder( TspModelCsvResultsConverter.getCsvResultString( tspModel ) )
-													.append( System.lineSeparator() );
-									Files.write( Paths.get( csvFile.toURI() ), csvString.toString().getBytes(), StandardOpenOption.APPEND );
-									log.info( "Results written to results file '" + csvFile.getAbsolutePath() + "'!" );
-								} catch(IOException e){
-									log.info( "Can not write csv results to file '" + csvFile.getAbsolutePath() + "'!" );
-									log.info( "Error: " + e.getMessage() );
+								if( tspModel == null ){
+									log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
 									continue;
 								}
 
-							}
-
-							if( cmd.hasOption( "r" ) ){
-								StringBuilder jsonResultsFileName = new StringBuilder( file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
-								jsonResultsFileName.append( "_" ).append( tspModel.getType() );
-								if( type.equals( Defines.PDSTSP ) ){
-									Pdstsp pdstsp = (Pdstsp)tspModel;
-									jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() )
-													.append( "_ds-" ).append( pdstsp.getDroneSpeed() )
-													.append( "_dfs-" ).append( pdstsp.getDroneFleetSize() )
-													.append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() )
-													.append( "_ms-" ).append( Configuration.getMaxOptimizationSeconds() );
+								if( Configuration.getMaxOptimizationSeconds() > 0 ){
+									tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
 								}
-								jsonResultsFileName.append( ".results.json" );
-								File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
-								if( !jsonResultsFile.exists() ){
+
+								tspModel.setLazyActive( Configuration.isLazyActive() );
+								tspModel.setHostname( Configuration.getHostname() );
+								tspModel.setThreadCount( Configuration.getThreadCount() );
+
+								log.info( "Start Optimization for: " + tspModel.getName() );
+								TspModelResult tspResults = tspModel.grbOptimize();
+
+								if( cmd.hasOption( "c" ) ){
+									File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
+									if( !csvFile.exists() ){
+										try{
+											csvFile.createNewFile();
+											log.info( "Creation of csv result file '" + csvFile.getAbsolutePath() + "' was successful!" );
+										} catch( IOException e ){
+											log.info( "Can not create csv result file '" + csvFile.getAbsolutePath() + "'!" );
+											log.info( "Error: " + e.getMessage() );
+											continue;
+										}
+
+										try{
+											StringBuilder headerString = new StringBuilder( TspModelCsvResultsConverter.getCsvHeaderString( type ) )
+															.append( System.lineSeparator() );
+											Files.write( Paths.get( csvFile.toURI() ), headerString.toString().getBytes() );
+											log.info( "Header written to csv result file '" + csvFile.getAbsolutePath() + "'!" );
+										} catch( IOException e ){
+											log.info( "Can not write csv results header to file '" + csvFile.getAbsolutePath() + "'!" );
+											log.info( "Error: " + e.getMessage() );
+											continue;
+										}
+
+									}
+
 									try{
-										jsonResultsFile.createNewFile();
-										log.info( "Creation of json results file '" + jsonResultsFile.getAbsolutePath() + "' was successful!" );
-									} catch(IOException e){
-										log.info( "Can not create json results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+										StringBuilder csvString = new StringBuilder( TspModelCsvResultsConverter.getCsvResultString( tspModel ) )
+														.append( System.lineSeparator() );
+										Files.write( Paths.get( csvFile.toURI() ), csvString.toString().getBytes(), StandardOpenOption.APPEND );
+										log.info( "Results written to results file '" + csvFile.getAbsolutePath() + "'!" );
+									} catch( IOException e ){
+										log.info( "Can not write csv results to file '" + csvFile.getAbsolutePath() + "'!" );
+										log.info( "Error: " + e.getMessage() );
+										continue;
+									}
+
+								}
+
+								if( cmd.hasOption( "r" ) ){
+									StringBuilder jsonResultsFileName = new StringBuilder( file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
+									jsonResultsFileName.append( "_" ).append( tspModel.getType() );
+									if( type.equals( Defines.PDSTSP ) ){
+										Pdstsp pdstsp = (Pdstsp)tspModel;
+										jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" ).append( pdstsp.getDroneSpeed() ).append( "_dfs-" )
+														   .append( pdstsp.getDroneFleetSize() ).append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() ).append( "_ms-" )
+														   .append( Configuration.getMaxOptimizationSeconds() );
+									}
+									jsonResultsFileName.append( ".results.json" );
+									File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
+									if( !jsonResultsFile.exists() ){
+										try{
+											jsonResultsFile.createNewFile();
+											log.info( "Creation of json results file '" + jsonResultsFile.getAbsolutePath() + "' was successful!" );
+										} catch( IOException e ){
+											log.info( "Can not create json results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+											log.info( "Error: " + e.getMessage() );
+										}
+									}
+									Gson gson = new GsonBuilder().setPrettyPrinting().create();
+									try{
+										Files.write( Paths.get( jsonResultsFile.toURI() ), gson.toJson( tspModel ).getBytes(),
+														StandardOpenOption.CREATE );
+										log.info( "JSON results written to results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
+									} catch( IOException e ){
+										log.info( "Can not write json results to file '" + jsonResultsFile.getAbsolutePath() + "'!" );
 										log.info( "Error: " + e.getMessage() );
 									}
-								}
-								Gson gson = new GsonBuilder().setPrettyPrinting().create();
-								try{
-									Files.write( Paths.get( jsonResultsFile.toURI() ), gson.toJson( tspModel ).getBytes(),
-													StandardOpenOption.CREATE );
-									log.info( "JSON results written to results file '" + jsonResultsFile.getAbsolutePath() + "'!" );
-								} catch(IOException e){
-									log.info( "Can not write json results to file '" + jsonResultsFile.getAbsolutePath() + "'!" );
-									log.info( "Error: " + e.getMessage() );
 								}
 							}
 						}
 					}
 				}
-			}
 
+			} catch( Exception e ) {
+				log.info( "Exception: " + e.getMessage() );
+				log.info( e.getStackTrace() );
+			}
 			log.info( "##################### End: " + file.getName() + " #####################" );
 		}
 	}
