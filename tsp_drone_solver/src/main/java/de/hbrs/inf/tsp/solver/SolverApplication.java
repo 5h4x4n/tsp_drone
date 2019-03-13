@@ -9,7 +9,6 @@ import de.hbrs.inf.tsp.TspModelResult;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
-import gurobi.GRB;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 
@@ -187,7 +186,6 @@ public class SolverApplication{
 		for(File file : jsonFiles){
 			log.info( "##################### Start: " + file.getName() + " #####################" );
 			TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( file.getPath() );
-			TspModel tspModel = null;
 
 			if( tspLibJson == null ){
 				log.error( "Could not convert JSON Object '" + file.getName() + "' to TSP Model!" );
@@ -214,6 +212,8 @@ public class SolverApplication{
 					droneFlightRanges = Configuration.getDroneFlightRanges();
 				}
 			}
+
+			TspModel tspModel = null;
 
 			for(int ts = 0; ts < truckSpeeds.length; ts++){
 				for(int ds = 0; ds < droneSpeeds.length; ds++){
