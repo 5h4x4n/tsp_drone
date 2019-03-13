@@ -19,15 +19,13 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
-        <!--
         <dependency>
             <groupId>gurobi</groupId>
             <artifactId>gurobi</artifactId>
             <version>8.1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../gurobi.jar</systemPath>
+            <systemPath>${project.basedir}/../lib/gurobi.jar</systemPath>
         </dependency>
-           -->
     </dependencies>
     <build>
         <plugins>
