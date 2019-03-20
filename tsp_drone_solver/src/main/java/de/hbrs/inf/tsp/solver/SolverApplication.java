@@ -6,6 +6,7 @@ import de.hbrs.inf.tsp.Defines;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.TspModelResult;
+import de.hbrs.inf.tsp.csv.HeuristicValueReader;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
@@ -60,6 +61,11 @@ public class SolverApplication{
 		if( cmd.hasOption( "j" ) ){
 			Configuration.setJsonFileOrDir( cmd.getOptionValue( "j" ) );
 			log.info( "Set json file/directory: " + Configuration.getJsonFileOrDir() );
+		}
+
+		if( cmd.hasOption( "hvf" ) ){
+			Configuration.setHeuristicValuesFile( cmd.getOptionValue( "hvf" ) );
+			log.info( "Set heuristic values file: " + Configuration.getHeuristicValuesFile() );
 		}
 
 		if( cmd.hasOption( "nl" ) ){
@@ -228,6 +234,17 @@ public class SolverApplication{
 								continue;
 							}
 
+							if( Configuration.getHeuristicValuesFile() != null ) {
+								double heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, Configuration.getHeuristicValuesFile() );
+								if( heuristicValue <= 0.0 ) {
+									log.error( "No heuristic value for current model in file + '" + Configuration.getHeuristicValuesFile() +
+													"' found!" );
+									continue;
+								} else {
+									tspModel.setHeuristicValue( heuristicValue );
+								}
+							}
+
 							if( Configuration.getMaxOptimizationSeconds() > 0 ){
 								tspModel.setMaxOptimizationSeconds( Configuration.getMaxOptimizationSeconds() );
 							}
@@ -348,6 +365,10 @@ public class SolverApplication{
 							  .desc( "use output directory (option: -o) to create file/s with CSV result/s for each solved problem" )
 							  .build();
 		options.addOption( csvDir );
+
+		Option heuristicValuesFile = Option.builder( "hvf" ).longOpt( "heuristicValuesFile" ).argName( "csv_file" ).hasArg().required( true )
+									 .desc( "read heuristic value/s from csv file (required parameter)" ).build();
+		options.addOption( heuristicValuesFile );
 
 		Option jsonResults = Option.builder( "r" ).longOpt( "results" ).required( false )
 								   .desc( "use output directory (option: -o) to create file/s with json results for each solved problem" )

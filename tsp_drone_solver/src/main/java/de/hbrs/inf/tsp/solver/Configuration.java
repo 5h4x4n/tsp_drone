@@ -15,6 +15,7 @@ public class Configuration{
 	private static int maxOptimizationSeconds = -1;
 	private static String hostname = null;
 	private static int threadCount = 0;
+	private static String heuristicValuesFile = null;
 
 	public static void setSystemProperties() {
 		System.setProperty( "log4j.logLevel", logLevel );
@@ -123,5 +124,13 @@ public class Configuration{
 
 	public static void setThreadCount( int threadCount ){
 		Configuration.threadCount = threadCount;
+	}
+
+	public static String getHeuristicValuesFile(){
+		return heuristicValuesFile;
+	}
+
+	public static void setHeuristicValuesFile( String heuristicValuesFile ){
+		Configuration.heuristicValuesFile = heuristicValuesFile;
 	}
 }
