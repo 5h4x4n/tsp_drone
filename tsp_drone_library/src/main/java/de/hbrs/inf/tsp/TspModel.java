@@ -350,10 +350,10 @@ public abstract class TspModel extends GRBCallback{
 
 					//only add lazy constraints if current objective value is lower-equals than the given heuristic (maybe optimal) value
 					//cause an other branch will find a better solution or the according solution for the given value
-					if( heuristicValue < 0.0 || objValue <= heuristicValue ){
+					if( heuristicValue <= 0.0 || objValue <= heuristicValue ){
 						addViolatedLazyConstraints();
 					} else {
-						log.info( "Do not look for violated constraints here, cause current solution is lower than given "
+						log.info( "Do not look for violated constraints here, cause current solution is lower than "
 										+ "'heuristic' value: " + heuristicValue );
 					}
 				}
