@@ -1,6 +1,5 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp;
 
-import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
 import de.hbrs.inf.tsp.solver.Configuration;

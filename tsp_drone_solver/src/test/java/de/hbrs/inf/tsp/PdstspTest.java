@@ -1,4 +1,4 @@
-package de.hbrs.inf;
+package de.hbrs.inf.tsp;
 
 import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
