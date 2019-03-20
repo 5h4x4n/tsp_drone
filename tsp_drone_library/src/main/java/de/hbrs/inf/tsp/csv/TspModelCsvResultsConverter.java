@@ -45,27 +45,27 @@ public class TspModelCsvResultsConverter{
 		ArrayList<String> parameterList = new ArrayList<>();
 
 		//add all common parameters
-		parameterList.add( "Name" );
-		parameterList.add( "Type" );
-		parameterList.add( "IsLazyActive" );
-		parameterList.add( "Hostname" );
-		parameterList.add( "Dimension" );
-		parameterList.add( "Runtime [s]" );
-		parameterList.add( "IsOptimal" );
-		parameterList.add( "Objective" );
-		parameterList.add( "DecisionVariables" );
-		parameterList.add( "TotalConstraints" );
-		parameterList.add( "AdditionalConstraints" );
-		parameterList.add( "Iterations" );
+		parameterList.add( Defines.Strings.NAME );
+		parameterList.add( Defines.Strings.TYPE );
+		parameterList.add( Defines.Strings.IS_LAZY_ACTIVE );
+		parameterList.add( Defines.Strings.HOSTNAME );
+		parameterList.add( Defines.Strings.DIMENSION );
+		parameterList.add( Defines.Strings.RUNTIME );
+		parameterList.add( Defines.Strings.IS_OPTIMAL );
+		parameterList.add( Defines.Strings.OBJECTIVE );
+		parameterList.add( Defines.Strings.DECISION_VARIABLES );
+		parameterList.add( Defines.Strings.TOTAL_CONSTRAINTS );
+		parameterList.add( Defines.Strings.ADDITIONAL_CONSTRAINTS );
+		parameterList.add( Defines.Strings.ITERATIONS );
 
 		//add additional parameters
 		switch( type ) {
 			case Defines.PDSTSP:
-				parameterList.add( "TruckSpeed" );
-				parameterList.add( "DroneSpeed" );
-				parameterList.add( "DroneFleetSize" );
-				parameterList.add( "DronesDeliveryPossibleAndInFlightRange" );
-				parameterList.add( "DroneFlightRangePercentage" );
+				parameterList.add( Defines.Strings.TRUCK_SPEED );
+				parameterList.add( Defines.Strings.DRONE_SPEED );
+				parameterList.add( Defines.Strings.DRONE_FLEET_SIZE );
+				parameterList.add( Defines.Strings.DRONES_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE );
+				parameterList.add( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE );
 				break;
 		}
 
