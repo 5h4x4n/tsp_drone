@@ -266,6 +266,7 @@ public abstract class TspModel extends GRBCallback{
 						getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
 						getResult().setObjective( objval );
 						getResult().setOptimal( true );
+						getResult().setUsedHeuristicValue( heuristicValue );
 
 						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );
 						log.info( currentTspIterationResult.getSolutionString() );
@@ -344,9 +345,6 @@ public abstract class TspModel extends GRBCallback{
 					log.info( "Current best objective bound: " + bestObjBound );
 					log.info( "Current explored node count: " + exploredNodeCount );
 					log.info( "Current count of feasible solutions found: " + feasableSolutionsFoundCount );
-
-					//TODO Remove after tests
-					//heuristicValue = 550.0;
 
 					//only add lazy constraints if current objective value is lower-equals than the given heuristic (maybe optimal) value
 					//cause an other branch will find a better solution or the according solution for the given value

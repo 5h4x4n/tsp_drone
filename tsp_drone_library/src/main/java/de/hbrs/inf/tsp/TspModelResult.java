@@ -9,6 +9,7 @@ public abstract class TspModelResult {
 	private double runtime;
 	private double runtimeGrbModelCalculation;
 	private int objective;
+	private double usedHeuristicValue = -1.0;
 
 	public TspModelResult( String name ) {
 		this. name = name;
@@ -62,5 +63,13 @@ public abstract class TspModelResult {
 
 	public void setObjective( int objective ){
 		this.objective = objective;
+	}
+
+	public double getUsedHeuristicValue(){
+		return usedHeuristicValue;
+	}
+
+	public void setUsedHeuristicValue( double heuristicValue ){
+		this.usedHeuristicValue = heuristicValue;
 	}
 }

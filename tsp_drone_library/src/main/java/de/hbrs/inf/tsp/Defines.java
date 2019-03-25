@@ -23,6 +23,7 @@ public class Defines{
 		public static final String DRONE_FLEET_SIZE = "DroneFleetSize";
 		public static final String DRONES_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE = "DronesDeliveryPossibleAndInFlightRange";
 		public static final String DRONE_FLIGHT_RANGE_PERCENTAGE = "DroneFlightRangePercentage";
+		public static final String USED_HEURISTIC_VALUE = "UsedHeuristicValue";
 
 	}
 
