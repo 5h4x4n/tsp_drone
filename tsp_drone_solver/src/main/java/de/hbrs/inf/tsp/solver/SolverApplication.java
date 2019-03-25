@@ -21,8 +21,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class SolverApplication{
 
@@ -218,6 +220,7 @@ public class SolverApplication{
 				}
 			}
 
+			List<double[]> alreadyCalculatedParameters = new ArrayList<>();
 			TspModel tspModel = null;
 
 			for( int ts = 0; ts < truckSpeeds.length; ts++ ){
@@ -231,15 +234,20 @@ public class SolverApplication{
 
 							if( tspModel == null ){
 								log.error( "Could not convert JSON file '" + file.getName() + "' to JSON Object!" );
+								break;
+							}
+
+							if( hasSpeedRatioAlreadyBeenCalculated( alreadyCalculatedParameters, droneFleetSizes[dfs], droneFlightRanges[dfr],
+											truckSpeeds[ts]/droneSpeeds[ds] ) ) {
+								log.info( "Skip current tspModel, cause it has already been optimized with the same speed ratio!" );
 								continue;
 							}
 
 							if( Configuration.getHeuristicValuesFile() != null ) {
 								double heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, Configuration.getHeuristicValuesFile() );
 								if( heuristicValue <= 0.0 ) {
-									log.error( "No heuristic value for current model in file + '" + Configuration.getHeuristicValuesFile() +
-													"' found!" );
-									continue;
+									log.info( "No heuristic value for current model in file + '" + Configuration.getHeuristicValuesFile() +
+													"' found! No value will be used!" );
 								} else {
 									tspModel.setHeuristicValue( heuristicValue );
 								}
@@ -255,6 +263,10 @@ public class SolverApplication{
 
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspModelResult tspResults = tspModel.grbOptimize();
+
+							double speedRatio = truckSpeeds[ts]/droneSpeeds[ds];
+							log.info( "Speed ratio: " + speedRatio );
+							alreadyCalculatedParameters.add( new double[] { droneFleetSizes[dfs], droneFlightRanges[dfr], speedRatio } );
 
 							if( cmd.hasOption( "c" ) ){
 								File csvFile = new File( Configuration.getOutputDirectory() + "/" + type + ".csv" );
@@ -339,6 +351,16 @@ public class SolverApplication{
 		}
 	}
 
+	private static boolean hasSpeedRatioAlreadyBeenCalculated( List<double[]> alreadyCalculatedParameters, int droneFleetSize,
+					int droneFlightRange, double speedRatio ){
+		for( double[] parameters : alreadyCalculatedParameters ){
+			if( parameters[0] == droneFleetSize && parameters[1] == droneFlightRange && parameters[2] == speedRatio ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static Options createOptions(){
 		Options options = new Options();
 
@@ -366,8 +388,8 @@ public class SolverApplication{
 							  .build();
 		options.addOption( csvDir );
 
-		Option heuristicValuesFile = Option.builder( "hvf" ).longOpt( "heuristicValuesFile" ).argName( "csv_file" ).hasArg().required( true )
-									 .desc( "read heuristic value/s from csv file (required parameter)" ).build();
+		Option heuristicValuesFile = Option.builder( "hvf" ).longOpt( "heuristicValuesFile" ).argName( "csv_file" ).hasArg().required( false )
+									 .desc( "read heuristic value/s from csv file" ).build();
 		options.addOption( heuristicValuesFile );
 
 		Option jsonResults = Option.builder( "r" ).longOpt( "results" ).required( false )
