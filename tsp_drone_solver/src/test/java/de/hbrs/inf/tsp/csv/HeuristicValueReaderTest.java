@@ -40,4 +40,14 @@ public class HeuristicValueReaderTest{
 		heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, "src/test/resources/test.csv" );
 		Assert.assertEquals( heuristicValue, 10, 0 );
 	}
+
+	@Test
+	public void getHeuristicValueTest2(){
+
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( JsonTspMapper.getJsonObjectFromJson( "../resources/pdstsplib_small_1/gr48.json" ),
+						10, 20, 4, 40, true );
+		double heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, "../resources/pdstsplib_small_1/HeuristicValues.csv" );
+		Assert.assertEquals( heuristicValue, 459, 0 );
+
+	}
 }

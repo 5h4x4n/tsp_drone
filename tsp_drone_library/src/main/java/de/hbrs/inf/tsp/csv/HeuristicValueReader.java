@@ -67,16 +67,16 @@ public class HeuristicValueReader{
 					double ts = pdstsp.getTruckSpeed();
 					double ds = pdstsp.getDroneSpeed();
 					double dfs = pdstsp.getDroneFleetSize();
-					double dfr = pdstsp.getDroneFlightRangePercentage();
+					double dfr = pdstsp.getDroneFlightRangePercentage() / 100.0;
 
-					log.info( "DEBUG: ts=" + ts + " , ds=" + ds + " , dfs=" + dfs + " , dfr=" + dfr );
+					log.info( "Search for line with ts=" + ts + " , ds=" + ds + " , dfs=" + dfs + " , dfr=" + dfr );
 
 					filteredRow = csv.stream().filter( line -> line.get( Defines.Strings.TYPE ).equalsIgnoreCase( type )
 									&& line.get( Defines.Strings.NAME ).equalsIgnoreCase( name )
-									&& Double.parseDouble( line.get( Defines.Strings.TRUCK_SPEED ) ) == ts
-									&& Double.parseDouble( line.get( Defines.Strings.DRONE_SPEED ) ) == ds
+									&& Double.parseDouble( line.get( Defines.Strings.TRUCK_SPEED ).replaceAll( ",", "." ) ) == ts
+									&& Double.parseDouble( line.get( Defines.Strings.DRONE_SPEED ).replaceAll( ",", "." ) ) == ds
 									&& Double.parseDouble( line.get( Defines.Strings.DRONE_FLEET_SIZE ) ) == dfs
-									&& Double.parseDouble( line.get( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE ) ) == dfr )
+									&& Double.parseDouble( line.get( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE ).replaceAll( ",", "." ) ) == dfr )
 											  .findFirst();
 
 					if( filteredRow.isPresent() ) {
