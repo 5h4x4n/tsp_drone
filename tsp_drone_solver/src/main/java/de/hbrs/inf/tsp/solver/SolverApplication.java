@@ -261,6 +261,20 @@ public class SolverApplication{
 							tspModel.setHostname( Configuration.getHostname() );
 							tspModel.setThreadCount( Configuration.getThreadCount() );
 
+							//TODO if PDSTSP and pdstsp heuristic xy active
+							/*
+							boolean isXYActive = false;
+							if( isXYActive ) {
+								log.info( "Start presolve process with heuristic xy ..." );
+								//TODO set heuristic solution as start solution?!
+								//TODO set heuristic value for tspModel
+								if( !tspModel.startHeuristic() ) {
+									log.info( "Something went wrong in the presolve heuristic calculation!" );
+									continue;
+								}
+							}
+							*/
+
 							log.info( "Start Optimization for: " + tspModel.getName() );
 							TspModelResult tspResults = tspModel.grbOptimize();
 

@@ -336,7 +336,7 @@ public abstract class TspModel extends GRBCallback{
 
 					log.info( "MIP Solution found." );
 
-					double objValue = getDoubleInfo( GRB.CB_MIPSOL_OBJ );
+					int objValue = (int)( getDoubleInfo( GRB.CB_MIPSOL_OBJ ) + 0.5d );
 					double bestObjValue = getDoubleInfo( GRB.CB_MIPSOL_OBJBST );
 					double bestObjBound = getDoubleInfo( GRB.CB_MIPSOL_OBJBND );
 					double exploredNodeCount = getDoubleInfo( GRB.CB_MIPSOL_NODCNT );
@@ -381,7 +381,7 @@ public abstract class TspModel extends GRBCallback{
 		for( int i = dimension - 1; i >= 0; i-- ){
 			for( int j = dimension - 1; j >= 0; j-- ){
 				if( i != j ){
-					if( ( (int)edgeVars[i][j] ) == 1 ){
+					if( ( (int)( edgeVars[i][j] + 0.5d ) ) != 0 ){
 						unvisitedVertices.add( i );
 						break;
 					}
@@ -409,7 +409,7 @@ public abstract class TspModel extends GRBCallback{
 				for( int i = 0; i < dimension; i++ ){
 					if( i != currentSubtourVertex ){
 						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) == 1 && !subtour.contains( i )
+						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) != 0 && !subtour.contains( i )
 										&& !unvisitedVerticesForSubtour.contains( i ) ){
 							unvisitedVerticesForSubtour.add( i );
 							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );

@@ -193,7 +193,7 @@ public class Pdstsp extends TspModel{
 			dronesCustomers[v] = new ArrayList<>();
 			for( int i = 0; i < dimension; i++ ){
 				if( grbDronesCustomersVars[v][i] != null ){
-					if( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) == 1 ){
+					if( (int)( grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) + 0.5d ) != 0 ){
 						dronesCustomers[v].add( i );
 					}
 				}
