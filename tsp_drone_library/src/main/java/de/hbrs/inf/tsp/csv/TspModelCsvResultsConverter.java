@@ -33,6 +33,7 @@ public class TspModelCsvResultsConverter{
 				Pdstsp pdstsp = (Pdstsp) tspModel;
 				resultList.add( Double.toString( pdstsp.getTruckSpeed() ) );
 				resultList.add( Double.toString( pdstsp.getDroneSpeed() ) );
+				resultList.add( Double.toString( pdstsp.getTruckSpeed() / pdstsp.getDroneSpeed() ) );
 				resultList.add( Integer.toString( pdstsp.getDroneFleetSize() ) );
 				resultList.add( Integer.toString( pdstsp.getDroneDeliveryPossibleAndInFlightRangeCounter() ) );
 				resultList.add( Double.toString( pdstsp.getDroneFlightRangePercentage() / 100.0 ) );
@@ -65,6 +66,7 @@ public class TspModelCsvResultsConverter{
 			case Defines.PDSTSP:
 				parameterList.add( Defines.Strings.TRUCK_SPEED );
 				parameterList.add( Defines.Strings.DRONE_SPEED );
+				parameterList.add( Defines.Strings.TRUCK_SPEED_DRONE_SPEED_RATIO );
 				parameterList.add( Defines.Strings.DRONE_FLEET_SIZE );
 				parameterList.add( Defines.Strings.DRONES_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE );
 				parameterList.add( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE );
