@@ -26,6 +26,7 @@ public abstract class TspModel extends GRBCallback{
 	protected String hostname;
 	protected int threadCount = 0;
 	protected double heuristicValue = -1.0;
+	protected int errorCode = 0;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -315,6 +316,7 @@ public abstract class TspModel extends GRBCallback{
 			grbEnv.dispose();
 
 		} catch( GRBException e ){
+			errorCode = e.getErrorCode();
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
 
@@ -359,6 +361,7 @@ public abstract class TspModel extends GRBCallback{
 
 		} catch( GRBException e ){
 			e.printStackTrace();
+			errorCode = e.getErrorCode();
 			log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
 			//TODO implement other solution when exception is thrown - cause termination will look like time exceed
 			grbModel.terminate();
@@ -532,6 +535,14 @@ public abstract class TspModel extends GRBCallback{
 
 	public void setHeuristicValue( double heuristicValue ){
 		this.heuristicValue = heuristicValue;
+	}
+
+	public int getErrorCode(){
+		return errorCode;
+	}
+
+	public void setErrorCode( int errorCode ){
+		this.errorCode = errorCode;
 	}
 }
 

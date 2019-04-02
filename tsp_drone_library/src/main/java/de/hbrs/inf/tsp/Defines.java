@@ -25,6 +25,7 @@ public class Defines{
 		public static final String DRONE_FLIGHT_RANGE_PERCENTAGE = "DroneFlightRangePercentage";
 		public static final String USED_HEURISTIC_VALUE = "UsedHeuristicValue";
 		public static final String TRUCK_SPEED_DRONE_SPEED_RATIO = "SpeedRatio" ;
+		public static final String ERROR_CODE = "ErrorCode";
 	}
 
 }
