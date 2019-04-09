@@ -165,6 +165,9 @@ public class SolverApplication{
 		outputPath.append( "_" );
 		if( Configuration.isLazyActive() ){
 			outputPath.append( "lazy" );
+			if( cmd.hasOption( "hvf" ) ) {
+				outputPath.append( "-heuristicValues" );
+			}
 		} else {
 			outputPath.append( "iterative" );
 		}

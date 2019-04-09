@@ -88,7 +88,7 @@ public class HeuristicValueReader{
 										+ "ts=" + ts + " , ds=" + ds + " , dfs=" + dfs + " , dfr=" + dfr );
 					} else {
 						//TODO parsing not safe - if there is a comma or s.th. else in the cell -> NumberFormatException
-						heuristicValue = Double.parseDouble( heuristicValueString );
+						heuristicValue = Double.parseDouble( heuristicValueString.replaceAll( ",", "." ) );
 						log.info( "Found heuristic value for PDSTSP model of '" + name + "' and values: "
 										+ "ts=" + ts + " , ds=" + ds + " , dfs=" + dfs + " , dfr=" + dfr + "': '" + heuristicValue + "' "
 										+ "(String value: '" + heuristicValueString + "')" );
