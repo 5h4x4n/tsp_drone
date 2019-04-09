@@ -47,7 +47,7 @@ public class HeuristicValueReaderTest{
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( JsonTspMapper.getJsonObjectFromJson( "../resources/pdstsplib_small_1/gr48.json" ),
 						10, 20, 4, 40, true );
 		double heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, "../resources/pdstsplib_small_1/HeuristicValues.csv" );
-		Assert.assertEquals( heuristicValue, 459, 0 );
+		Assert.assertEquals( heuristicValue, 504.9, 0 );
 
 	}
 }
