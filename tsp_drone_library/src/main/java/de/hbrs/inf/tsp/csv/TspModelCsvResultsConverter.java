@@ -14,12 +14,14 @@ public class TspModelCsvResultsConverter{
 		//add all common results
 		resultList.add( tspModel.getName() );
 		resultList.add( tspModel.getType() );
+		resultList.add( tspModel.getTestDescription() );
 		resultList.add( Boolean.toString( tspModel.isLazyActive() ) );
 		resultList.add( tspModel.getHostname() );
 		resultList.add( Integer.toString( tspModel.getThreadCount() ) );
 		resultList.add( Integer.toString( tspModel.getDimension() ) );
 		resultList.add( Double.toString( tspModel.getResult().getRuntime() ) );
 		resultList.add( Boolean.toString( tspModel.getResult().isOptimal() ) );
+		resultList.add( Integer.toString( tspModel.getMaxOptimizationSeconds() ) );
 		resultList.add( Integer.toString( tspModel.getErrorCode() ) );
 		resultList.add( Double.toString( tspModel.getResult().getObjective() ) );
 		resultList.add( Double.toString( tspModel.getResult().getUsedHeuristicValue() ) );
@@ -51,12 +53,14 @@ public class TspModelCsvResultsConverter{
 		//add all common parameters
 		parameterList.add( Defines.Strings.NAME );
 		parameterList.add( Defines.Strings.TYPE );
+		parameterList.add( Defines.Strings.TEST_DESCRIPTION );
 		parameterList.add( Defines.Strings.IS_LAZY_ACTIVE );
 		parameterList.add( Defines.Strings.HOSTNAME );
 		parameterList.add( Defines.Strings.THREAD_COUNT );
 		parameterList.add( Defines.Strings.DIMENSION );
 		parameterList.add( Defines.Strings.RUNTIME );
 		parameterList.add( Defines.Strings.IS_OPTIMAL );
+		parameterList.add( Defines.Strings.MAX_RUNTIME_SECONDS );
 		parameterList.add( Defines.Strings.ERROR_CODE );
 		parameterList.add( Defines.Strings.OBJECTIVE );
 		parameterList.add( Defines.Strings.USED_HEURISTIC_VALUE );

@@ -11,6 +11,7 @@ public abstract class TspModel extends GRBCallback{
 
 	protected String name;
 	protected String comment;
+	protected String testDescription = "-";
 	protected String type;
 	protected int dimension;
 	protected double[][] nodes;
@@ -505,6 +506,10 @@ public abstract class TspModel extends GRBCallback{
 		this.maxOptimizationSeconds = maxOptimizationSeconds;
 	}
 
+	public int getMaxOptimizationSeconds(){
+		return maxOptimizationSeconds;
+	}
+
 	public boolean isLazyActive(){
 		return isLazyActive;
 	}
@@ -543,6 +548,14 @@ public abstract class TspModel extends GRBCallback{
 
 	public void setErrorCode( int errorCode ){
 		this.errorCode = errorCode;
+	}
+
+	public String getTestDescription(){
+		return testDescription;
+	}
+
+	public void setTestDescription( String testDescription ){
+		this.testDescription = testDescription;
 	}
 }
 

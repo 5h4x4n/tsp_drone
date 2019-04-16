@@ -27,6 +27,8 @@ public class Defines{
 		public static final String TRUCK_SPEED_DRONE_SPEED_RATIO = "SpeedRatio" ;
 		public static final String ERROR_CODE = "ErrorCode";
 		public static final String THREAD_COUNT = "ThreadCount";
+		public static final String MAX_RUNTIME_SECONDS = "maxSeconds";
+		public static final String TEST_DESCRIPTION = "testDescription";
 	}
 
 }

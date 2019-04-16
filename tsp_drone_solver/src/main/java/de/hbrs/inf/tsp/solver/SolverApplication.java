@@ -80,6 +80,11 @@ public class SolverApplication{
 		}
 		log.info( "ThreadCount set to: " + Configuration.getThreadCount() );
 
+		if( cmd.hasOption( "td" ) ){
+			Configuration.setTestDescription( cmd.getOptionValue( "td" ) );
+		}
+		log.info( "TestDescription set to: " + Configuration.getTestDescription() );
+
 		log.info( "Set log level: " + System.getProperty( "log4j.logLevel" ) );
 		log.info( "Set log file: " + Configuration.getLogFile() );
 
@@ -263,6 +268,7 @@ public class SolverApplication{
 							tspModel.setLazyActive( Configuration.isLazyActive() );
 							tspModel.setHostname( Configuration.getHostname() );
 							tspModel.setThreadCount( Configuration.getThreadCount() );
+							tspModel.setTestDescription( Configuration.getTestDescription() );
 
 							//TODO if PDSTSP and pdstsp heuristic xy active
 							/*
@@ -448,6 +454,11 @@ public class SolverApplication{
 											  .desc( "an optimization process will be canceled when the total runtime exceeds the given parameter in seconds." )
 											  .build();
 		options.addOption( maxOptimizationSeconds );
+
+		Option testDescription = Option.builder( "td" ).longOpt( "testDescription" ).required( false ).argName( "comment" ).hasArg()
+						.desc( "a description/comment of the test settings, which will be written to the results." )
+						.build();
+		options.addOption( testDescription );
 
 		Option threadCount = Option.builder( "tc" ).longOpt( "threadCount" ).required( false ).argName( "number of threads to use" )
 								   .hasArg().desc( "the optimization process will use this number of threads for parallelism." ).build();

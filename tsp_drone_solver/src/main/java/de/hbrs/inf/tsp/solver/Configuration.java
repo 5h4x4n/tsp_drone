@@ -6,6 +6,7 @@ public class Configuration{
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
 	private static String outputDirectory = null;
+	private static String testDescription = "-";
 	private static boolean allCustomersByDrones = false;
 	private static boolean lazyActive = true;
 	private static double[] truckSpeeds = null;
@@ -132,5 +133,13 @@ public class Configuration{
 
 	public static void setHeuristicValuesFile( String heuristicValuesFile ){
 		Configuration.heuristicValuesFile = heuristicValuesFile;
+	}
+
+	public static void setTestDescription( String testDescription ){
+		Configuration.testDescription = testDescription;
+	}
+
+	public static String getTestDescription(){
+		return testDescription;
 	}
 }
