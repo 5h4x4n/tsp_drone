@@ -11,7 +11,7 @@ public abstract class TspModel extends GRBCallback{
 
 	protected String name;
 	protected String comment;
-	protected String testDescription = "-";
+	protected String testDescription = "";
 	protected String type;
 	protected int dimension;
 	protected double[][] nodes;

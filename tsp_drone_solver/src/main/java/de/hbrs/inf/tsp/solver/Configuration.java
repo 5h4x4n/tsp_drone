@@ -6,7 +6,7 @@ public class Configuration{
 	private static String jsonFileOrDir = null;
 	private static String logLevel = "INFO";
 	private static String outputDirectory = null;
-	private static String testDescription = "-";
+	private static String testDescription = "";
 	private static boolean allCustomersByDrones = false;
 	private static boolean lazyActive = true;
 	private static double[] truckSpeeds = null;
