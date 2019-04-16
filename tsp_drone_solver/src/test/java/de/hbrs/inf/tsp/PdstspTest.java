@@ -31,13 +31,13 @@ public class PdstspTest{
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 49 );
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 6646.0, 0.0 );
 
 		Configuration.setIsLazyActive( false );
 		tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 49 );
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 6646.0, 0.0 );
 	}
 
 }

@@ -35,13 +35,13 @@ public class TspTest{
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 27603 );
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2760300, 0.0 );
 
 		Configuration.setIsLazyActive( false );
 		tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 27603 );
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2760300.0, 0.0 );
 	}
 
 }
