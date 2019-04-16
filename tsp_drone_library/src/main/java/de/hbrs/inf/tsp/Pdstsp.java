@@ -300,6 +300,8 @@ public class Pdstsp extends TspModel{
 					additionalConstraintsCounter++;
 				}
 			}
+		} else {
+			log.info( "No subtours found! Current solution is feasible!" );
 		}
 	}
 
