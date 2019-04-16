@@ -8,7 +8,7 @@ public abstract class TspModelResult {
 	private boolean isOptimal = false;
 	private double runtime;
 	private double runtimeGrbModelCalculation;
-	private int objective;
+	private double objective;
 	private double usedHeuristicValue = -1.0;
 
 	public TspModelResult( String name ) {
@@ -57,11 +57,11 @@ public abstract class TspModelResult {
 		return getIterationResults().size();
 	}
 
-	public int getObjective(){
+	public double getObjective(){
 		return objective;
 	}
 
-	public void setObjective( int objective ){
+	public void setObjective( double objective ){
 		this.objective = objective;
 	}
 

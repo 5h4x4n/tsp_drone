@@ -8,11 +8,11 @@ import java.util.ArrayList;
 public class Pdstsp extends TspModel{
 
 	private double truckSpeed;
-	private transient double[][] truckTimes;
+	private transient int[][] truckTimes;
 	private double droneSpeed;
 	private double droneFlightTime;
 	private int droneFleetSize;
-	private transient double[][] droneTimes;
+	private transient int[][] droneTimes;
 	private int[] droneDeliveryPossible;
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private transient GRBVar[][] grbDronesCustomersVars;
@@ -25,7 +25,7 @@ public class Pdstsp extends TspModel{
 	}
 
 	public Pdstsp( String name, String comment, String type, int dimension, double[][] nodes, int[][] distances, double truckSpeed,
-					double[][] truckTimes, double droneSpeed, double droneFlightTime, int droneFleetSize, double[][] droneTimes,
+					int[][] truckTimes, double droneSpeed, double droneFlightTime, int droneFleetSize, int[][] droneTimes,
 					int[] droneDeliveryPossible ){
 		super( name, comment, type, dimension, nodes, distances );
 		this.truckSpeed = truckSpeed;
@@ -321,11 +321,11 @@ public class Pdstsp extends TspModel{
 		this.droneFleetSize = droneFleetSize;
 	}
 
-	public double[][] getDroneTimes(){
+	public int[][] getDroneTimes(){
 		return droneTimes;
 	}
 
-	public void setDroneTimes( double[][] droneTimes ){
+	public void setDroneTimes( int[][] droneTimes ){
 		this.droneTimes = droneTimes;
 	}
 
@@ -345,11 +345,11 @@ public class Pdstsp extends TspModel{
 		this.truckSpeed = truckSpeed;
 	}
 
-	public double[][] getTruckTimes(){
+	public int[][] getTruckTimes(){
 		return truckTimes;
 	}
 
-	public void setTruckTimes( double[][] truckTimes ){
+	public void setTruckTimes( int[][] truckTimes ){
 		this.truckTimes = truckTimes;
 	}
 

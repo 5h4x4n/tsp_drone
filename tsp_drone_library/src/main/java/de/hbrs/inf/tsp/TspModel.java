@@ -154,15 +154,15 @@ public abstract class TspModel extends GRBCallback{
 		}
 	}
 
-	public static double[][] calculateTravelTimes( double speed, int[][] distances ){
+	public static int[][] calculateTravelTimes( double speed, int[][] distances ){
 
 		int dimension = distances.length;
 
 		//calculate times with distances and speed
-		double[][] travelTimes = new double[dimension][dimension];
+		int[][] travelTimes = new int[dimension][dimension];
 		for( int i = 0; i < dimension; i++ ){
 			for( int j = 0; j < dimension; j++ ){
-				travelTimes[i][j] = distances[i][j] / speed;
+				travelTimes[i][j] = (int)( ( distances[i][j] / speed ) + 0.5d );
 			}
 		}
 
@@ -232,7 +232,7 @@ public abstract class TspModel extends GRBCallback{
 				}
 
 				if( optimizationStatus == GRB.Status.OPTIMAL ){
-					int objval = (int)( grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d );
+					double objval = grbModel.get( GRB.DoubleAttr.ObjVal );
 					log.info( "Found objective: " + objval );
 
 					GRBVar[] vars = grbModel.getVars();
@@ -337,7 +337,7 @@ public abstract class TspModel extends GRBCallback{
 
 					log.info( "MIP Solution found." );
 
-					int objValue = (int)( getDoubleInfo( GRB.CB_MIPSOL_OBJ ) + 0.5d );
+					double objValue = getDoubleInfo( GRB.CB_MIPSOL_OBJ );
 					double bestObjValue = getDoubleInfo( GRB.CB_MIPSOL_OBJBST );
 					double bestObjBound = getDoubleInfo( GRB.CB_MIPSOL_OBJBND );
 					double exploredNodeCount = getDoubleInfo( GRB.CB_MIPSOL_NODCNT );

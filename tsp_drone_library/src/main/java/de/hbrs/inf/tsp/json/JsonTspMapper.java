@@ -112,10 +112,10 @@ public class JsonTspMapper{
 				double droneFlightTime = pdstspLibJson.getDrone_flight_range() / pdstspLibJson.getDrone_speed();
 				log.debug( "Drone Flight Time: " + droneFlightTime );
 				log.info( "Calculate droneTimes with speed '" + pdstspLibJson.getDrone_speed() + "'." );
-				double[][] droneTimes = TspModel.calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
+				int[][] droneTimes = TspModel.calculateTravelTimes( pdstspLibJson.getDrone_speed(), distances );
 
 				log.info( "Calculate truckTimes with speed '" + pdstspLibJson.getTruck_speed() + "'." );
-				double[][] truckTimes = TspModel.calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
+				int[][] truckTimes = TspModel.calculateTravelTimes( pdstspLibJson.getTruck_speed(), distances );
 
 				//convert PdstspLibJson to Pdstsp object
 				tspModel = new Pdstsp( pdstspLibJson.getName(), pdstspLibJson.getComment(), tspType, pdstspLibJson.getDimension(), nodes,

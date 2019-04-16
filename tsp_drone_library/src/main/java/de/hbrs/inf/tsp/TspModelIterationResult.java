@@ -8,7 +8,7 @@ public abstract class TspModelIterationResult{
 
 	private static Logger log = Logger.getLogger( TspModelIterationResult.class.getName() );
 
-	private int objective;
+	private double objective;
 	private double iterationRuntime;
 	private ArrayList<ArrayList<Integer>> truckTours;
 
@@ -28,11 +28,11 @@ public abstract class TspModelIterationResult{
 		this.truckTours = truckTours;
 	}
 
-	public int getObjective() {
+	public double getObjective() {
 		return objective;
 	}
 
-	public void setObjective( int objective ) {
+	public void setObjective( double objective ) {
 		this.objective = objective;
 	}
 
