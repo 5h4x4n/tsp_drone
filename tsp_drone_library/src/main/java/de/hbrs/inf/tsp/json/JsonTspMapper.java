@@ -65,6 +65,14 @@ public class JsonTspMapper{
 			return null;
 		}
 
+		//TODO TESTING increasing distances by factor 100
+		for( int i = 0; i < tspLibJson.getDimension(); i++ ){
+			for( int j = 0; j < tspLibJson.getDimension(); j++ ){
+				distances[i][j] *= 100;
+			}
+		}
+		//TODO TESTING increasing distances by factor 100
+
 		String tspType = tspLibJson.getType().toUpperCase();
 		log.info( "TSP Type: " + tspType );
 
