@@ -232,7 +232,7 @@ public abstract class TspModel extends GRBCallback{
 				}
 
 				if( optimizationStatus == GRB.Status.OPTIMAL ){
-					double objval = grbModel.get( GRB.DoubleAttr.ObjVal );
+					double objval = (int)( grbModel.get( GRB.DoubleAttr.ObjVal ) + 0.5d );
 					log.info( "Found objective: " + objval );
 
 					GRBVar[] vars = grbModel.getVars();
@@ -337,8 +337,8 @@ public abstract class TspModel extends GRBCallback{
 
 					log.info( "MIP Solution found." );
 
-					double objValue = getDoubleInfo( GRB.CB_MIPSOL_OBJ );
-					double bestObjValue = getDoubleInfo( GRB.CB_MIPSOL_OBJBST );
+					double objValue = (int)( getDoubleInfo( GRB.CB_MIPSOL_OBJ ) + 0.5d );
+					double bestObjValue = (int)( getDoubleInfo( GRB.CB_MIPSOL_OBJBST ) + 0.5d );
 					double bestObjBound = getDoubleInfo( GRB.CB_MIPSOL_OBJBND );
 					double exploredNodeCount = getDoubleInfo( GRB.CB_MIPSOL_NODCNT );
 					int feasableSolutionsFoundCount = getIntInfo( GRB.CB_MIPSOL_SOLCNT );
