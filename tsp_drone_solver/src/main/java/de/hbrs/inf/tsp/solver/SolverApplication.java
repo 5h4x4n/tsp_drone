@@ -255,7 +255,8 @@ public class SolverApplication{
 								double heuristicValue = HeuristicValueReader.getHeuristicValue( tspModel, Configuration.getHeuristicValuesFile() );
 								if( heuristicValue <= 0.0 ) {
 									log.info( "No heuristic value for current model in file + '" + Configuration.getHeuristicValuesFile() +
-													"' found! No value will be used!" );
+													"' found! Skip model for test!" );
+									continue;
 								} else {
 									tspModel.setHeuristicValue( heuristicValue );
 								}
