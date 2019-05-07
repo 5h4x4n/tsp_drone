@@ -8,6 +8,7 @@ public abstract class TspModelResult {
 	private boolean isOptimal = false;
 	private double runtime;
 	private double runtimeGrbModelCalculation;
+	private double runtimePresolveHeuristic;
 	private double objective;
 	private double usedHeuristicValue = -1.0;
 
@@ -42,7 +43,11 @@ public abstract class TspModelResult {
 	public abstract ArrayList<? extends TspModelIterationResult> getIterationResults();
 
 	public TspModelIterationResult getLast() {
-		return getIterationResults().get( getIterationResults().size() - 1 );
+		if( getIterationResults() == null || getIterationResults().size() < 1 ) {
+			return null;
+		} else {
+			return getIterationResults().get( getIterationResults().size() - 1 );
+		}
 	}
 
 	public double getRuntimeGrbModelCalculation(){
@@ -51,6 +56,14 @@ public abstract class TspModelResult {
 
 	public void setRuntimeGrbModelCalculation( double runtimeGrbModelCalculation ){
 		this.runtimeGrbModelCalculation = runtimeGrbModelCalculation;
+	}
+
+	public double getRuntimePresolveHeuristic(){
+		return runtimePresolveHeuristic;
+	}
+
+	public void setRuntimePresolveHeuristic( double runtimePresolveHeuristic ){
+		this.runtimePresolveHeuristic = runtimePresolveHeuristic;
 	}
 
 	public int getIterationCounter() {

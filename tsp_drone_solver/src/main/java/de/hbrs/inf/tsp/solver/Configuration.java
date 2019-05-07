@@ -9,6 +9,7 @@ public class Configuration{
 	private static String testDescription = "";
 	private static boolean allCustomersByDrones = false;
 	private static boolean lazyActive = true;
+	private static boolean isPresolveHeuristicActive = false;
 	private static double[] truckSpeeds = null;
 	private static double[] droneSpeeds = null;
 	private static int[] droneFleetSizes = null;
@@ -107,7 +108,7 @@ public class Configuration{
 		return lazyActive;
 	}
 
-	public static void setIsLazyActive( boolean lazyActive ){
+	public static void setLazyActive( boolean lazyActive ){
 		Configuration.lazyActive = lazyActive;
 	}
 
@@ -141,5 +142,13 @@ public class Configuration{
 
 	public static String getTestDescription(){
 		return testDescription;
+	}
+
+	public static boolean isPresolveHeuristicActive(){
+		return isPresolveHeuristicActive;
+	}
+
+	public static void setPresolveHeuristicActive( boolean isPresolveHeuristicActive ){
+		Configuration.isPresolveHeuristicActive = isPresolveHeuristicActive;
 	}
 }

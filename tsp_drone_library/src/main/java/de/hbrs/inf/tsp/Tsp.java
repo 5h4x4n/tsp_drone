@@ -6,7 +6,6 @@ import java.util.*;
 
 public class Tsp extends TspModel{
 
-	private ArrayList<Integer> truckTspTour;
 	private TspResult result;
 
 	public Tsp(){
@@ -18,7 +17,6 @@ public class Tsp extends TspModel{
 	}
 
 	public String toString(){
-		//TODO implement toString
 		return super.toString();
 	}
 
@@ -63,10 +61,24 @@ public class Tsp extends TspModel{
 		return grbModel;
 	}
 
+	@Override public boolean presolveHeuristic(){
+		//heuristic for testing is also optimal solution of the tsp
+		Tsp tsp = new Tsp( this.name, this.comment, "TSP", this.dimension, this.nodes, this.distances );
+		if( tsp.grbOptimize() != null ){
+			if( tsp.getResult().isOptimal() ){
+				grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
+				log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
+				setHeuristicValue( tsp.getResult().getObjective() );
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	protected TspModelIterationResult calculateAndAddIterationResult() throws GRBException{
 		TspIterationResult tspIterationResult = new TspIterationResult();
-		double[][] truckEdgeVars = grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeVars );
+		truckEdgeVars = grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeVars );
 		tspIterationResult.setTruckTours( findSubtours( truckEdgeVars ) );
 		result.getTspIterationResults().add( tspIterationResult );
 		return tspIterationResult;
@@ -166,13 +178,5 @@ public class Tsp extends TspModel{
 	@Override
 	public TspModelResult getResult(){
 		return result;
-	}
-
-	public ArrayList<Integer> getTruckTspTour(){
-		return truckTspTour;
-	}
-
-	public void setTruckTspTour( ArrayList<Integer> truckTspTour ){
-		this.truckTspTour = truckTspTour;
 	}
 }

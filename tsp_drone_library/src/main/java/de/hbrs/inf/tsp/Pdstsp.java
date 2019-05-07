@@ -16,6 +16,7 @@ public class Pdstsp extends TspModel{
 	private int[] droneDeliveryPossible;
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private transient GRBVar[][] grbDronesCustomersVars;
+	private double[][] grbDronesCustomersVarsStartValues = null;
 	private transient GRBVar grbObjectiveVar;
 	private PdstspResult result;
 
@@ -180,6 +181,42 @@ public class Pdstsp extends TspModel{
 		log.info( "End calculation of gurobi model for the PDSTSP without subtour elimination constraints" );
 
 		return grbModel;
+	}
+
+	@Override public boolean presolveHeuristic(){
+		//tsp as heuristic solution
+		Tsp tsp = new Tsp( this.name, this.comment, "TSP", this.dimension, this.nodes, this.distances );
+		if( tsp.grbOptimize() != null ){
+			if( tsp.getResult().isOptimal() ){
+				grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
+				log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
+				setHeuristicValue( tsp.getResult().getObjective() );
+				// set the grbDronesCustomerStartValues to 0 (doubles are 0 by default)
+				grbDronesCustomersVarsStartValues = new double[droneFleetSize][dimension];
+
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override protected void setStartValues() throws GRBException{
+		super.setStartValues();
+		if( grbDronesCustomersVarsStartValues != null ) {
+			log.info( "Set start values for grbDronesCustomersVars!" );
+			for( int v = 0; v < droneFleetSize; v++ ){
+				for( int i : droneDeliveryPossibleAndInFlightRange ){
+					if( grbDronesCustomersVarsStartValues[v][i] >= 0 ){
+						log.debug( "Set start value for y" + v + "_" + i + ": " + (int)(grbDronesCustomersVarsStartValues[v][i] + 0.5d) );
+						grbDronesCustomersVars[v][i].set( GRB.DoubleAttr.Start, (int)(grbDronesCustomersVarsStartValues[v][i] + 0.5d) );
+					} else {
+						grbDronesCustomersVars[v][i].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+					}
+				}
+			}
+		} else {
+			log.info( "Could not set start values for grbDronesCustomersVars, because grbDronesCustomersVarsStartValues is null!" );
+		}
 	}
 
 	@Override
@@ -398,6 +435,15 @@ public class Pdstsp extends TspModel{
 	public double getDroneFlightRangePercentage(){
 		double droneFlightRangePercentage = ( getDroneFlightRange() / getMaximumCustomerDistance() ) * 100.0;
 		return Math.round( droneFlightRangePercentage ) / 2.0;
+	}
+
+
+	public double[][] getGrbDronesCustomersVarsStartValues(){
+		return grbDronesCustomersVarsStartValues;
+	}
+
+	public void setGrbDronesCustomersVarsStartValues( double[][] grbDronesCustomersVarsStartValues ){
+		this.grbDronesCustomersVarsStartValues = grbDronesCustomersVarsStartValues;
 	}
 
 }

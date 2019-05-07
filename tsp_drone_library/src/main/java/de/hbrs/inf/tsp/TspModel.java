@@ -19,11 +19,14 @@ public abstract class TspModel extends GRBCallback{
 	protected transient GRBModel grbModel;
 	protected transient GRBEnv grbEnv;
 	protected transient GRBVar[][] grbTruckEdgeVars;
+	protected transient double[][] truckEdgeVars;
+	protected double[][] grbTruckEdgeVarsStartValues = null;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected int maxOptimizationSeconds = -1;
 	protected transient long startOptimizationTime = -1;
 	protected boolean isLazyActive = true;
+	protected boolean isPresolveHeuristicActive = false;
 	protected String hostname;
 	protected int threadCount = 0;
 	protected double heuristicValue = -1.0;
@@ -189,25 +192,59 @@ public abstract class TspModel extends GRBCallback{
 
 	protected abstract boolean addViolatedConstraints() throws GRBException;
 
+	protected void setStartValues() throws GRBException{
+		if( grbTruckEdgeVarsStartValues != null ) {
+			log.info( "Set start values for grbTruckEdgeVars!" );
+			for( int i = 0; i < dimension; i++ ){
+				for( int j = i; j < dimension; j++ ){
+					if( grbTruckEdgeVarsStartValues[i][j] >= 0 ){
+						log.debug( "Set start value for x" + i + "_" + j + ": " + (int)(grbTruckEdgeVarsStartValues[i][j] + 0.5d) );
+						grbTruckEdgeVars[i][j].set( GRB.DoubleAttr.Start, (int)(grbTruckEdgeVarsStartValues[i][j] + 0.5d) );
+					} else {
+						grbTruckEdgeVars[i][j].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+					}
+				}
+			}
+		} else {
+			log.info( "Could not set start values for grbTruckEdgeVars, because grbTruckEdgeVarsStartValues is null!" );
+		}
+	}
+
+	public abstract boolean presolveHeuristic();
+
 	public TspModelResult grbOptimize(){
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
-			//TODO changeable with parameter
+			//TODO changeable with parameter?!
 			grbEnv.set( GRB.IntParam.LogToConsole, 0 );
+
 			grbModel = calcGrbModel();
 
 			if( isLazyActive ){
 				grbModel.set( GRB.IntParam.LazyConstraints, 1 );
 			}
-
 			grbModel.set( GRB.IntParam.Threads, threadCount );
 
 			runtimeCalcGrbModel = System.nanoTime() - runtimeCalcGrbModel;
-			boolean isSolutionOptimal = false;
-			int iterationCounter = 1;
+
+			long runtimePresolveHeuristic = 0;
+			if( isPresolveHeuristicActive ) {
+				runtimePresolveHeuristic = System.nanoTime();
+				log.info( "Start presolve process with heuristic!" );
+				if( !presolveHeuristic() ){
+					log.info( "Something went wrong in the presolve heuristic calculation!" );
+					return null;
+				}
+				setStartValues();
+				runtimePresolveHeuristic = System.nanoTime() - runtimePresolveHeuristic;
+				log.info( "End presolve process with heuristic!" );
+			}
+
 
 			log.info( "Start optimization process" );
+			boolean isSolutionOptimal = false;
+			int iterationCounter = 1;
 			long runtimeOptimization = System.nanoTime();
 			startOptimizationTime = runtimeOptimization;
 			grbModel.setCallback( this );
@@ -266,6 +303,7 @@ public abstract class TspModel extends GRBCallback{
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
 						getResult().setRuntime( runtimeOptimization / 1e9 );
 						getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
+						getResult().setRuntimePresolveHeuristic( runtimePresolveHeuristic / 1e9 );
 						getResult().setObjective( objval );
 						getResult().setOptimal( true );
 						getResult().setUsedHeuristicValue( heuristicValue );
@@ -275,7 +313,8 @@ public abstract class TspModel extends GRBCallback{
 						log.info( "Optimal objective: " + objval );
 
 						log.info( "Total optimization runtime: " + getResult().getRuntime() + "s" );
-						log.debug( "Runtime of GRB Model calculation: " + getResult().getRuntimeGrbModelCalculation() + "s" );
+						log.info( "Runtime of GRB Model calculation: " + getResult().getRuntimeGrbModelCalculation() + "s" );
+						log.info( "Runtime of Presolve Heuristic: " + getResult().getRuntimePresolveHeuristic() + "s" );
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
@@ -556,6 +595,22 @@ public abstract class TspModel extends GRBCallback{
 
 	public void setTestDescription( String testDescription ){
 		this.testDescription = testDescription;
+	}
+
+	public boolean isPresolveHeuristicActive(){
+		return isPresolveHeuristicActive;
+	}
+
+	public void setPresolveHeuristicActive( boolean isPresolveHeuristicActive ){
+		this.isPresolveHeuristicActive = isPresolveHeuristicActive;
+	}
+
+	public double[][] getGrbTruckEdgeVarsStartValues(){
+		return grbTruckEdgeVarsStartValues;
+	}
+
+	public void setGrbTruckEdgeVarsStartValues( double[][] grbTruckEdgeVarsStartValues ){
+		this.grbTruckEdgeVarsStartValues = grbTruckEdgeVarsStartValues;
 	}
 }
 

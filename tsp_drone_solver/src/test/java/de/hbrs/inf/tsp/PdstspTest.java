@@ -26,18 +26,58 @@ public class PdstspTest{
 	}
 
 	@Test
-	public void testGrbOptimize() {
+	public void testGrbOptimizeIterative() {
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/pdstsp_test.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 6646.0, 0.0 );
+		tspModel.setLazyActive( false );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 193800.0, 0.0 );
+	}
 
-		Configuration.setIsLazyActive( false );
-		tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+	@Test
+	public void testGrbOptimizeLazy(){
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/pdstsp_test.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 6646.0, 0.0 );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 193800.0, 0.0 );
+	}
+
+	@Test
+	public void testGrbOptimizePresolveHeuristic() {
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/pdstsp_test.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assert tspModel != null;
+		tspModel.setPresolveHeuristicActive( true );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 193800.0, 0.0 );
+	}
+
+	//TODO Remove: Just for fast testing
+	@Test
+	public void testGrbOptimizeLazy2(){
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/pdstsplib_small/gr48.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assert tspModel != null;
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 199650.0, 0.0 );
+	}
+
+	//TODO Remove: Just for fast testing
+	@Test
+	public void testGrbOptimizePresolveHeuristic2() {
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/pdstsplib_small/gr48.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assert tspModel != null;
+		tspModel.setPresolveHeuristicActive( true );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 199650.0, 0.0 );
 	}
 
 }

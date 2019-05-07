@@ -30,18 +30,35 @@ public class TspTest{
 	}
 
 	@Test
-	public void testGrbOptimize() {
+	public void testGrbOptimizeIterative() {
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/tsplib/wi29.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2760300, 0.0 );
+		tspModel.setLazyActive( false );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( result.getLast().getObjective(), 2760300.0, 0.0 );
+	}
 
-		Configuration.setIsLazyActive( false );
-		tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+	@Test
+	public void testGrbOptimizeLazy(){
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/tsplib/wi29.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.grbOptimize();
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2760300.0, 0.0 );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( result.getLast().getObjective(), 2760300.0, 0.0 );
+	}
+
+	@Test
+	public void testGrbOptimizeLazyPresolveHeuristic(){
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/tsplib/wi29.json" );
+		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
+		assert tspModel != null;
+		tspModel.setPresolveHeuristicActive( true );
+		TspModelResult result = tspModel.grbOptimize();
+		assert result != null;
+		Assert.assertEquals( result.getLast().getObjective(), 2760300.0, 0.0 );
 	}
 
 }

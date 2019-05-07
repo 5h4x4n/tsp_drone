@@ -12,6 +12,8 @@ public class Defines{
 		public static final String HOSTNAME = "Hostname";
 		public static final String DIMENSION = "Dimension";
 		public static final String RUNTIME = "Runtime [s]";
+		public static final String RUNTIME_MODEL_CALCULATION = "RuntimeModelCalculation [s]";
+		public static final String RUNTIME_PRESOLVE_HEURISTIC = "RuntimePresolveHeuristic [s]";
 		public static final String IS_OPTIMAL = "IsOptimal";
 		public static final String OBJECTIVE = "Objective";
 		public static final String DECISION_VARIABLES = "DecisionVariables";
@@ -29,6 +31,7 @@ public class Defines{
 		public static final String THREAD_COUNT = "ThreadCount";
 		public static final String MAX_RUNTIME_SECONDS = "maxSeconds";
 		public static final String TEST_DESCRIPTION = "testDescription";
+		public static final String IS_PRESOLVE_HEURISTIC_ACTIVE = "IsPresolveHeuristicActive";
 	}
 
 }

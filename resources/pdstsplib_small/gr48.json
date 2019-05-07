@@ -3,7 +3,7 @@
     "type" : "PDSTSP",
     "comment" : "48-city problem (Groetschel)",
     "dimension" : 48,
-	"drone_flight_range" : 800,
+	"drone_flight_range" : 99999999,
     "drone_fleet_size" : 4,
     "drone_speed" : 1,
     "truck_speed" : 2,
