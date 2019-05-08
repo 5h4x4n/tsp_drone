@@ -186,6 +186,8 @@ public class SolverApplication{
 			outputPath.append( "iterative" );
 		}
 
+		outputPath.append( "_ph-" ).append( Configuration.getPresolveHeuristicType().getType() );
+
 		Configuration.setOutputDirectory( outputPath.toString() );
 		log.info( "Set output directory: " + Configuration.getOutputDirectory() );
 
