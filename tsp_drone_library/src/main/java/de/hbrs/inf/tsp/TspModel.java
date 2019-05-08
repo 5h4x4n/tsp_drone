@@ -2,6 +2,7 @@ package de.hbrs.inf.tsp;
 
 import de.hbrs.inf.tsp.json.TspLibJson;
 import gurobi.*;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public abstract class TspModel extends GRBCallback{
 	protected int threadCount = 0;
 	protected double heuristicValue = -1.0;
 	protected int errorCode = 0;
+
+	private final transient static Object lock = new Object();
+	protected transient static double currentBestObjectiveSynced = 99999999;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -226,7 +230,12 @@ public abstract class TspModel extends GRBCallback{
 			}
 			grbModel.set( GRB.IntParam.Threads, threadCount );
 
+			if( maxOptimizationSeconds > 0 ){
+				grbModel.set( GRB.DoubleParam.TimeLimit, maxOptimizationSeconds );
+			}
+
 			runtimeCalcGrbModel = System.nanoTime() - runtimeCalcGrbModel;
+			getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
 
 			long runtimePresolveHeuristic = 0;
 			if( presolveHeuristicType != Defines.PresolveHeuristicType.NONE ){
@@ -240,7 +249,7 @@ public abstract class TspModel extends GRBCallback{
 				runtimePresolveHeuristic = System.nanoTime() - runtimePresolveHeuristic;
 				log.info( "End presolve process with heuristic!" );
 			}
-
+			getResult().setRuntimePresolveHeuristic( runtimePresolveHeuristic / 1e9 );
 
 			log.info( "Start optimization process" );
 			boolean isSolutionOptimal = false;
@@ -302,11 +311,9 @@ public abstract class TspModel extends GRBCallback{
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
 						getResult().setRuntimeOptimization( runtimeOptimization / 1e9 );
-						getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
-						getResult().setRuntimePresolveHeuristic( runtimePresolveHeuristic / 1e9 );
 						getResult().setObjective( objval );
+						getResult().setObjectiveBound( objval );
 						getResult().setOptimal( true );
-						getResult().setUsedHeuristicValue( heuristicValue );
 
 						log.info( "Found solution for '" + name + "' with dimension '" + dimension + "' is optimal!" );
 						log.info( currentTspIterationResult.getSolutionString() );
@@ -334,7 +341,7 @@ public abstract class TspModel extends GRBCallback{
 
 					}
 				} else if( optimizationStatus == GRB.Status.INTERRUPTED ){
-					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds!" );
+					log.info( "Optimization process interrupted, cause of an error!" );
 					break;
 				} else if( optimizationStatus == GRB.Status.INFEASIBLE ){
 					//TODO change filename specific for input
@@ -345,6 +352,9 @@ public abstract class TspModel extends GRBCallback{
 					break;
 				} else if( optimizationStatus == GRB.Status.UNBOUNDED ){
 					log.info( "Model is unbounded" );
+					break;
+				} else if( optimizationStatus == GRB.Status.TIME_LIMIT ){
+					log.info( "Optimization process cancelled, cause the runtime exceeds the maximumOptimizationSeconds!" );
 					break;
 				} else {
 					log.info( "Optimization was stopped with status = " + optimizationStatus );
@@ -368,10 +378,9 @@ public abstract class TspModel extends GRBCallback{
 	protected void callback(){
 		try{
 			if( where == GRB.CB_MIP ){
-				double currentRuntimeSeconds = ( System.nanoTime() - startOptimizationTime ) / 1e9;
-				if( maxOptimizationSeconds > 0 && currentRuntimeSeconds > maxOptimizationSeconds ){
-					grbModel.terminate();
-				}
+				double currentRuntimeSeconds = (System.nanoTime() - startOptimizationTime) / 1e9;
+				getResult().setRuntimeOptimization( currentRuntimeSeconds );
+
 			} else if( where == GRB.CB_MIPSOL ){
 				if( isLazyActive ){
 
@@ -385,17 +394,37 @@ public abstract class TspModel extends GRBCallback{
 
 					log.info( "Objective value for new solution: " + objValue );
 					log.info( "Current best objective: " + bestObjValue );
+					log.info( "Current best objective (synced): " + getCurrentBestObjectiveSynced() );
 					log.info( "Current best objective bound: " + bestObjBound );
 					log.info( "Current explored node count: " + exploredNodeCount );
 					log.info( "Current count of feasible solutions found: " + feasableSolutionsFoundCount );
 
+					getResult().setObjectiveBound( getDoubleInfo( GRB.CB_MIPSOL_OBJBND ) );
+					double currentRuntimeSeconds = (System.nanoTime() - startOptimizationTime) / 1e9;
+					getResult().setRuntimeOptimization( currentRuntimeSeconds );
+
+					//TODO Remove debug message here?!
+					if( objValue > getCurrentBestObjectiveSynced() ){
+						log.info( "############# WARNING: objValue > currentBestObjectiveSynced ###############" );
+					}
+
 					//only add lazy constraints if current objective value is lower-equals than the given heuristic (maybe optimal) value
 					//cause an other branch will find a better solution or the according solution for the given value
 					if( heuristicValue <= 0.0 || objValue <= heuristicValue ){
-						addViolatedLazyConstraints();
+						if( !addViolatedLazyConstraints() ){
+							synchronized( lock ){
+								log.info( "No violated constraints found! Current solution is feasible!" );
+								if( objValue < getCurrentBestObjectiveSynced() ){
+									setCurrentBestObjectiveSynced( objValue );
+									getResult().setObjective( objValue );
+									//TODO getSolution and add it as iterationResult?!
+									log.info( "New best feasible solution found (objective: " + objValue + ")." );
+									log.info( logSolution() );
+								}
+							}
+						}
 					} else {
-						log.info( "Do not look for violated constraints here, cause current solution is lower than "
-										+ "'heuristic' value: " + heuristicValue );
+						log.info( "Do not look for violated constraints here, cause current solution is lower than " + "'heuristic' value: " + heuristicValue );
 					}
 				}
 			}
@@ -404,14 +433,29 @@ public abstract class TspModel extends GRBCallback{
 			e.printStackTrace();
 			errorCode = e.getErrorCode();
 			log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
-			//TODO implement other solution when exception is thrown - cause termination will look like time exceed
 			grbModel.terminate();
 		}
 	}
 
-	protected abstract void addViolatedLazyConstraints() throws GRBException;
+	protected String logSolution() throws GRBException{
+		ArrayList<ArrayList<Integer>> truckTours = findSubtours( getSolution( grbTruckEdgeVars ) );
+		StringBuilder solutionString = new StringBuilder( "\nTruck_Tours_Size: " ).append( truckTours.size() );
+		if( truckTours.size() > 0 ){
+			for( int i = 0; i < truckTours.size(); i++ ){
+				solutionString.append( "\nTruck_Tour_" ).append( i ).append( "_Size: " ).append( truckTours.get( i ).size() );
+				solutionString.append( "\nTruck_Tour_" ).append( i ).append( ": " );
+				for( int j = 0; j < truckTours.get( i ).size(); j++ ){
+					solutionString.append( truckTours.get( i ).get( j ) ).append( ", " );
+				}
+				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
+			}
+		}
+		return solutionString.toString();
+	}
 
-	protected ArrayList<ArrayList<Integer>> findSubtours( double[][] edgeVars ) throws GRBException{
+	protected abstract boolean addViolatedLazyConstraints() throws GRBException;
+
+	protected ArrayList<ArrayList<Integer>> findSubtours( double[][] edgeVars ){
 		log.debug( "Starting find subtours" );
 
 		ArrayList<ArrayList<Integer>> subtours = new ArrayList<>();
@@ -580,6 +624,7 @@ public abstract class TspModel extends GRBCallback{
 
 	public void setHeuristicValue( double heuristicValue ){
 		this.heuristicValue = heuristicValue;
+		getResult().setUsedHeuristicValue( heuristicValue );
 	}
 
 	public int getErrorCode(){
@@ -612,6 +657,20 @@ public abstract class TspModel extends GRBCallback{
 
 	public void setGrbTruckEdgeVarsStartValues( double[][] grbTruckEdgeVarsStartValues ){
 		this.grbTruckEdgeVarsStartValues = grbTruckEdgeVarsStartValues;
+	}
+
+	public static void setCurrentBestObjectiveSynced( double value ){
+		synchronized( lock ){
+			if( value < currentBestObjectiveSynced ){
+				currentBestObjectiveSynced = value;
+			}
+		}
+	}
+
+	public static double getCurrentBestObjectiveSynced(){
+		synchronized( lock ){
+			return currentBestObjectiveSynced;
+		}
 	}
 }
 

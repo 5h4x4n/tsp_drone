@@ -28,6 +28,8 @@ public class TspModelCsvResultsConverter{
 		resultList.add( Integer.toString( tspModel.getMaxOptimizationSeconds() ) );
 		resultList.add( Integer.toString( tspModel.getErrorCode() ) );
 		resultList.add( Double.toString( tspModel.getResult().getObjective() ) );
+		resultList.add( Double.toString( tspModel.getResult().getObjectiveBound() ) );
+		resultList.add( Double.toString( (tspModel.getResult().getObjective() / tspModel.getResult().getObjectiveBound()) - 1.0 ) );
 		resultList.add( Double.toString( tspModel.getResult().getUsedHeuristicValue() ) );
 		resultList.add( Integer.toString( tspModel.getDecisionVariablesCounter() ) );
 		resultList.add( Integer.toString( tspModel.getTotalConstraintsCounter() ) );
@@ -71,6 +73,8 @@ public class TspModelCsvResultsConverter{
 		parameterList.add( Defines.Strings.MAX_RUNTIME_SECONDS );
 		parameterList.add( Defines.Strings.ERROR_CODE );
 		parameterList.add( Defines.Strings.OBJECTIVE );
+		parameterList.add( Defines.Strings.OBJECTIVE_BOUND );
+		parameterList.add( Defines.Strings.OBJECTIVE_GAP );
 		parameterList.add( Defines.Strings.USED_HEURISTIC_VALUE );
 		parameterList.add( Defines.Strings.DECISION_VARIABLES );
 		parameterList.add( Defines.Strings.TOTAL_CONSTRAINTS );

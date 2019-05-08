@@ -4,6 +4,7 @@ import gurobi.*;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Pdstsp extends TspModel{
 
@@ -126,12 +127,18 @@ public class Pdstsp extends TspModel{
 			for( int v = 0; v < droneFleetSize; v++ ){
 				logString = new StringBuilder();
 				grbLinExpr = new GRBLinExpr();
-				for( int i : droneDeliveryPossibleAndInFlightRange ){
-					logString.append( "(dronetimes_0_" ).append( i ).append( " + dronetimes_" ).append( i ).append( "_0) * y" ).append( v )
-							 .append( "_" ).append( i ).append( " + " );
-					grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
-					log.debug( "Add decision var y" + v + "_" + i );
-					grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
+				for( int i = 0; i < dimension; i++ ){
+					if( droneDeliveryPossibleAndInFlightRange.contains( i ) ){
+
+						logString.append( "(dronetimes_0_" ).append( i ).append( " + dronetimes_" ).append( i ).append( "_0) * y" ).append( v ).append( "_" ).append( i )
+										.append( " + " );
+						grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
+						log.debug( "Add decision var y" + v + "_" + i );
+						grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
+					} else {
+						//TODO test if nothing goes wrong now
+						grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
+					}
 				}
 				logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
 				log.debug( "Add constraint dronetime_" + v + ": " + logString + " <= traveltime" );
@@ -231,22 +238,46 @@ public class Pdstsp extends TspModel{
 		PdstspIterationResult pdstspIterationResult = new PdstspIterationResult();
 		double[][] truckEdgeVars = grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeVars );
 		pdstspIterationResult.setTruckTours( findSubtours( truckEdgeVars ) );
+		double[][] dronesCustomersVars = grbModel.get( GRB.DoubleAttr.X, grbDronesCustomersVars );
+		pdstspIterationResult.setDronesCustomers( findDronesCustomers( dronesCustomersVars ) );
+		result.getPdstspIterationResults().add( pdstspIterationResult );
 
+		return pdstspIterationResult;
+	}
+
+	private ArrayList<Integer>[] findDronesCustomers( double[][] dronesCustomerVars ) throws GRBException{
 		ArrayList<Integer>[] dronesCustomers = new ArrayList[droneFleetSize];
 		for( int v = 0; v < droneFleetSize; v++ ){
 			dronesCustomers[v] = new ArrayList<>();
 			for( int i = 0; i < dimension; i++ ){
-				if( grbDronesCustomersVars[v][i] != null ){
-					if( (int)( grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) + 0.5d ) != 0 ){
-						dronesCustomers[v].add( i );
-					}
+				if( (int)(dronesCustomerVars[v][i] + 0.5d) != 0 ){
+					dronesCustomers[v].add( i );
 				}
 			}
 		}
-		pdstspIterationResult.setDronesCustomers( dronesCustomers );
-		result.getPdstspIterationResults().add( pdstspIterationResult );
+		return dronesCustomers;
+	}
 
-		return pdstspIterationResult;
+	protected String logSolution() throws GRBException{
+		StringBuilder solutionString = new StringBuilder( super.logSolution() ).append( "\n" );
+		double[][] dronesCustomersVars = getSolution( grbDronesCustomersVars );
+		ArrayList<Integer>[] dronesCustomers = findDronesCustomers( dronesCustomersVars );
+
+		if( dronesCustomers.length == 0 ){
+			return solutionString.toString();
+		}
+
+		for( int v = 0; v < dronesCustomers.length; v++ ){
+			solutionString.append( "Drone_" ).append( v ).append( "_Customers_Size: " ).append( dronesCustomers[v].size() ).append( "\n" );
+			if( dronesCustomers[v].size() > 0 ){
+				solutionString.append( "Drone_" ).append( v ).append( "_Customers: " );
+				for( int i = 0; i < dronesCustomers[v].size(); i++ ){
+					solutionString.append( dronesCustomers[v].get( i ) ).append( ", " );
+				}
+				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 1 ) ).append( "\n" );
+			}
+		}
+		return solutionString.substring( 0, solutionString.length() - 2 );
 	}
 
 	@Override
@@ -308,8 +339,7 @@ public class Pdstsp extends TspModel{
 		}
 	}
 
-	@Override
-	protected void addViolatedLazyConstraints() throws GRBException{
+	@Override protected boolean addViolatedLazyConstraints() throws GRBException{
 
 		log.info( "Look for subtours and add lazy constraints." );
 
@@ -344,8 +374,9 @@ public class Pdstsp extends TspModel{
 					additionalConstraintsCounter++;
 				}
 			}
+			return true;
 		} else {
-			log.info( "No subtours found! Current solution is feasible!" );
+			return false;
 		}
 	}
 

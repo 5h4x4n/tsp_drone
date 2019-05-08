@@ -30,9 +30,11 @@ public class Defines{
 		public static final String TRUCK_SPEED_DRONE_SPEED_RATIO = "SpeedRatio" ;
 		public static final String ERROR_CODE = "ErrorCode";
 		public static final String THREAD_COUNT = "ThreadCount";
-		public static final String MAX_RUNTIME_SECONDS = "maxSeconds";
+		public static final String MAX_RUNTIME_SECONDS = "MaxSeconds";
 		public static final String TEST_DESCRIPTION = "testDescription";
-		public static final String PRESOLVE_HEURISTIC_TYPE = "presolveHeuristicType";
+		public static final String PRESOLVE_HEURISTIC_TYPE = "PresolveHeuristicType";
+		public static final String OBJECTIVE_BOUND = "ObjectiveBound";
+		public static final String OBJECTIVE_GAP = "ObjectiveGap";
 	}
 
 	public enum PresolveHeuristicType{

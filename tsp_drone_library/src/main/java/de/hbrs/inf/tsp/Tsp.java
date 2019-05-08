@@ -129,8 +129,7 @@ public class Tsp extends TspModel{
 		}
 	}
 
-	@Override
-	protected void addViolatedLazyConstraints() throws GRBException{
+	@Override protected boolean addViolatedLazyConstraints() throws GRBException{
 		log.info( "Look for subtours and add lazy constraints." );
 
 		ArrayList<ArrayList<Integer>> subtours = null;
@@ -164,7 +163,9 @@ public class Tsp extends TspModel{
 				addLazy( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1 );
 				additionalConstraintsCounter++;
 			}
+			return true;
 		}
+		return false;
 	}
 
 	public double[][] getNodes(){
