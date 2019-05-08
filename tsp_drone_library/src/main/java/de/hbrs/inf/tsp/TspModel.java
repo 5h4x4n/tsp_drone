@@ -26,7 +26,7 @@ public abstract class TspModel extends GRBCallback{
 	protected int maxOptimizationSeconds = -1;
 	protected transient long startOptimizationTime = -1;
 	protected boolean isLazyActive = true;
-	protected boolean isPresolveHeuristicActive = false;
+	protected Defines.PresolveHeuristicType presolveHeuristicType = Defines.PresolveHeuristicType.NONE;
 	protected String hostname;
 	protected int threadCount = 0;
 	protected double heuristicValue = -1.0;
@@ -210,7 +210,7 @@ public abstract class TspModel extends GRBCallback{
 		}
 	}
 
-	public abstract boolean presolveHeuristic();
+	public abstract boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType );
 
 	public TspModelResult grbOptimize(){
 		try{
@@ -229,10 +229,10 @@ public abstract class TspModel extends GRBCallback{
 			runtimeCalcGrbModel = System.nanoTime() - runtimeCalcGrbModel;
 
 			long runtimePresolveHeuristic = 0;
-			if( isPresolveHeuristicActive ) {
+			if( presolveHeuristicType != Defines.PresolveHeuristicType.NONE ){
 				runtimePresolveHeuristic = System.nanoTime();
 				log.info( "Start presolve process with heuristic!" );
-				if( !presolveHeuristic() ){
+				if( !presolveHeuristic( presolveHeuristicType ) ){
 					log.info( "Something went wrong in the presolve heuristic calculation!" );
 					return null;
 				}
@@ -301,7 +301,7 @@ public abstract class TspModel extends GRBCallback{
 						runtimeOptimization = System.nanoTime() - runtimeOptimization;
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
-						getResult().setRuntime( runtimeOptimization / 1e9 );
+						getResult().setRuntimeOptimization( runtimeOptimization / 1e9 );
 						getResult().setRuntimeGrbModelCalculation( runtimeCalcGrbModel / 1e9 );
 						getResult().setRuntimePresolveHeuristic( runtimePresolveHeuristic / 1e9 );
 						getResult().setObjective( objval );
@@ -312,9 +312,10 @@ public abstract class TspModel extends GRBCallback{
 						log.info( currentTspIterationResult.getSolutionString() );
 						log.info( "Optimal objective: " + objval );
 
-						log.info( "Total optimization runtime: " + getResult().getRuntime() + "s" );
+						log.info( "Runtime (total): " + getResult().getRuntimeTotal() + "s" );
 						log.info( "Runtime of GRB Model calculation: " + getResult().getRuntimeGrbModelCalculation() + "s" );
 						log.info( "Runtime of Presolve Heuristic: " + getResult().getRuntimePresolveHeuristic() + "s" );
+						log.info( "Runtime of Optimization: " + getResult().getRuntimeOptimization() + "s" );
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
@@ -329,7 +330,7 @@ public abstract class TspModel extends GRBCallback{
 						log.info( "Current total optimization runtime: " + currentRuntimeOptimizationSeconds + "s" );
 
 						currentTspIterationResult.setIterationRuntime( currentIterationRuntimeSeconds );
-						getResult().setRuntime( currentRuntimeOptimizationSeconds );
+						getResult().setRuntimeOptimization( currentRuntimeOptimizationSeconds );
 
 					}
 				} else if( optimizationStatus == GRB.Status.INTERRUPTED ){
@@ -597,12 +598,12 @@ public abstract class TspModel extends GRBCallback{
 		this.testDescription = testDescription;
 	}
 
-	public boolean isPresolveHeuristicActive(){
-		return isPresolveHeuristicActive;
+	public Defines.PresolveHeuristicType getPresolveHeuristicType(){
+		return presolveHeuristicType;
 	}
 
-	public void setPresolveHeuristicActive( boolean isPresolveHeuristicActive ){
-		this.isPresolveHeuristicActive = isPresolveHeuristicActive;
+	public void setPresolveHeuristicType( Defines.PresolveHeuristicType presolveHeuristicType ){
+		this.presolveHeuristicType = presolveHeuristicType;
 	}
 
 	public double[][] getGrbTruckEdgeVarsStartValues(){

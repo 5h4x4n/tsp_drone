@@ -1,6 +1,5 @@
 package de.hbrs.inf.tsp;
 
-import de.hbrs.inf.tsp.TspModel;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
 import de.hbrs.inf.tsp.json.TspLibJson;
 import de.hbrs.inf.tsp.solver.Configuration;
@@ -51,7 +50,7 @@ public class PdstspTest{
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/pdstsp_test.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.setPresolveHeuristicActive( true );
+		tspModel.setPresolveHeuristicType( Defines.PresolveHeuristicType.TSP );
 		TspModelResult result = tspModel.grbOptimize();
 		assert result != null;
 		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 193800.0, 0.0 );
@@ -74,7 +73,7 @@ public class PdstspTest{
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/pdstsplib_small/gr48.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.setPresolveHeuristicActive( true );
+		tspModel.setPresolveHeuristicType( Defines.PresolveHeuristicType.TSP );
 		TspModelResult result = tspModel.grbOptimize();
 		assert result != null;
 		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 199650.0, 0.0 );

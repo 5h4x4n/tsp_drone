@@ -1,5 +1,7 @@
 package de.hbrs.inf.tsp.solver;
 
+import de.hbrs.inf.tsp.Defines;
+
 public class Configuration{
 
 	private static String logFile = "tsp_drone_solver.log";
@@ -9,7 +11,7 @@ public class Configuration{
 	private static String testDescription = "";
 	private static boolean allCustomersByDrones = false;
 	private static boolean lazyActive = true;
-	private static boolean isPresolveHeuristicActive = false;
+	private static Defines.PresolveHeuristicType presolveHeuristicType = Defines.PresolveHeuristicType.NONE;
 	private static double[] truckSpeeds = null;
 	private static double[] droneSpeeds = null;
 	private static int[] droneFleetSizes = null;
@@ -144,11 +146,11 @@ public class Configuration{
 		return testDescription;
 	}
 
-	public static boolean isPresolveHeuristicActive(){
-		return isPresolveHeuristicActive;
+	public static void setPresolveHeuristicType( Defines.PresolveHeuristicType presolveHeuristicType ){
+		Configuration.presolveHeuristicType = presolveHeuristicType;
 	}
 
-	public static void setPresolveHeuristicActive( boolean isPresolveHeuristicActive ){
-		Configuration.isPresolveHeuristicActive = isPresolveHeuristicActive;
+	public static Defines.PresolveHeuristicType getPresolveHeuristicType(){
+		return presolveHeuristicType;
 	}
 }

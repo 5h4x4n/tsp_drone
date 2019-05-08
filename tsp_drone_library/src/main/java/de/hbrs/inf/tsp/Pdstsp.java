@@ -183,21 +183,28 @@ public class Pdstsp extends TspModel{
 		return grbModel;
 	}
 
-	@Override public boolean presolveHeuristic(){
-		//tsp as heuristic solution
-		Tsp tsp = new Tsp( this.name, this.comment, "TSP", this.dimension, this.nodes, this.distances );
-		if( tsp.grbOptimize() != null ){
-			if( tsp.getResult().isOptimal() ){
-				grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
-				log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
-				setHeuristicValue( tsp.getResult().getObjective() );
-				// set the grbDronesCustomerStartValues to 0 (doubles are 0 by default)
-				grbDronesCustomersVarsStartValues = new double[droneFleetSize][dimension];
+	@Override public boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType ){
 
-				return true;
-			}
+		switch( presolveHeuristicType ){
+			case TSP:
+				//tsp as heuristic solution
+				Tsp tsp = new Tsp( this.name, this.comment, Defines.TSP, this.dimension, this.nodes, this.distances );
+				if( tsp.grbOptimize() != null ){
+					if( tsp.getResult().isOptimal() ){
+						grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
+						log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
+						setHeuristicValue( tsp.getResult().getObjective() / truckSpeed );
+						// set the grbDronesCustomerStartValues to 0 (doubles are 0 by default)
+						grbDronesCustomersVarsStartValues = new double[droneFleetSize][dimension];
+						return true;
+					}
+				}
+				return false;
+
+			default:
+				log.info( "PresolveHeuristicType + '" + presolveHeuristicType.toString() + "' not supported for TSP!" );
+				return false;
 		}
-		return false;
 	}
 
 	@Override protected void setStartValues() throws GRBException{

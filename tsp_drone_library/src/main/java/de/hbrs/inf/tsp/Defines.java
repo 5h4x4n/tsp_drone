@@ -11,7 +11,8 @@ public class Defines{
 		public static final String IS_LAZY_ACTIVE = "IsLazyActive";
 		public static final String HOSTNAME = "Hostname";
 		public static final String DIMENSION = "Dimension";
-		public static final String RUNTIME = "Runtime [s]";
+		public static final String RUNTIME_TOTAL = "RuntimeTotal [s]";
+		public static final String RUNTIME_OPTIMIZATION = "RuntimeOptimization [s]";
 		public static final String RUNTIME_MODEL_CALCULATION = "RuntimeModelCalculation [s]";
 		public static final String RUNTIME_PRESOLVE_HEURISTIC = "RuntimePresolveHeuristic [s]";
 		public static final String IS_OPTIMAL = "IsOptimal";
@@ -31,7 +32,22 @@ public class Defines{
 		public static final String THREAD_COUNT = "ThreadCount";
 		public static final String MAX_RUNTIME_SECONDS = "maxSeconds";
 		public static final String TEST_DESCRIPTION = "testDescription";
-		public static final String IS_PRESOLVE_HEURISTIC_ACTIVE = "IsPresolveHeuristicActive";
+		public static final String PRESOLVE_HEURISTIC_TYPE = "presolveHeuristicType";
+	}
+
+	public enum PresolveHeuristicType{
+
+		NONE( "None" ), TSP( "TSP" );
+
+		private String type;
+
+		PresolveHeuristicType( String type ){
+			this.type = type.toUpperCase();
+		}
+
+		public String getType(){
+			return type;
+		}
 	}
 
 }

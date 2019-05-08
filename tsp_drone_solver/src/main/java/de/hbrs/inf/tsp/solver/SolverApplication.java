@@ -42,8 +42,7 @@ public class SolverApplication{
 			cmd = parser.parse( options, args );
 		} catch( ParseException e ){
 			System.out.println( "Error while parsing parameters! Error message: " + e.getMessage() );
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "tsp_drone_solver", options );
+			printHelp( options );
 			return;
 		}
 
@@ -68,6 +67,16 @@ public class SolverApplication{
 		if( cmd.hasOption( "hvf" ) ){
 			Configuration.setHeuristicValuesFile( cmd.getOptionValue( "hvf" ) );
 			log.info( "Set heuristic values file: " + Configuration.getHeuristicValuesFile() );
+		}
+
+		if( cmd.hasOption( "ph" ) ){
+			try{
+				Configuration.setPresolveHeuristicType( Defines.PresolveHeuristicType.valueOf( cmd.getOptionValue( "ph" ).toUpperCase() ) );
+			} catch( IllegalArgumentException e ){
+				log.info( "PresolveHeuristicType + '" + cmd.getOptionValue( "ph" ) + "' not supported!" );
+				printHelp( options );
+				return;
+			}
 		}
 
 		if( cmd.hasOption( "nl" ) ){
@@ -267,7 +276,7 @@ public class SolverApplication{
 							}
 
 							tspModel.setLazyActive( Configuration.isLazyActive() );
-							tspModel.setPresolveHeuristicActive( Configuration.isPresolveHeuristicActive() );
+							tspModel.setPresolveHeuristicType( Configuration.getPresolveHeuristicType() );
 							tspModel.setHostname( Configuration.getHostname() );
 							tspModel.setThreadCount( Configuration.getThreadCount() );
 							tspModel.setTestDescription( Configuration.getTestDescription() );
@@ -362,6 +371,11 @@ public class SolverApplication{
 		}
 	}
 
+	private static void printHelp( Options options ){
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp( "tsp_drone_solver", options );
+	}
+
 	private static boolean hasSpeedRatioAlreadyBeenCalculated( List<double[]> alreadyCalculatedParameters, int droneFleetSize,
 					int droneFlightRange, double speedRatio ){
 		for( double[] parameters : alreadyCalculatedParameters ){
@@ -452,7 +466,15 @@ public class SolverApplication{
 								   .hasArg().desc( "the optimization process will use this number of threads for parallelism." ).build();
 		options.addOption( threadCount );
 
-		//TODO add option for different subtour elimination constraint versions (MTZ, etc.)
+		StringBuilder supportedPresolveHeuristicTypes = new StringBuilder();
+		for( Defines.PresolveHeuristicType presolveHeuristicType : Defines.PresolveHeuristicType.values() ){
+			supportedPresolveHeuristicTypes.append( presolveHeuristicType.getType() ).append( " " );
+		}
+		Option presolveHeuristicType = Option.builder( "ph" ).longOpt( "presolveHeuristic" ).required( false ).argName( "presolve heuristic type" ).hasArg()
+						.desc( "if the option is set a presolve heuristic will be used. its solution will be used for the start values in the optimization process. supported presolveHeuristicTypes are: "
+										+ supportedPresolveHeuristicTypes ).build();
+
+		options.addOption( presolveHeuristicType );
 
 		return options;
 	}

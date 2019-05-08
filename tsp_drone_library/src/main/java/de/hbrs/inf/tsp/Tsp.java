@@ -61,18 +61,26 @@ public class Tsp extends TspModel{
 		return grbModel;
 	}
 
-	@Override public boolean presolveHeuristic(){
-		//heuristic for testing is also optimal solution of the tsp
-		Tsp tsp = new Tsp( this.name, this.comment, "TSP", this.dimension, this.nodes, this.distances );
-		if( tsp.grbOptimize() != null ){
-			if( tsp.getResult().isOptimal() ){
-				grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
-				log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
-				setHeuristicValue( tsp.getResult().getObjective() );
-				return true;
-			}
+	@Override public boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType ){
+
+		switch( presolveHeuristicType ){
+			case TSP:
+				//heuristic for testing is also optimal solution of the tsp
+				Tsp tsp = new Tsp( this.name, this.comment, "TSP", this.dimension, this.nodes, this.distances );
+				if( tsp.grbOptimize() != null ){
+					if( tsp.getResult().isOptimal() ){
+						grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
+						log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
+						setHeuristicValue( tsp.getResult().getObjective() );
+						return true;
+					}
+				}
+				return false;
+
+			default:
+				log.info( "PresolveHeuristicType + '" + presolveHeuristicType.toString() + "' not supported for TSP!" );
+				return false;
 		}
-		return false;
 	}
 
 	@Override

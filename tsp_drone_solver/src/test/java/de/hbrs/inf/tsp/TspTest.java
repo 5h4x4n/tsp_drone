@@ -55,7 +55,7 @@ public class TspTest{
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/tsplib/wi29.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
-		tspModel.setPresolveHeuristicActive( true );
+		tspModel.setPresolveHeuristicType( Defines.PresolveHeuristicType.TSP );
 		TspModelResult result = tspModel.grbOptimize();
 		assert result != null;
 		Assert.assertEquals( result.getLast().getObjective(), 2760300.0, 0.0 );
