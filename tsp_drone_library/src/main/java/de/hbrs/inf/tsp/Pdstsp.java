@@ -17,7 +17,7 @@ public class Pdstsp extends TspModel{
 	private int[] droneDeliveryPossible;
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private transient GRBVar[][] grbDronesCustomersVars;
-	private double[][] grbDronesCustomersVarsStartValues = null;
+	private transient double[][] grbDronesCustomersVarsStartValues = null;
 	private transient GRBVar grbObjectiveVar;
 	private PdstspResult result;
 

@@ -21,7 +21,7 @@ public abstract class TspModel extends GRBCallback{
 	protected transient GRBEnv grbEnv;
 	protected transient GRBVar[][] grbTruckEdgeVars;
 	protected transient double[][] truckEdgeVars;
-	protected double[][] grbTruckEdgeVarsStartValues = null;
+	protected transient double[][] grbTruckEdgeVarsStartValues = null;
 	protected int additionalConstraintsCounter = 0;
 	protected int calculatedConstraintsCounter = 0;
 	protected int maxOptimizationSeconds = -1;
