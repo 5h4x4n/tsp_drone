@@ -2,10 +2,7 @@ package de.hbrs.inf.tsp.json;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import de.hbrs.inf.tsp.Defines;
-import de.hbrs.inf.tsp.Pdstsp;
-import de.hbrs.inf.tsp.Tsp;
-import de.hbrs.inf.tsp.TspModel;
+import de.hbrs.inf.tsp.*;
 import org.apache.log4j.Logger;
 
 import java.io.FileNotFoundException;
@@ -31,8 +28,10 @@ public class JsonTspMapper{
 					return tspLibJson;
 				case Defines.PDSTSP:
 					reader = new JsonReader( new FileReader( fileName ) );
-					PdstspLibJson pdstspLibJson = gson.fromJson( reader, PdstspLibJson.class );
-					return pdstspLibJson;
+					return gson.fromJson( reader, PdstspLibJson.class );
+				case Defines.FSTSP:
+					reader = new JsonReader( new FileReader( fileName ) );
+					return gson.fromJson( reader, FstspLibJson.class );
 				default:
 					log.info( "TSP Type '" + tspType + "' not supported yet." );
 					return null;
@@ -86,9 +85,12 @@ public class JsonTspMapper{
 			case Defines.PDSTSP:
 				PdstspLibJson pdstspLibJson = (PdstspLibJson)tspLibJson;
 
-				if( truckSpeed > 0 ) pdstspLibJson.setTruck_speed( truckSpeed );
-				if( droneSpeed > 0 ) pdstspLibJson.setDrone_speed( droneSpeed );
-				if( droneFleetSize > 0 ) pdstspLibJson.setDrone_fleet_size( droneFleetSize );
+				if( droneFleetSize > 0 )
+					pdstspLibJson.setDrone_fleet_size( droneFleetSize );
+				if( truckSpeed > 0 )
+					pdstspLibJson.setTruck_speed( truckSpeed );
+				if( droneSpeed > 0 )
+					pdstspLibJson.setDrone_speed( droneSpeed );
 				if( droneFlightRangePercentage > 0 ) {
 					double maxDistance = -1;
 					for( int i = 1; i < tspLibJson.getDimension(); i++ ) {
@@ -130,12 +132,61 @@ public class JsonTspMapper{
 								distances, pdstspLibJson.getTruck_speed(), truckTimes, pdstspLibJson.getDrone_speed(), droneFlightTime,
 								pdstspLibJson.getDrone_fleet_size(), droneTimes, pdstspLibJson.getDrone_delivery_possible() );
 				break;
+			case Defines.FSTSP:
+				FstspLibJson fstspLibJson = (FstspLibJson)tspLibJson;
+
+				if( truckSpeed > 0 )
+					fstspLibJson.setTruck_speed( truckSpeed );
+				if( droneSpeed > 0 )
+					fstspLibJson.setDrone_speed( droneSpeed );
+				if( droneFlightRangePercentage > 0 ){
+					double maxDistance = -1;
+					for( int i = 1; i < tspLibJson.getDimension(); i++ ){
+						if( distances[0][i] > maxDistance ){
+							maxDistance = distances[0][i];
+						}
+					}
+					log.info( "MaxDistance: " + maxDistance );
+					int droneFlightRange = (int)Math.ceil( ((double)droneFlightRangePercentage / 100 * maxDistance) * 2 );
+					fstspLibJson.setDrone_flight_range( droneFlightRange );
+				}
+				if( droneDeliveryPossibleForAllCustomers ){
+					int dimension = fstspLibJson.getDimension();
+					int[] droneDeliveryPossible = new int[dimension - 1];
+					for( int i = 0; i < dimension - 1; i++ ){
+						droneDeliveryPossible[i] = i + 1;
+					}
+					fstspLibJson.setDrone_delivery_possible( droneDeliveryPossible );
+				}
+				log.info( "TruckSpeed: " + truckSpeed );
+				log.info( "DroneSpeed: " + droneSpeed );
+				log.info( "DroneFlightRange: " + fstspLibJson.getDrone_flight_range() );
+				if( droneFlightRangePercentage > 0 ){
+					log.info( "DroneFlightRangePercentage: " + droneFlightRangePercentage + "%" );
+				}
+				log.info( "DroneDeliveryPossibleForAllCustomers: " + droneDeliveryPossibleForAllCustomers );
+
+				double droneFlightTime2 = fstspLibJson.getDrone_flight_range() / fstspLibJson.getDrone_speed();
+				log.debug( "Drone Flight Time: " + droneFlightTime2 );
+				log.info( "Calculate droneTimes with speed '" + fstspLibJson.getDrone_speed() + "'." );
+				int[][] droneTimes2 = TspModel.calculateTravelTimes( fstspLibJson.getDrone_speed(), distances );
+
+				log.info( "Calculate truckTimes with speed '" + fstspLibJson.getTruck_speed() + "'." );
+				int[][] truckTimes2 = TspModel.calculateTravelTimes( fstspLibJson.getTruck_speed(), distances );
+
+				//convert fstspLibJson to Fdstsp object
+				tspModel = new Fstsp( fstspLibJson.getName(), fstspLibJson.getComment(), tspType, fstspLibJson.getDimension(), nodes, distances,
+								fstspLibJson.getTruck_speed(), truckTimes2, fstspLibJson.getDrone_speed(), droneFlightTime2, droneTimes2,
+								fstspLibJson.getDrone_delivery_possible() );
+
+				break;
 			default:
 				log.info( "TSP Type '" + tspType + "' not supported yet." );
 				return null;
 		}
 
 		log.info( "Created Tsp model from JSON file." );
+		log.debug( "Tsp Model to String:" );
 		log.debug( tspModel );
 		return tspModel;
 	}

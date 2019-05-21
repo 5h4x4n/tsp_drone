@@ -1,6 +1,7 @@
 package de.hbrs.inf.tsp.csv;
 
 import de.hbrs.inf.tsp.Defines;
+import de.hbrs.inf.tsp.Fstsp;
 import de.hbrs.inf.tsp.Pdstsp;
 import de.hbrs.inf.tsp.TspModel;
 
@@ -48,6 +49,14 @@ public class TspModelCsvResultsConverter{
 				resultList.add( Integer.toString( pdstsp.getDroneDeliveryPossibleAndInFlightRangeCounter() ) );
 				resultList.add( Double.toString( pdstsp.getDroneFlightRangePercentage() / 100.0 ) );
 				break;
+			case Defines.FSTSP:
+				Fstsp fdstsp = (Fstsp)tspModel;
+				resultList.add( Double.toString( fdstsp.getTruckSpeed() ) );
+				resultList.add( Double.toString( fdstsp.getDroneSpeed() ) );
+				resultList.add( Double.toString( fdstsp.getTruckSpeed() / fdstsp.getDroneSpeed() ) );
+				resultList.add( Integer.toString( fdstsp.getPossibleDroneFlightsSize() ) );
+				resultList.add( Double.toString( fdstsp.getDroneFlightRangePercentage() / 100.0 ) );
+				break;
 		}
 
 		return convertListToCsvString( resultList );
@@ -91,6 +100,12 @@ public class TspModelCsvResultsConverter{
 				parameterList.add( Defines.Strings.DRONES_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE );
 				parameterList.add( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE );
 				break;
+			case Defines.FSTSP:
+				parameterList.add( Defines.Strings.TRUCK_SPEED );
+				parameterList.add( Defines.Strings.DRONE_SPEED );
+				parameterList.add( Defines.Strings.TRUCK_SPEED_DRONE_SPEED_RATIO );
+				parameterList.add( Defines.Strings.POSSIBLE_DRONE_FLIGHTS );
+				parameterList.add( Defines.Strings.DRONE_FLIGHT_RANGE_PERCENTAGE );
 		}
 
 		return convertListToCsvString( parameterList );

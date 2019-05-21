@@ -1,0 +1,74 @@
+package de.hbrs.inf.tsp.json;
+
+import com.google.gson.annotations.SerializedName;
+
+public class FstspLibJson extends TspLibJson{
+
+	@SerializedName( value = "truck_speed", alternate = { "Truck_Speed", "TRUCK_SPEED" } ) private double truck_speed = 1;
+	@SerializedName( value = "drone_flight_range", alternate = { "Drone_Flight_Range", "DRONE_FLIGHT_RANGE" } ) private int drone_flight_range;
+	@SerializedName( value = "drone_speed", alternate = { "Drone_Speed", "DRONE_SPEED" } ) private double drone_speed = 1;
+	@SerializedName( value = "drone_delivery_possible", alternate = { "Drone_Delivery_Possible", "DRONE_DELIVERY_POSSIBLE" } ) private int[] drone_delivery_possible;
+
+	public double getTruck_speed(){
+		return truck_speed;
+	}
+
+	public void setTruck_speed( double truck_speed ){
+		this.truck_speed = truck_speed;
+	}
+
+	public int getDrone_flight_range(){
+		return drone_flight_range;
+	}
+
+	public void setDrone_flight_range( int drone_flight_range ){
+		this.drone_flight_range = drone_flight_range;
+	}
+
+	public double getDrone_speed(){
+		return drone_speed;
+	}
+
+	public void setDrone_speed( double drone_speed ){
+		this.drone_speed = drone_speed;
+	}
+
+	public int[] getDrone_delivery_possible(){
+		return drone_delivery_possible;
+	}
+
+	public void setDrone_delivery_possible( int[] drone_delivery_possible ){
+		this.drone_delivery_possible = drone_delivery_possible;
+	}
+
+	public String toString(){
+
+		String toString;
+
+		toString = "Name: " + getName() + "\n";
+		toString += "Type: " + getType() + "\n";
+		toString += "Comment: " + getComment() + "\n";
+		toString += "Dimension: " + getDimension() + "\n";
+		toString += "Truck Speed: " + truck_speed + "\n";
+		;
+		toString += "Drone Flight Range: " + drone_flight_range + "\n";
+		toString += "Drone Speed: " + drone_speed + "\n";
+		toString += "Edge Weight Type: " + getEdge_weight_type() + "\n";
+		toString += "Edge Weight Format: " + getEdge_weight_format() + "\n";
+		toString += "Display Data Type: " + getDisplay_data_type() + "\n";
+		toString += "Node Coordinates: \n";
+		int i = 0;
+		for( double[] nodeCoordinates : getNode_coordinates() ){
+			toString += "\t" + i++ + ": [ " + nodeCoordinates[0] + ", " + nodeCoordinates[1] + " ]\n";
+		}
+		toString += "Drone Delivery Possible: [ ";
+
+		for( int index : drone_delivery_possible ){
+			toString += index + ", ";
+		}
+		toString = toString.substring( 0, toString.length() - 2 ) + " ]";
+
+		return toString;
+	}
+
+}

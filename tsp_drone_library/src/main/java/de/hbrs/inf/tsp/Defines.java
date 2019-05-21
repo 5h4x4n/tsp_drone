@@ -4,6 +4,7 @@ public class Defines{
 
 	public static final String TSP = "TSP";
 	public static final String PDSTSP = "PDSTSP";
+	public static final String FSTSP = "FSTSP";
 
 	public static class Strings {
 		public static final String TYPE = "Type";
@@ -35,6 +36,7 @@ public class Defines{
 		public static final String PRESOLVE_HEURISTIC_TYPE = "PresolveHeuristicType";
 		public static final String OBJECTIVE_BOUND = "ObjectiveBound";
 		public static final String OBJECTIVE_GAP = "ObjectiveGap";
+		public static final String POSSIBLE_DRONE_FLIGHTS = "PossibleDroneFlights";
 	}
 
 	public enum PresolveHeuristicType{

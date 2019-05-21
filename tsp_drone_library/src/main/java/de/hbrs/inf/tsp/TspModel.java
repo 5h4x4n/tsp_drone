@@ -432,7 +432,7 @@ public abstract class TspModel extends GRBCallback{
 		} catch( GRBException e ){
 			e.printStackTrace();
 			errorCode = e.getErrorCode();
-			log.error( "GRBException while looking for subtours and adding lazy constraints in MIPSOL callback!" );
+			log.error( "GRBException while looking for violated constraints and adding lazy constraints in MIPSOL callback!" );
 			grbModel.terminate();
 		}
 	}
