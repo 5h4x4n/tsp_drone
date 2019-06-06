@@ -34,7 +34,8 @@ public abstract class TspModel extends GRBCallback{
 	protected int errorCode = 0;
 
 	private final transient static Object lock = new Object();
-	protected transient static double currentBestObjectiveSynced = 99999999;
+	private transient final static double currentBestObjectiveSynced_DEFAULT_VALUE = 999999999;
+	protected transient static double currentBestObjectiveSynced = currentBestObjectiveSynced_DEFAULT_VALUE;
 
 	private static final double EARTH_RADIUS = 6378.388;
 	protected static Logger log = Logger.getLogger( TspModel.class.getName() );
@@ -49,6 +50,7 @@ public abstract class TspModel extends GRBCallback{
 		this.dimension = dimension;
 		this.nodes = nodes;
 		this.distances = distances;
+		setDefaultValueForCurrentBestObjectiveSynced();
 	}
 
 	public static double[][] calculateNodes( TspLibJson tspLibJson ){
@@ -222,6 +224,11 @@ public abstract class TspModel extends GRBCallback{
 			grbEnv = new GRBEnv();
 			//TODO changeable with parameter?!
 			grbEnv.set( GRB.IntParam.LogToConsole, 0 );
+			//TODO Disable gurobi heuristics, cause gurobi does not call the MIPSOL Callback when a solution is found with a heuristic - if it is the best solution
+			// gurobi terminates with this solution, but maybe it is not feasible. The Callback would check it and adds lazy constraints
+			if( type.equals( Defines.FSTSP ) ){
+				grbEnv.set( GRB.DoubleParam.Heuristics, 0.0 );
+			}
 
 			grbModel = calcGrbModel();
 
@@ -287,12 +294,12 @@ public abstract class TspModel extends GRBCallback{
 					StringBuilder solutionString = new StringBuilder();
 
 					for( int i = 0; i < vars.length; i++ ){
-						if( (int)( x[i] + 0.5d ) != 0 ){
+						if( !varNames[i].contains( "w" ) && (int)(x[i] + 0.5d) != 0 ){
 							solutionString.append( varNames[i] ).append( ", " );
 						}
 					}
 					solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
-					log.debug( "Decision variables in solution: " + solutionString );
+					log.debug( "Decision variables for edges in solution: " + solutionString );
 
 					if( log.isDebugEnabled() ){
 						logIterationDebug();
@@ -371,6 +378,7 @@ public abstract class TspModel extends GRBCallback{
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
 
+		setDefaultValueForCurrentBestObjectiveSynced();
 		return getResult();
 	}
 
@@ -382,6 +390,8 @@ public abstract class TspModel extends GRBCallback{
 				getResult().setRuntimeOptimization( currentRuntimeSeconds );
 
 			} else if( where == GRB.CB_MIPSOL ){
+				log.debug( "MIPSOL Callback called." );
+				//grbModel.getEnv().message( "GRB.CB_MIPSOL" );
 				if( isLazyActive ){
 
 					log.info( "MIP Solution found." );
@@ -399,7 +409,7 @@ public abstract class TspModel extends GRBCallback{
 					log.info( "Current explored node count: " + exploredNodeCount );
 					log.info( "Current count of feasible solutions found: " + feasableSolutionsFoundCount );
 
-					getResult().setObjectiveBound( getDoubleInfo( GRB.CB_MIPSOL_OBJBND ) );
+					getResult().setObjectiveBound( bestObjBound );
 					double currentRuntimeSeconds = (System.nanoTime() - startOptimizationTime) / 1e9;
 					getResult().setRuntimeOptimization( currentRuntimeSeconds );
 
@@ -422,9 +432,11 @@ public abstract class TspModel extends GRBCallback{
 									log.info( logSolution() );
 								}
 							}
+						} else {
+							log.info( "Added violated lazy constraints!" );
 						}
 					} else {
-						log.info( "Do not look for violated constraints here, cause current solution is lower than " + "'heuristic' value: " + heuristicValue );
+						log.info( "Do not look for violated constraints here, cause current solution " + objValue + " is higher than heuristic value " + heuristicValue );
 					}
 				}
 			}
@@ -432,7 +444,8 @@ public abstract class TspModel extends GRBCallback{
 		} catch( GRBException e ){
 			e.printStackTrace();
 			errorCode = e.getErrorCode();
-			log.error( "GRBException while looking for violated constraints and adding lazy constraints in MIPSOL callback!" );
+			log.error( "GRBException while looking for violated constraints and adding lazy constraints in MIPSOL callback! Error Code: " + errorCode + ", Message: " + e
+							.getMessage() );
 			grbModel.terminate();
 		}
 	}
@@ -672,6 +685,13 @@ public abstract class TspModel extends GRBCallback{
 			return currentBestObjectiveSynced;
 		}
 	}
+
+	public static void setDefaultValueForCurrentBestObjectiveSynced(){
+		synchronized( lock ){
+			currentBestObjectiveSynced = currentBestObjectiveSynced_DEFAULT_VALUE;
+		}
+	}
+
 }
 
 

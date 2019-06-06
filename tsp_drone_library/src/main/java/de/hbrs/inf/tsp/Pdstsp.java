@@ -195,8 +195,17 @@ public class Pdstsp extends TspModel{
 				if( tsp.grbOptimize() != null ){
 					if( tsp.getResult().isOptimal() ){
 						grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
-						log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
-						setHeuristicValue( tsp.getResult().getObjective() / truckSpeed );
+						//calculate heuristic value with tsp solution and calculated trucktimes of pdstsp
+						double calculatedHeuristicValue = 0.0;
+						for( int i = 0; i < dimension; i++ ){
+							for( int j = i; j < dimension; j++ ){
+								if( (int)(grbTruckEdgeVarsStartValues[i][j] + 0.5d) == 1 ){
+									calculatedHeuristicValue += truckTimes[i][j];
+								}
+							}
+						}
+						log.info( "Calculated heuristicValue with TSP solution and trucktimes: " + calculatedHeuristicValue );
+						setHeuristicValue( calculatedHeuristicValue );
 						// set the grbDronesCustomerStartValues to 0 (doubles are 0 by default)
 						grbDronesCustomersVarsStartValues = new double[droneFleetSize][dimension];
 						return true;
