@@ -222,8 +222,10 @@ public abstract class TspModel extends GRBCallback{
 		try{
 			long runtimeCalcGrbModel = System.nanoTime();
 			grbEnv = new GRBEnv();
-			//TODO changeable with parameter?!
-			grbEnv.set( GRB.IntParam.LogToConsole, 0 );
+			grbEnv.set( GRB.IntParam.LogToConsole, 1 );
+			if( log.isDebugEnabled() ){
+				grbEnv.set( GRB.StringParam.LogFile, "out.log" );
+			}
 			//TODO Disable gurobi heuristics, cause gurobi does not call the MIPSOL Callback when a solution is found with a heuristic - if it is the best solution
 			// gurobi terminates with this solution, but maybe it is not feasible. The Callback would check it and adds lazy constraints
 			if( type.equals( Defines.FSTSP ) ){
@@ -292,14 +294,23 @@ public abstract class TspModel extends GRBCallback{
 					String[] varNames = grbModel.get( GRB.StringAttr.VarName, vars );
 					double[] x = grbModel.get( GRB.DoubleAttr.X, vars );
 					StringBuilder solutionString = new StringBuilder();
+					StringBuilder solutionWaitTimesString = new StringBuilder();
 
 					for( int i = 0; i < vars.length; i++ ){
 						if( !varNames[i].contains( "w" ) && (int)(x[i] + 0.5d) != 0 ){
 							solutionString.append( varNames[i] ).append( ", " );
 						}
+						if( varNames[i].contains( "w" ) && (int)(x[i] + 0.5d) != 0 ){
+							solutionWaitTimesString.append( varNames[i] ).append( " = " ).append( (int)(x[i] + 0.5d) ).append( ", " );
+						}
 					}
 					solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) );
-					log.debug( "Decision variables for edges in solution: " + solutionString );
+					log.info( "Decision variables for edges in solution: " + solutionString );
+
+					if( solutionWaitTimesString.length() > 0 ){
+						solutionWaitTimesString = new StringBuilder( solutionWaitTimesString.substring( 0, solutionWaitTimesString.length() - 2 ) );
+						log.info( "Wait times in solution: " + solutionWaitTimesString );
+					}
 
 					if( log.isDebugEnabled() ){
 						logIterationDebug();
@@ -330,6 +341,12 @@ public abstract class TspModel extends GRBCallback{
 						log.info( "Runtime of GRB Model calculation: " + getResult().getRuntimeGrbModelCalculation() + "s" );
 						log.info( "Runtime of Presolve Heuristic: " + getResult().getRuntimePresolveHeuristic() + "s" );
 						log.info( "Runtime of Optimization: " + getResult().getRuntimeOptimization() + "s" );
+
+						if( log.isDebugEnabled() ){
+							grbModel.write( "out.lp" );
+							grbModel.write( "out.mps" );
+							grbModel.write( "out.sol" );
+						}
 
 						//TODO show runtime from parts like finding subtours (also percentage)
 
@@ -384,6 +401,9 @@ public abstract class TspModel extends GRBCallback{
 
 	@Override
 	protected void callback(){
+
+		//log.debug( "#Test - where: " + where );
+
 		try{
 			if( where == GRB.CB_MIP ){
 				double currentRuntimeSeconds = (System.nanoTime() - startOptimizationTime) / 1e9;
@@ -430,6 +450,8 @@ public abstract class TspModel extends GRBCallback{
 									//TODO getSolution and add it as iterationResult?!
 									log.info( "New best feasible solution found (objective: " + objValue + ")." );
 									log.info( logSolution() );
+								} else {
+									log.info( "Current solution is feasible, but no new best one!" );
 								}
 							}
 						} else {

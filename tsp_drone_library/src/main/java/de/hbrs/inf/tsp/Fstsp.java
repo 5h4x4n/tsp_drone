@@ -3,9 +3,7 @@ package de.hbrs.inf.tsp;
 import gurobi.*;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Stack;
+import java.util.*;
 
 public class Fstsp extends TspModel{
 
@@ -21,7 +19,7 @@ public class Fstsp extends TspModel{
 	private transient double[][] grbTruckEdgeWaitVarsStartValues = null;
 	private transient GRBVar[][][] grbDroneFlightsVars;
 	private transient double[][][] grbDroneFlightsVarsStartValues = null;
-	private transient GRBVar grbObjectiveVar;
+	private transient double valueBiggerThanObjective = 0;
 	private FstspResult result;
 
 	private static Logger log = Logger.getLogger( Fstsp.class.getName() );
@@ -39,20 +37,15 @@ public class Fstsp extends TspModel{
 		this.droneTimes = droneTimes;
 		this.droneDeliveryPossible = droneDeliveryPossible;
 
-		// [start][customer][end]
-		this.possibleDroneFlights = new boolean[dimension+1][dimension][dimension+1];
-		for( int start = 0; start < dimension + 1; start++ ){
+		// [i][j][customer]
+		this.possibleDroneFlights = new boolean[dimension][dimension][dimension];
+		for( int i = 0; i < dimension; i++ ){
 			for( int customer : droneDeliveryPossible ){
-				for( int end = 0; end < dimension + 1; end++ ){
-
-					if( start != end && start != customer && end != customer ){
-
-						//TODO depot only 0 or add column/row in times arrays
-						int tmpStart = start == dimension ? 0 : start;
-						int tmpEnd = end == dimension ? 0 : end;
-
-						if( droneTimes[tmpStart][customer] + droneTimes[customer][tmpEnd] <= this.droneFlightTime ){
-							possibleDroneFlights[start][customer][end] = true;
+				for( int j = 0; j < dimension; j++ ){
+					if( i != j && i != customer && j != customer ){
+						if( droneTimes[i][customer] + droneTimes[customer][j] <= this.droneFlightTime ){
+							possibleDroneFlights[i][j][customer] = true;
+							possibleDroneFlights[j][i][customer] = true;
 							possibleDroneFlightsSize++;
 						}
 
@@ -61,24 +54,21 @@ public class Fstsp extends TspModel{
 			}
 		}
 
-		//TODO Remove debug log?!
-		/*
-		log.debug( "possibleDroneFlightsSize: " + possibleDroneFlightsSize );
-		for( int customer = 1; customer < dimension; customer++ ){
-			log.debug( "possibleDroneFlights for customer " + customer + ":" );
-			for( int start = 0; start < dimension + 1; start++ ){
-				for( int end = 0; end < dimension + 1; end++ ){
-					if( start != end && start != customer && end != customer ){
-						if( possibleDroneFlights[start][customer][end] ) {
-							log.debug( "start: " + start + ", end " + end );
-						}
-					}
+		this.result = new FstspResult( name );
+
+		//calculate valueBiggerThanObjective
+		int maxTruckTimes = 0;
+		for( int i = 0; i < dimension; i++ ){
+			for( int j = i; j < dimension; j++ ){
+				if( truckTimes[i][j] > maxTruckTimes ){
+					maxTruckTimes = truckTimes[i][j];
 				}
 			}
 		}
-		 */
+		valueBiggerThanObjective = maxTruckTimes * dimension;
+		log.debug( "maxTruckTimes: " + maxTruckTimes );
+		log.debug( "valueBiggerThanObjective: " + valueBiggerThanObjective );
 
-		this.result = new FstspResult( name );
 	}
 
 	public String toString(){
@@ -119,31 +109,26 @@ public class Fstsp extends TspModel{
 		GRBModel grbModel = new GRBModel( grbEnv );
 
 		//init arrays for decision variables
-		grbTruckEdgeVars = new GRBVar[dimension+1][dimension+1];
-		grbTruckEdgeWaitVars = new GRBVar[dimension+1][dimension+1];
-		grbDroneFlightsVars = new GRBVar[dimension+1][dimension][dimension+1];
+		grbTruckEdgeVars = new GRBVar[dimension][dimension];
+		grbTruckEdgeWaitVars = new GRBVar[dimension][dimension];
+		grbDroneFlightsVars = new GRBVar[dimension][dimension][dimension];
 
 		GRBLinExpr grbLinExpr;
 		StringBuilder logString;
 
 		//create decision variables for the truck edges and the according wait times
-		for( int i = 0; i < dimension + 1; i++ ){
-			for( int j = i; j < dimension + 1; j++ ){
+		for( int i = 0; i < dimension; i++ ){
+			for( int j = i; j < dimension; j++ ){
 				if( i == j ){
 					grbTruckEdgeVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "x" + i + "_" + i );
-					grbTruckEdgeWaitVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.CONTINUOUS, "w" + i + "_" + i );
+					grbTruckEdgeWaitVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.INTEGER, "w" + i + "_" + i );
 				} else {
-					// this is necessary cause the node with dimension as index is also the depot, but as end-node
-					int tmpJ = j;
-					if( j == dimension ) {
-						tmpJ = 0;
-					}
-					log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][tmpJ] );
-					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][tmpJ], GRB.BINARY, "x" + i + "_" + j );
+					log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][j] );
+					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][j], GRB.BINARY, "x" + i + "_" + j );
 					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
 
 					log.debug( "Add decision var w" + i + "_" + j + " with factor 1.0 and upper bound " + droneFlightTime );
-					grbTruckEdgeWaitVars[i][j] = grbModel.addVar( 0.0, droneFlightTime, 1.0, GRB.CONTINUOUS, "w" + i + "_" + j );
+					grbTruckEdgeWaitVars[i][j] = grbModel.addVar( 0.0, droneFlightTime, 1.0, GRB.INTEGER, "w" + i + "_" + j );
 					grbTruckEdgeWaitVars[j][i] = grbTruckEdgeWaitVars[i][j];
 				}
 			}
@@ -151,15 +136,15 @@ public class Fstsp extends TspModel{
 
 		//create decision variables for the drone flights
 		for( int customer = 0; customer < dimension; customer++ ){
-			for( int i = 0; i < dimension + 1; i++ ){
-				for( int j = i; j < dimension + 1; j++ ){
-					if( possibleDroneFlights[i][customer][j] ) {
-						log.debug( "Add decision var y" + i + "_" + customer + "_" + j + " with factor 0.0 " );
-						grbDroneFlightsVars[i][customer][j] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + i + "_" + customer + "_" + j );
+			for( int i = 0; i < dimension; i++ ){
+				for( int j = i; j < dimension; j++ ){
+					if( possibleDroneFlights[i][j][customer] ){
+						log.debug( "Add decision var y" + i + "_" + j + "_" + customer + " with factor 0.0 " );
+						grbDroneFlightsVars[i][j][customer] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + i + "_" + j + "_" + customer );
 					} else {
-						grbDroneFlightsVars[i][customer][j] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "y" + i + "_" + customer + "_" + j );
+						grbDroneFlightsVars[i][j][customer] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "y" + i + "_" + j + "_" + customer );
 					}
-					grbDroneFlightsVars[j][customer][i] = grbDroneFlightsVars[i][customer][j];
+					grbDroneFlightsVars[j][i][customer] = grbDroneFlightsVars[i][j][customer];
 				}
 			}
 		}
@@ -177,11 +162,11 @@ public class Fstsp extends TspModel{
 			}
 			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) ).append( ") + " );
 
-			for( int start = 0; start < dimension; start++ ) {
-				for( int end = 1; end < dimension + 1; end++ ) {
-					if( possibleDroneFlights[start][customer][end] ) {
-						logString.append( "y" ).append( start ).append( "_" ).append( customer ).append( "_" ).append( end ).append( " + " );
-						grbLinExpr.addTerm( 1.0, grbDroneFlightsVars[start][customer][end] );
+			for( int i = 0; i < dimension; i++ ){
+				for( int j = i; j < dimension; j++ ){
+					if( possibleDroneFlights[i][j][customer] ){
+						logString.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( customer ).append( " + " );
+						grbLinExpr.addTerm( 1.0, grbDroneFlightsVars[i][j][customer] );
 					}
 				}
 			}
@@ -192,40 +177,28 @@ public class Fstsp extends TspModel{
 			calculatedConstraintsCounter++;
 		}
 
-		//create constraints that the truck leaves the start-depot-node
+		//Add degree-2 constraint for depot
 		grbLinExpr = new GRBLinExpr();
 		logString = new StringBuilder();
-		for( int j = 1; j < dimension + 1; j++ ) {
-			logString.append( "x0_" ).append( j ).append( " + " );
-			grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[0][j] );
+		for( int customer = 1; customer < dimension; customer++ ){
+			logString.append( "x0_" ).append( customer ).append( " + " );
+			grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[0][customer] );
 		}
 		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-		log.debug( "Add constraint truck_leave_depot: " + logString + " = 1" );
-		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 1.0, "truck_leave_depot" );
-		calculatedConstraintsCounter++;
-
-		//create constraints that the truck stops at the end-depot-node
-		grbLinExpr = new GRBLinExpr();
-		logString = new StringBuilder();
-		for( int i = 0; i < dimension; i++ ) {
-			logString.append( "x" ).append( i ).append( "_" ).append( dimension ).append( " + " );
-			grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[i][dimension] );
-		}
-		logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-		log.debug( "Add constraint truck_stop_depot: " + logString + " = 1" );
-		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 1.0, "truck_stop_depot" );
+		log.debug( "Add degree-2 constraint for depot: " + logString + " = 2" );
+		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_depot" );
 		calculatedConstraintsCounter++;
 
 		//create constraints that the truck visits start and end nodes of a drone flight
 		for( int customer = 1; customer < dimension; customer++ ) {
 			for( int i = 0; i < dimension; i++ ) {
-				for( int j = 1; j < dimension + 1; j++ ){
-					if( possibleDroneFlights[i][customer][j] ){
+				for( int j = i; j < dimension; j++ ){
+					if( possibleDroneFlights[i][j][customer] ){
 						grbLinExpr = new GRBLinExpr();
 						logString = new StringBuilder();
 						GRBLinExpr grbLinExpr2 = new GRBLinExpr();
 						StringBuilder logString2 = new StringBuilder();
-						for( int h = 0; h < dimension + 1; h++ ) {
+						for( int h = 0; h < dimension; h++ ){
 							if( i != h ){
 								logString.append( "x" ).append( i ).append( "_" ).append( h ).append( " + " );
 								grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[i][h] );
@@ -237,44 +210,43 @@ public class Fstsp extends TspModel{
 						}
 
 						logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + customer + "_" + j + " <= " + logString );
-						grbModel.addConstr( grbLinExpr, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][customer][j], "truck_visits_drone_nodes" );
+						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + j + "_" + customer + " <= " + logString );
+						grbModel.addConstr( grbLinExpr, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][j][customer],
+										"truck_visits_drone_nodes_" + i + "_" + j + "_" + customer + "_i" );
 						calculatedConstraintsCounter++;
 
 						logString2 = new StringBuilder( logString2.substring( 0, logString2.length() - 3 ) );
-						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + customer + "_" + j + " <= " + logString2 );
-						grbModel.addConstr( grbLinExpr2, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][customer][j], "truck_visits_drone_nodes" );
+						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + j + "_" + customer + " <= " + logString2 );
+						grbModel.addConstr( grbLinExpr2, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][j][customer],
+										"truck_visits_drone_nodes_" + i + "_" + j + "_" + customer + "_j" );
 						calculatedConstraintsCounter++;
 					}
 				}
 			}
 		}
 
-
-		//TODO just for testing - adding constraints - each node max 2 drone edges
-		for( int i = 0; i < dimension + 1; i++ ) {
+		//TODO each node max 2 drone edges
+		for( int i = 0; i < dimension; i++ ){
 			grbLinExpr = new GRBLinExpr();
 			logString = new StringBuilder();
-			for( int c = 1; c < dimension; c++ ) {
-				for( int j = 0; j < dimension + 1; j++ ) {
-					if( i != c && c != j && i != j ) {
-						logString.append( "y" ).append( i ).append( "_" ).append( c ).append( "_" ).append( j ).append( " + " );
-						grbLinExpr.addTerm( 1.0, grbDroneFlightsVars[i][c][j] );
+			boolean termsAdded = false;
+			for( int customer = 1; customer < dimension; customer++ ){
+				for( int j = 0; j < dimension; j++ ){
+					if( possibleDroneFlights[i][j][customer] ){
+						termsAdded = true;
+						logString.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( customer ).append( " + " );
+						grbLinExpr.addTerm( 1.0, grbDroneFlightsVars[i][j][customer] );
 					}
 				}
 			}
 
-			int rhs = 2;
-			if( i == 0 || i == dimension ) {
-				rhs = 1;
+			if( termsAdded ){
+				logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
+				log.debug( "Add constraint max_drone_edge_constraint_" + i + ":  2 >= " + logString );
+				grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, 2, "max_drone_edge_constraint_" + i );
+				calculatedConstraintsCounter++;
 			}
-			logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-			log.debug( "Add constraint max_drone_edge_constraint_" + i + ":  rhs >= " + logString );
-			grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, rhs, "max_drone_edge_constraint_" );
-			calculatedConstraintsCounter++;
 		}
-
-		//TODO just for testing
 
 
 
@@ -351,10 +323,10 @@ public class Fstsp extends TspModel{
 	private ArrayList<Integer[]> findDroneFlights( double[][][] droneFlightsVars ) throws GRBException{
 		ArrayList<Integer[]> droneFlights = new ArrayList<>();
 		for( int i = 0; i < droneFlightsVars.length; i++ ) {
-			for( int c = 0; c < droneFlightsVars[i].length; c++ ) {
-				for( int j = i; j < droneFlightsVars[i][c].length; j++ ) {
-					if( (int)(droneFlightsVars[i][c][j] + 0.5d) != 0 ){
-						droneFlights.add( new Integer[] { i, c, j } );
+			for( int j = i + 1; j < droneFlightsVars[i].length; j++ ){
+				for( int c = 0; c < droneFlightsVars[i][j].length; c++ ){
+					if( (int)(droneFlightsVars[i][j][c] + 0.5d) != 0 ){
+						droneFlights.add( new Integer[]{ i, j, c } );
 					}
 				}
 			}
@@ -362,64 +334,11 @@ public class Fstsp extends TspModel{
 		return droneFlights;
 	}
 
-	protected ArrayList<ArrayList<Integer>> findSubtours( double[][] edgeVars ){
-		log.debug( "Starting find subtours" );
-
-		ArrayList<ArrayList<Integer>> subtours = new ArrayList<>();
-		Stack<Integer> unvisitedVertices = new Stack<>();
-
-		//this prevents to search subtours for vertices which are not currently in the solution
-		for( int i = dimension; i >= 0; i-- ){
-			for( int j = dimension; j >= 0; j-- ){
-				if( i != j ){
-					if( ( (int)( edgeVars[i][j] + 0.5d ) ) != 0 ){
-						unvisitedVertices.add( i );
-						break;
-					}
-				}
-			}
-		}
-
-		while( !unvisitedVertices.isEmpty() ){
-			int currentVertex = unvisitedVertices.pop();
-			log.debug( "currentVertex: " + currentVertex );
-			log.debug( "unvisitedVertices: " + unvisitedVertices );
-			ArrayList<Integer> subtour = new ArrayList<>();
-			subtours.add( subtour );
-			Stack<Integer> unvisitedVerticesForSubtour = new Stack<>();
-			unvisitedVerticesForSubtour.add( currentVertex );
-			log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-
-			while( !unvisitedVerticesForSubtour.isEmpty() ){
-				Integer currentSubtourVertex = unvisitedVerticesForSubtour.pop();
-				log.debug( "currentSubtourVertex: " + currentSubtourVertex );
-				log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-				subtour.add( currentSubtourVertex );
-				log.debug( "subtour: " + subtour );
-				unvisitedVertices.remove( currentSubtourVertex );
-				for( int i = 0; i < dimension + 1; i++ ){
-					if( i != currentSubtourVertex ){
-						//log.debug( "Check x" + currentSubtourVertex + "_" + i + " = " + (int) grbTruckEdgeVars[currentSubtourVertex][i].get( GRB.DoubleAttr.X ) );
-						if( ( (int)( edgeVars[currentSubtourVertex][i] + 0.5d ) ) != 0 && !subtour.contains( i )
-										&& !unvisitedVerticesForSubtour.contains( i ) ){
-							unvisitedVerticesForSubtour.add( i );
-							log.debug( "unvisitedVerticesForSubtour: " + unvisitedVerticesForSubtour );
-						}
-					}
-				}
-			}
-			log.debug( "subtour: " + subtour );
-		}
-		log.debug( "Ending find subtours" );
-		return subtours;
-
-	}
-
 	protected String logSolution() throws GRBException{
 		StringBuilder solutionString = new StringBuilder( super.logSolution() ).append( "\n" );
 
-		double[][][] droneFlightsVars = new double[dimension+1][dimension][dimension+1];
-		for( int i = 0; i < dimension + 1; i++ ) {
+		double[][][] droneFlightsVars = new double[dimension][dimension][dimension];
+		for( int i = 0; i < dimension; i++ ){
 			droneFlightsVars[i] = getSolution( grbDroneFlightsVars[i] );
 		}
 
@@ -429,8 +348,8 @@ public class Fstsp extends TspModel{
 			solutionString.append( "Drone_Flights_Size" ).append( ": " ).append( droneFlights.size() ).append( "\n" );
 			for( int v = 0; v < droneFlights.size(); v++ ){
 				if( droneFlights.get( v ).length > 0 ){
-					solutionString.append( "Drone_Flight_" ).append( v ).append( ": " );
-					for( int i = 0; i < droneFlights.get( v ).length; i++ ){
+					solutionString.append( "Drone_Flight_" ).append( droneFlights.get( v )[2] ).append( ": " );
+					for( int i = 0; i < 2; i++ ){
 						solutionString.append( droneFlights.get( v )[i] ).append( ", " );
 					}
 					solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) ).append( "\n" );
@@ -445,73 +364,24 @@ public class Fstsp extends TspModel{
 	}
 
 	@Override protected void logIterationDebug() throws GRBException{
-		/*
 		super.logIterationDebug();
-		log.debug( "Drone customer vars of solution:" );
-		for( int v = 0; v < droneFleetSize; v++ ){
-			StringBuilder rowString = new StringBuilder( "Drone_" ).append( v ).append( " : " );
-			for( int i = 1; i < dimension; i++ ){
-				if( grbDronesCustomersVars[v][i] == null ){
-					rowString.append( "-, " );
-				} else {
-					rowString.append( (int)grbDronesCustomersVars[v][i].get( GRB.DoubleAttr.X ) ).append( ", " );
-				}
-			}
-			log.debug( rowString.substring( 0, rowString.length() - 2 ) );
-		}
-
-		 */
+		//TODO add debug information for droneFlights?!
 	}
 
 	@Override protected boolean addViolatedConstraints() throws GRBException{
-/*
-		ArrayList<ArrayList<Integer>> subtours = result.getLast().getTruckTours();
-		if( subtours.size() > 1 ){
-			log.info( "Found subtours: " + subtours.size() );
-			log.debug( "Subtours: " + subtours );
 
-			log.info( "Add violated subtour elimination constraints" );
-			for( ArrayList<Integer> subtour : subtours ){
-
-				if( subtour.contains( 0 ) ){
-				//TODO FSTSP
-					log.info( "Skip subtour with depot, cause it is a possible solution for the PDSTSP." );
-				} else {
-					double subtourVertexCounter = subtour.size();
-
-					ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
-					StringBuilder subtourEliminationConstraintString = new StringBuilder();
-					String subtourEliminationConstraintName = "sec_";
-					GRBLinExpr grbExpr = new GRBLinExpr();
-					for( int[] edge : edges ){
-						subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
-						grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
-					}
-					subtourEliminationConstraintName += additionalConstraintsCounter;
-					log.debug( "Add subtour elimination constraint: " + subtourEliminationConstraintString.substring( 0, subtourEliminationConstraintString.length() - 2 )
-									+ "<= " + (subtour.size() - 1) );
-					grbModel.addConstr( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, subtourEliminationConstraintName );
-					additionalConstraintsCounter++;
-				}
-			}
-			return true;
-		} else {
-			return false;
-		}
-
- */
-	return false;
+		//TODO implementation is only necessary if FSTSP should be solved with the iterative way instead of lazy
+		return false;
 	}
 
 	@Override protected boolean addViolatedLazyConstraints() throws GRBException{
 
-		/*
-		log.info( "Look for subtours and add lazy constraints." );
+		log.info( "Look for violated constraints and add them as lazy constraints." );
+		boolean addedConstraints = false;
 
-		ArrayList<ArrayList<Integer>> subtours = null;
-		double[][] truckEdgeVars;
-
-		truckEdgeVars = getSolution( grbTruckEdgeVars );
+		log.info( "Looking for truck subtours." );
+		ArrayList<ArrayList<Integer>> subtours;
+		double[][] truckEdgeVars = getSolution( grbTruckEdgeVars );
 		subtours = findSubtours( truckEdgeVars );
 
 		if( subtours.size() > 1 ){
@@ -522,9 +392,9 @@ public class Fstsp extends TspModel{
 			for( ArrayList<Integer> subtour : subtours ){
 
 				if( subtour.contains( 0 ) ){
-					log.info( "Skip subtour with depot, cause it is a possible solution for the PDSTSP." );
+					log.info( "Skip subtour with depot, cause it is a possible solution for the FSTSP." );
 				} else {
-					double subtourVertexCounter = subtour.size();
+					int subtourVertexCounter = subtour.size();
 
 					ArrayList<int[]> edges = createEdgesForSubtourEliminationConstraint( subtour );
 					StringBuilder subtourEliminationConstraintString = new StringBuilder();
@@ -536,16 +406,176 @@ public class Fstsp extends TspModel{
 					log.debug( "Add (lazy) subtour elimination constraint: " + subtourEliminationConstraintString
 									.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + (subtour.size() - 1) );
 					addLazy( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1 );
+					addedConstraints = true;
 					additionalConstraintsCounter++;
 				}
 			}
-			return true;
-		} else {
-			return false;
 		}
 
-		 */
-		return false;
+		log.info( "Looking for prohibited sub-drone-flights." );
+		double[][][] droneFlightsVars = new double[dimension][dimension][dimension];
+		for( int i = 0; i < dimension; i++ ){
+			droneFlightsVars[i] = getSolution( grbDroneFlightsVars[i] );
+		}
+		ArrayList<Integer[]> droneFlights = findDroneFlights( droneFlightsVars );
+		if( droneFlights.size() > 0 ){
+			log.debug( "droneFlights:" );
+			for( int k = 0; k < droneFlights.size(); k++ ){
+				Integer i = droneFlights.get( k )[0];
+				Integer j = droneFlights.get( k )[1];
+				Integer c = droneFlights.get( k )[2];
+				log.debug( "droneFlight_" + k + ": ({ " + i + ", " + j + " }, " + c + " )" );
+			}
+		} else {
+			log.debug( "No droneFlights in solution!" );
+		}
+
+		for( Integer[] droneFlight : droneFlights ){
+			Integer i = droneFlight[0];
+			Integer j = droneFlight[1];
+			Integer c = droneFlight[2];
+			log.debug( "Check drone flight ({ " + i + ", " + j + " }, " + c + " ) for sub-drone-flights." );
+			for( ArrayList<Integer> subtour : subtours ){
+				if( subtour.contains( i ) && subtour.contains( j ) ){
+					//droneFlight start/end in same subtour
+					int indexI = subtour.indexOf( i );
+					int indexJ = subtour.indexOf( j );
+					if( indexI > indexJ ){
+						int tmp = indexI;
+						indexI = indexJ;
+						indexJ = tmp;
+					}
+					List<Integer> truckTourItoJ = subtour.subList( indexI, indexJ + 1 );
+					log.debug( "truckTourItoJ: " + truckTourItoJ );
+
+					for( Integer[] subDroneFlight : droneFlights ){
+						Integer i2 = subDroneFlight[0];
+						Integer j2 = subDroneFlight[1];
+						Integer c2 = subDroneFlight[2];
+						//skip the current sub drone flight
+						if( !(i2.equals( i ) && j2.equals( j ) && c2.equals( c )) ){
+							// skip sub drone flights which have start and end node in a different truck subtour
+							if( (truckTourItoJ.contains( i2 ) || truckTourItoJ.contains( j2 )) && subtour.contains( i2 ) && subtour.contains( j2 ) ){
+
+								StringBuilder subDroneFlightEliminationConstraintString = new StringBuilder();
+								GRBLinExpr grbExpr = new GRBLinExpr();
+
+								grbExpr.addTerm( 1.0, grbDroneFlightsVars[i][j][c] );
+								StringBuilder test = new StringBuilder( Double.toString( droneFlightsVars[i][j][c] ) ).append( " + " );
+								subDroneFlightEliminationConstraintString.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( c ).append( " + " );
+								grbExpr.addTerm( 1.0, grbDroneFlightsVars[i2][j2][c2] );
+								test.append( droneFlightsVars[i2][j2][c2] ).append( " + " );
+								subDroneFlightEliminationConstraintString.append( "y" ).append( i2 ).append( "_" ).append( j2 ).append( "_" ).append( c2 )
+												.append( " + " );
+								for( int k = 0; k < truckTourItoJ.size() - 1; k++ ){
+									int node1 = truckTourItoJ.get( k );
+									int node2 = truckTourItoJ.get( k + 1 );
+									grbExpr.addTerm( 1.0, grbTruckEdgeVars[node1][node2] );
+									test.append( truckEdgeVars[node1][node2] ).append( " + " );
+									subDroneFlightEliminationConstraintString.append( "x" ).append( node1 ).append( "_" ).append( node2 ).append( " + " );
+								}
+
+								//log.debug( "TEST: " + test.substring( 0, test.length() - 2 ) );
+
+								log.debug( "Add (lazy) sub-drone-flight elimination constraint: " + subDroneFlightEliminationConstraintString
+												.substring( 0, subDroneFlightEliminationConstraintString.length() - 2 ) + "<= " + truckTourItoJ.size() );
+								addLazy( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size() );
+								additionalConstraintsCounter++;
+								addedConstraints = true;
+							} else {
+								log.debug( "Skip sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is in a different truck subtour." );
+							}
+						} else {
+							log.debug( "Skip the current sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is the current drone flight." );
+						}
+					}
+
+				}
+			}
+
+		}
+
+		//TODO ACTIVATE WAIT TIMES
+
+		log.info( "Looking for forbidden drone flights and add lazy constraints for the wait times for allowed drone flights." );
+		// do it together with the sub drone flights check to increase performance?!
+		for( Integer[] droneFlight : droneFlights ){
+			Integer i = droneFlight[0];
+			Integer j = droneFlight[1];
+			Integer c = droneFlight[2];
+			log.info( "Check drone flight ({ " + i + ", " + j + " }, " + c + " ) for wait time." );
+
+			for( ArrayList<Integer> subtour : subtours ){
+				if( subtour.contains( i ) && subtour.contains( j ) ){
+					//droneFlight start/end in same subtour
+					int indexI = subtour.indexOf( i );
+					int indexJ = subtour.indexOf( j );
+					if( indexI > indexJ ){
+						int tmp = indexI;
+						indexI = indexJ;
+						indexJ = tmp;
+					}
+					List<Integer> truckTourItoJ = subtour.subList( indexI, indexJ + 1 );
+					log.debug( "truckTourItoJ: " + truckTourItoJ );
+
+					StringBuilder waitTimeConstraintString = new StringBuilder();
+					GRBLinExpr grbExpr = new GRBLinExpr();
+
+					grbExpr.addConstant( truckTourItoJ.size() * valueBiggerThanObjective );
+					waitTimeConstraintString.append( valueBiggerThanObjective ).append( " * ( " ).append( truckTourItoJ.size() ).append( " - " );
+					grbExpr.addTerm( -valueBiggerThanObjective, grbDroneFlightsVars[i][j][c] );
+					waitTimeConstraintString.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( c ).append( " - " );
+					double rhs = droneTimes[i][c] + droneTimes[c][j];
+					for( int k = 0; k < truckTourItoJ.size() - 1; k++ ){
+						int node1 = truckTourItoJ.get( k );
+						int node2 = truckTourItoJ.get( k + 1 );
+						grbExpr.addTerm( -valueBiggerThanObjective, grbTruckEdgeVars[node1][node2] );
+						waitTimeConstraintString.append( "x" ).append( node1 ).append( "_" ).append( node2 ).append( " - " );
+						rhs -= truckTimes[node1][node2];
+					}
+
+					if( rhs == 0 ){
+						log.debug( "Skip current drone flight, cause wait time is exactly 0 for the current tour!" );
+						break;
+					} else if( rhs < 0 ){
+						log.debug( "Drone has to wait for the truck. Check if wait time plus flight time exceeds maximum drone flight time." );
+						double droneWaitTime = -rhs;
+						if( droneTimes[i][c] + droneTimes[c][j] + droneWaitTime > droneFlightTime ){
+							grbExpr = new GRBLinExpr();
+							StringBuilder droneFlightTimeExceedsConstraintString = new StringBuilder( "y" ).append( i ).append( "_" ).append( j ).append( "_" )
+											.append( c ).append( " + " );
+							grbExpr.addTerm( 1.0, grbDroneFlightsVars[i][j][c] );
+							for( int k = 0; k < truckTourItoJ.size() - 1; k++ ){
+								int node1 = truckTourItoJ.get( k );
+								int node2 = truckTourItoJ.get( k + 1 );
+								grbExpr.addTerm( 1.0, grbTruckEdgeVars[node1][node2] );
+								droneFlightTimeExceedsConstraintString.append( "x" ).append( node1 ).append( "_" ).append( node2 ).append( " + " );
+							}
+							log.debug( "Add (lazy) drone flight time exceeds constraint: " + droneFlightTimeExceedsConstraintString
+											.substring( 0, droneFlightTimeExceedsConstraintString.length() - 2 ) + "<= " + (truckTourItoJ.size() - 1) );
+							addLazy( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size() - 1 );
+						} else {
+							break;
+						}
+					} else {
+						grbExpr.addTerm( 1.0, grbTruckEdgeWaitVars[i][j] );
+						int w_ij = (int)(getSolution( grbTruckEdgeWaitVars )[i][j] + 0.5d);
+						if( w_ij >= rhs ){
+							log.debug( "Do not add wait time constraint, cause w" + i + "_" + j + " = " + w_ij + " is already greater-equal " + rhs );
+							break;
+						}
+						log.debug( "w" + i + "_" + j + ": " + w_ij );
+						log.debug( "Add (lazy) wait time constraint: " + waitTimeConstraintString.substring( 0, waitTimeConstraintString.length() - 2 ) + ") + w" + i
+										+ "_" + j + " >= " + rhs );
+						addLazy( grbExpr, GRB.GREATER_EQUAL, rhs );
+					}
+					additionalConstraintsCounter++;
+					addedConstraints = true;
+				}
+			}
+		}
+
+		return addedConstraints;
 	}
 
 	public double getDroneFlightTime(){

@@ -27,14 +27,14 @@ public class FstspTest{
 	}
 
 	@Test public void testGrbOptimizeLazy(){
-		/*
-		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/fstsp_test.json" );
+		//TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/fstsp_test.json" );
+		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/fstsp_test2.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		TspModelResult result = tspModel.grbOptimize();
 		assert result != null;
-		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 193800.0, 0.0 );
-		 */
+		//Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 328700.0, 0.0 );
+		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2417500.0, 0.0 );
 	}
 
 	//TODO Remove: Just for fast testing

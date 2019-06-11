@@ -224,18 +224,21 @@ public class SolverApplication{
 			int[] droneFlightRanges = { -1 };
 
 			String type = tspLibJson.getType();
-			if( type.equals( Defines.PDSTSP ) ){
+			if( type.equals( Defines.PDSTSP ) || type.equals( Defines.FSTSP ) ){
 				if( Configuration.getTruckSpeeds() != null ){
 					truckSpeeds = Configuration.getTruckSpeeds();
 				}
 				if( Configuration.getDroneSpeeds() != null ){
 					droneSpeeds = Configuration.getDroneSpeeds();
 				}
-				if( Configuration.getDroneFleetSizes() != null ){
-					droneFleetSizes = Configuration.getDroneFleetSizes();
-				}
 				if( Configuration.getDroneFlightRanges() != null ){
 					droneFlightRanges = Configuration.getDroneFlightRanges();
+				}
+
+				if( type.equals( Defines.PDSTSP ) ){
+					if( Configuration.getDroneFleetSizes() != null ){
+						droneFleetSizes = Configuration.getDroneFleetSizes();
+					}
 				}
 			}
 

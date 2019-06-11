@@ -11,8 +11,8 @@ public class FstspIterationResult extends TspModelIterationResult{
 		solutionString.append( "Drone_Flights_Size" ).append( ": " ).append( droneFlights.size() ).append( "\n" );
 		for( int v = 0; v < droneFlights.size(); v++ ){
 			if( droneFlights.get( v ).length > 0 ){
-				solutionString.append( "Drone_Flight_" ).append( v ).append( ": " );
-				for( int i = 0; i < droneFlights.get( v ).length; i++ ){
+				solutionString.append( "Drone_Flight_" ).append( droneFlights.get( v )[2] ).append( ": " );
+				for( int i = 0; i < 2; i++ ){
 					solutionString.append( droneFlights.get( v )[i] ).append( ", " );
 				}
 				solutionString = new StringBuilder( solutionString.substring( 0, solutionString.length() - 2 ) ).append( "\n" );
