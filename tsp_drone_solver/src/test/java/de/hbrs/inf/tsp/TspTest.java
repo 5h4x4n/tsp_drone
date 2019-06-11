@@ -43,6 +43,7 @@ public class TspTest{
 	@Test
 	public void testGrbOptimizeLazy(){
 		TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/tsplib/wi29.json" );
+		//TspLibJson tspLibJson = JsonTspMapper.getJsonObjectFromJson( "../resources/test/tsp_test.json" );
 		TspModel tspModel = JsonTspMapper.getTspModelFromJsonObject( tspLibJson );
 		assert tspModel != null;
 		TspModelResult result = tspModel.grbOptimize();
