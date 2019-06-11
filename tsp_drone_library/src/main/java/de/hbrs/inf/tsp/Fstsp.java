@@ -53,6 +53,7 @@ public class Fstsp extends TspModel{
 				}
 			}
 		}
+		log.info( "possibleDroneFlightsSize: " + possibleDroneFlightsSize );
 
 		this.result = new FstspResult( name );
 
@@ -66,8 +67,8 @@ public class Fstsp extends TspModel{
 			}
 		}
 		valueBiggerThanObjective = maxTruckTimes * dimension;
-		log.debug( "maxTruckTimes: " + maxTruckTimes );
-		log.debug( "valueBiggerThanObjective: " + valueBiggerThanObjective );
+		log.info( "maxTruckTimes: " + maxTruckTimes );
+		log.info( "valueBiggerThanObjective: " + valueBiggerThanObjective );
 
 	}
 
@@ -123,8 +124,8 @@ public class Fstsp extends TspModel{
 					grbTruckEdgeVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "x" + i + "_" + i );
 					grbTruckEdgeWaitVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.INTEGER, "w" + i + "_" + i );
 				} else {
-					log.debug( "Add decision var x" + i + "_" + j + " with factor " + distances[i][j] );
-					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, distances[i][j], GRB.BINARY, "x" + i + "_" + j );
+					log.debug( "Add decision var x" + i + "_" + j + " with factor " + truckTimes[i][j] );
+					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, truckTimes[i][j], GRB.BINARY, "x" + i + "_" + j );
 					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
 
 					log.debug( "Add decision var w" + i + "_" + j + " with factor 1.0 and upper bound " + droneFlightTime );
@@ -248,19 +249,14 @@ public class Fstsp extends TspModel{
 			}
 		}
 
-
-
-		//TODO Remove debug info
 		log.debug( "calculatedConstraintsCounter: " + calculatedConstraintsCounter );
-
 		log.info( "End calculation of gurobi model for the FSTSP without all special constraints" );
 
 		return grbModel;
 	}
 
 	@Override public boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType ){
-/*
-		//TODO FSTSP has two variables for the depot (start and end node)
+
 		switch( presolveHeuristicType ){
 			case TSP:
 				//tsp as heuristic solution
@@ -268,10 +264,20 @@ public class Fstsp extends TspModel{
 				if( tsp.grbOptimize() != null ){
 					if( tsp.getResult().isOptimal() ){
 						grbTruckEdgeVarsStartValues = tsp.truckEdgeVars.clone();
-						log.info( "Set heuristicValue: " + tsp.getResult().getObjective() );
-						setHeuristicValue( tsp.getResult().getObjective() / truckSpeed );
-						// set the grbDronesCustomerStartValues to 0 (doubles are 0 by default)
-						grbDronesCustomersVarsStartValues = new double[droneFleetSize][dimension];
+						//calculate heuristic value with tsp solution and calculated trucktimes of fstsp
+						double calculatedHeuristicValue = 0.0;
+						for( int i = 0; i < dimension; i++ ){
+							for( int j = i; j < dimension; j++ ){
+								if( (int)(grbTruckEdgeVarsStartValues[i][j] + 0.5d) == 1 ){
+									calculatedHeuristicValue += truckTimes[i][j];
+								}
+							}
+						}
+						log.info( "Calculated heuristicValue with TSP solution and trucktimes: " + calculatedHeuristicValue );
+						setHeuristicValue( calculatedHeuristicValue );
+						// set the grbDroneFlightsVarsStartValues and grbTruckEdgeWaitVarsStartValues to 0 (doubles are 0 by default)
+						grbDroneFlightsVarsStartValues = new double[dimension][dimension][dimension];
+						grbTruckEdgeWaitVarsStartValues = new double[dimension][dimension];
 						return true;
 					}
 				}
@@ -281,31 +287,44 @@ public class Fstsp extends TspModel{
 				log.info( "PresolveHeuristicType + '" + presolveHeuristicType.toString() + "' not supported for TSP!" );
 				return false;
 		}
-
- */
-		return false;
 	}
 
 	@Override protected void setStartValues() throws GRBException{
-		/*
+
 		super.setStartValues();
-		if( grbDronesCustomersVarsStartValues != null ){
-			log.info( "Set start values for grbDronesCustomersVars!" );
-			for( int v = 0; v < droneFleetSize; v++ ){
-				for( int i : droneDeliveryPossibleAndInFlightRange ){
-					if( grbDronesCustomersVarsStartValues[v][i] >= 0 ){
-						log.debug( "Set start value for y" + v + "_" + i + ": " + (int)(grbDronesCustomersVarsStartValues[v][i] + 0.5d) );
-						grbDronesCustomersVars[v][i].set( GRB.DoubleAttr.Start, (int)(grbDronesCustomersVarsStartValues[v][i] + 0.5d) );
-					} else {
-						grbDronesCustomersVars[v][i].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+		if( grbDroneFlightsVarsStartValues != null ){
+			log.info( "Set start values for grbDroneFlightsVars!" );
+			for( int customer = 0; customer < dimension; customer++ ){
+				for( int i = 0; i < dimension; i++ ){
+					for( int j = i; j < dimension; j++ ){
+						if( grbDroneFlightsVarsStartValues[i][j][customer] >= 0 ){
+							log.debug( "Set start value for y" + i + "_" + j + "_" + customer + ": " + (int)(grbDroneFlightsVarsStartValues[j][j][customer] + 0.5d) );
+							grbDroneFlightsVars[j][j][customer].set( GRB.DoubleAttr.Start, (int)(grbDroneFlightsVarsStartValues[j][j][customer] + 0.5d) );
+						} else {
+							grbDroneFlightsVars[j][j][customer].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+						}
 					}
 				}
 			}
 		} else {
-			log.info( "Could not set start values for grbDronesCustomersVars, because grbDronesCustomersVarsStartValues is null!" );
+			log.info( "Could not set start values for grbDroneFlightsVars, because grbDroneFlightsVarsStartValues is null!" );
 		}
 
-		 */
+		if( grbTruckEdgeWaitVarsStartValues != null ){
+			log.info( "Set start values for grbTruckEdgeWaitVars!" );
+			for( int i = 0; i < dimension; i++ ){
+				for( int j = i; j < dimension; j++ ){
+					if( i != j && grbTruckEdgeWaitVarsStartValues[i][j] >= 0 ){
+						log.debug( "Set start value for w" + i + "_" + j + ": " + (int)(grbTruckEdgeWaitVarsStartValues[j][j] + 0.5d) );
+						grbTruckEdgeWaitVars[j][j].set( GRB.DoubleAttr.Start, (int)(grbTruckEdgeWaitVarsStartValues[j][j] + 0.5d) );
+					} else {
+						grbTruckEdgeWaitVars[j][j].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+					}
+				}
+			}
+		} else {
+			log.info( "Could not set start values for grbTruckEdgeWaitVars, because grbTruckEdgeWaitVarsStartValues is null!" );
+		}
 	}
 
 	@Override protected TspModelIterationResult calculateAndAddIterationResult() throws GRBException{
@@ -494,8 +513,6 @@ public class Fstsp extends TspModel{
 			}
 
 		}
-
-		//TODO ACTIVATE WAIT TIMES
 
 		log.info( "Looking for forbidden drone flights and add lazy constraints for the wait times for allowed drone flights." );
 		// do it together with the sub drone flights check to increase performance?!

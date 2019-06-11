@@ -249,7 +249,7 @@ public abstract class TspModel extends GRBCallback{
 			long runtimePresolveHeuristic = 0;
 			if( presolveHeuristicType != Defines.PresolveHeuristicType.NONE ){
 				runtimePresolveHeuristic = System.nanoTime();
-				log.info( "Start presolve process with heuristic!" );
+				log.info( "Start presolve process with heuristic (" + presolveHeuristicType + ")!" );
 				if( !presolveHeuristic( presolveHeuristicType ) ){
 					log.info( "Something went wrong in the presolve heuristic calculation!" );
 					return null;
