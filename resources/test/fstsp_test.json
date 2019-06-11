@@ -3,7 +3,7 @@
     "type" : "FSTSP",
     "comment" : "Depot and 13 customers",
     "dimension" : 14,
-	"drone_flight_range" : 9999999,
+	"drone_flight_range" : 50000,
 	"drone_speed" : 1,
 	"truck_speed" : 1,
     "edge_weight_type" : "GEO",
@@ -26,5 +26,5 @@
             [ 19.41,  97.13 ],
             [ 20.09,  94.55 ]
         ],
-	"drone_delivery_possible" : [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13]
+	"drone_delivery_possible" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 }
