@@ -24,4 +24,8 @@ public class FstspIterationResult extends TspModelIterationResult{
 	public void setDroneFlights( ArrayList<Integer[]> droneFlights ) {
 		this.droneFlights = droneFlights;
 	}
+
+	public ArrayList<Integer[]> getDroneFlights(){
+		return droneFlights;
+	}
 }

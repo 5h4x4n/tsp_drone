@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 
 public class DisplayApplication extends Application{
 
@@ -34,7 +33,10 @@ public class DisplayApplication extends Application{
 	private static final double DEPOT_SIZE = 1.5 * NODE_SIZE;
 	private static final int DRONE_FLIGHT_RANGE_LINE_WIDTH = 1;
 	private static final int EDGE_LINE_WIDTH = 1;
+	private static final int DASHES_DISTANCE = 5;
 	private static final double NODE_MARGIN_DISTANCE_RATIO = 0.02;
+
+	private static final Color[] DRONE_EDGE_COLORS = { Color.GREEN, Color.ORANGE, Color.PURPLE, Color.MAGENTA };
 
 	private static Logger log;
 
@@ -150,6 +152,10 @@ public class DisplayApplication extends Application{
 						reader = new JsonReader( new FileReader( jsonFile ) );
 						tspModel = gson.fromJson( reader, Pdstsp.class );
 						break;
+					case Defines.FSTSP:
+						reader = new JsonReader( new FileReader( jsonFile ) );
+						tspModel = gson.fromJson( reader, Fstsp.class );
+						break;
 					default:
 						log.info( "TSP Type '" + tspType + "' not supported yet." );
 						tspModel = null;
@@ -212,6 +218,25 @@ public class DisplayApplication extends Application{
 
 							if( droneDeliveryPossibleAndInFlightRange.contains( new Integer( i ) ) ){
 								type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE;
+							}
+						}
+						break;
+					case Defines.FSTSP:
+						Fstsp fstsp = (Fstsp)tspModel;
+						ArrayList<Integer> droneDeliveryPossibleFstsp = new ArrayList<>();
+						int[] droneDeliveryPossibleFstspArray = fstsp.getDroneDeliveryPossible();
+						for( int node : droneDeliveryPossibleFstspArray ){
+							droneDeliveryPossibleFstsp.add( node );
+						}
+						if( i == 0 ){
+							type = Node.NodeType.DEPOT;
+						} else {
+							type = Node.NodeType.DRONE_DELIVERY_NOT_POSSIBLE;
+
+							for( int j : droneDeliveryPossibleFstsp ){
+								if( i == j ){
+									type = Node.NodeType.DRONE_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE;
+								}
 							}
 						}
 						break;
@@ -282,6 +307,17 @@ public class DisplayApplication extends Application{
 					drawDroneFlightRange( gc, nodes[0], normalizedDroneFlightRange );
 				}
 
+				//TODO
+				if( tspType.equals( Defines.FSTSP ) ){
+					double normalizedDroneFlightRange = ((Fstsp)tspModel).getDroneFlightRange() * normalizeFactor;
+					normalizedDroneFlightRange *= (calculateDistance( nodes[0], nodes[1] ) / tspModel.getDistances()[0][1]);
+
+					log.info( "normalized drone flight range: " + normalizedDroneFlightRange );
+
+					//TODO maybe normalizedDroneFlightRange is not correct ...
+					drawDroneFlightRange( gc, nodes[0], normalizedDroneFlightRange );
+				}
+
 				TspModelIterationResult iterationResult;
 				if( iterationCount == 0 ) {
 					iterationResult = (TspModelIterationResult)iterationResults.get( 0 );
@@ -294,11 +330,19 @@ public class DisplayApplication extends Application{
 					if( tspType.equals( Defines.PDSTSP ) ){
 						PdstspIterationResult pdstspIterationResult = (PdstspIterationResult)iterationResult;
 						ArrayList<Integer>[] dronesCustomers = pdstspIterationResult.getDronesCustomers();
-						for (int v = 0; v < dronesCustomers.length; v++){
-							//TODO draw drone edges in different colors?! For each drone different color?!
+						for( int v = 0; v < dronesCustomers.length; v++ ){
 							for(int droneCustomer : dronesCustomers[v]){
-								drawEdge( gc, new Edge( nodes[0], nodes[droneCustomer], Edge.EdgeType.DRONE ) );
+								drawEdge( gc, new Edge( nodes[0], nodes[droneCustomer], Edge.EdgeType.DRONE ), DRONE_EDGE_COLORS[v], DASHES_DISTANCE );
 							}
+						}
+					}
+
+					if( tspType.equals( Defines.FSTSP ) ){
+						FstspIterationResult fstspIterationResult = (FstspIterationResult)iterationResult;
+						ArrayList<Integer[]> dronesFlights = fstspIterationResult.getDroneFlights();
+						for( Integer[] droneFlight : dronesFlights ){
+							drawEdge( gc, new Edge( nodes[droneFlight[0]], nodes[droneFlight[2]], Edge.EdgeType.DRONE ) );
+							drawEdge( gc, new Edge( nodes[droneFlight[1]], nodes[droneFlight[2]], Edge.EdgeType.DRONE ) );
 						}
 					}
 
@@ -411,19 +455,27 @@ public class DisplayApplication extends Application{
 
 	private void drawEdge( GraphicsContext gc, Edge edge ) {
 		gc.setLineWidth( EDGE_LINE_WIDTH );
-		Color stroke = Color.BLACK;
+		Color color = Color.BLACK;
+		double dashesDistance = 0;
 
 		switch ( edge.getType() ) {
 			case TRUCK:
-				stroke = Color.BLACK;
+				color = Color.BLACK;
 				break;
 			case DRONE:
-				stroke = Color.GREEN;
+				dashesDistance = DASHES_DISTANCE;
+				color = Color.GREEN;
 				break;
 		}
 
-		gc.setStroke( stroke );
+		drawEdge( gc, edge, color, dashesDistance );
+	}
+
+	private void drawEdge( GraphicsContext gc, Edge edge, Color color, double dashesDistance ){
+		gc.setLineDashes( dashesDistance );
+		gc.setStroke( color );
 		gc.strokeLine( edge.getNode1().getX(), edge.getNode1().getY(), edge.getNode2().getX(), edge.getNode2().getY() );
+		gc.setLineDashes( 0 );
 	}
 
 	private double normalizeCoordinates( double[][] nodeCoordinates ) {
