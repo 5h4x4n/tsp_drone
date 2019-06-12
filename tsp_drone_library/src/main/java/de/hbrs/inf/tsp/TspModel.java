@@ -16,7 +16,7 @@ public abstract class TspModel extends GRBCallback{
 	protected String type;
 	protected int dimension;
 	protected double[][] nodes;
-	protected transient int[][] distances;
+	protected int[][] distances;
 	protected transient GRBModel grbModel;
 	protected transient GRBEnv grbEnv;
 	protected transient GRBVar[][] grbTruckEdgeVars;

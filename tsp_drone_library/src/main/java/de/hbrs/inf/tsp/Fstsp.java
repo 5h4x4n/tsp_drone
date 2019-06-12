@@ -8,12 +8,12 @@ import java.util.*;
 public class Fstsp extends TspModel{
 
 	private double truckSpeed;
-	private transient int[][] truckTimes;
+	private int[][] truckTimes;
 	private double droneSpeed;
 	private double droneFlightTime;
-	private transient int[][] droneTimes;
+	private int[][] droneTimes;
 	private int[] droneDeliveryPossible;
-	private transient boolean[][][] possibleDroneFlights;
+	private boolean[][][] possibleDroneFlights;
 	private int possibleDroneFlightsSize = 0;
 	private transient GRBVar[][] grbTruckEdgeWaitVars;
 	private transient double[][] grbTruckEdgeWaitVarsStartValues = null;

@@ -9,11 +9,11 @@ import java.util.Arrays;
 public class Pdstsp extends TspModel{
 
 	private double truckSpeed;
-	private transient int[][] truckTimes;
+	private int[][] truckTimes;
 	private double droneSpeed;
 	private double droneFlightTime;
 	private int droneFleetSize;
-	private transient int[][] droneTimes;
+	private int[][] droneTimes;
 	private int[] droneDeliveryPossible;
 	private ArrayList<Integer> droneDeliveryPossibleAndInFlightRange;
 	private transient GRBVar[][] grbDronesCustomersVars;
