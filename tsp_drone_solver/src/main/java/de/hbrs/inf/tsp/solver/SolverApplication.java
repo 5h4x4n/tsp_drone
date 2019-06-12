@@ -2,10 +2,7 @@ package de.hbrs.inf.tsp.solver;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import de.hbrs.inf.tsp.Defines;
-import de.hbrs.inf.tsp.Pdstsp;
-import de.hbrs.inf.tsp.TspModel;
-import de.hbrs.inf.tsp.TspModelResult;
+import de.hbrs.inf.tsp.*;
 import de.hbrs.inf.tsp.csv.HeuristicValueReader;
 import de.hbrs.inf.tsp.csv.TspModelCsvResultsConverter;
 import de.hbrs.inf.tsp.json.JsonTspMapper;
@@ -337,18 +334,17 @@ public class SolverApplication{
 								StringBuilder jsonResultsFileName = new StringBuilder(
 												file.getName().substring( 0, file.getName().lastIndexOf( '.' ) ) );
 								jsonResultsFileName.append( "_" ).append( tspModel.getType() );
-								if( type.equals( Defines.PDSTSP ) || type.equals( Defines.FSTSP ) ){
+								if( type.equals( Defines.PDSTSP ) ){
 									Pdstsp pdstsp = (Pdstsp)tspModel;
-									jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" ).append( pdstsp.getDroneSpeed() );
-
-									if( type.equals( Defines.PDSTSP ) ){
-										jsonResultsFileName.append( "_dfs-" ).append( pdstsp.getDroneFleetSize() );
-									}
-
-									jsonResultsFileName.append( "_dfr-" ).append( pdstsp.getDroneFlightRangePercentage() ).append( "_ms-" )
-													.append( Configuration.getMaxOptimizationSeconds() );
+									jsonResultsFileName.append( "_ts-" ).append( pdstsp.getTruckSpeed() ).append( "_ds-" ).append( pdstsp.getDroneSpeed() )
+													.append( "_dfs-" ).append( pdstsp.getDroneFleetSize() ).append( "_dfr-" )
+													.append( pdstsp.getDroneFlightRangePercentage() );
+								} else if( type.equals( Defines.FSTSP ) ){
+									Fstsp fstsp = (Fstsp)tspModel;
+									jsonResultsFileName.append( "_ts-" ).append( fstsp.getTruckSpeed() ).append( "_ds-" ).append( fstsp.getDroneSpeed() )
+													.append( "_dfr-" ).append( fstsp.getDroneFlightRangePercentage() );
 								}
-								jsonResultsFileName.append( ".results.json" );
+								jsonResultsFileName.append( "_ms-" ).append( Configuration.getMaxOptimizationSeconds() ).append( ".results.json" );
 								File jsonResultsFile = new File( Configuration.getOutputDirectory() + "/" + jsonResultsFileName );
 								if( !jsonResultsFile.exists() ){
 									try{
