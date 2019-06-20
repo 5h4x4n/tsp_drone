@@ -79,7 +79,12 @@ public class SolverApplication{
 		if( cmd.hasOption( "nl" ) ){
 			Configuration.setLazyActive( false );
 		}
-		log.info( "IsLazyActive set to: " + Configuration.isLazyActive() );
+		log.info( "LazyActive set to: " + Configuration.isLazyActive() );
+
+		if( cmd.hasOption( "dgh" ) ){
+			Configuration.setGurobiHeuristicsActive( false );
+		}
+		log.info( "GurobiHeuristicsActive set to: " + Configuration.isGurobiHeuristicsActive() );
 
 		if( cmd.hasOption( "tc" ) ){
 			Configuration.setThreadCount( Integer.parseInt( cmd.getOptionValue( "tc" ) ) );
@@ -278,6 +283,7 @@ public class SolverApplication{
 							}
 
 							tspModel.setLazyActive( Configuration.isLazyActive() );
+							tspModel.setGurobiHeuristicsActive( Configuration.isGurobiHeuristicsActive() );
 							tspModel.setPresolveHeuristicType( Configuration.getPresolveHeuristicType() );
 							tspModel.setHostname( Configuration.getHostname() );
 							tspModel.setThreadCount( Configuration.getThreadCount() );
@@ -479,6 +485,10 @@ public class SolverApplication{
 										+ supportedPresolveHeuristicTypes ).build();
 
 		options.addOption( presolveHeuristicType );
+
+		Option disableGurobiHeuristics = Option.builder( "dgh" ).longOpt( "disableGurobiHeuristics" ).required( false )
+						.desc( "disables gurobi heuristics in optimization process ( grbEnv.set( GRB.DoubleParam.Heuristics, 0.0 ) )" ).build();
+		options.addOption( disableGurobiHeuristics );
 
 		return options;
 	}

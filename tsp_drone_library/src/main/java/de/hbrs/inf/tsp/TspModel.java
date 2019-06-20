@@ -27,6 +27,7 @@ public abstract class TspModel extends GRBCallback{
 	protected int maxOptimizationSeconds = -1;
 	protected transient long startOptimizationTime = -1;
 	protected boolean isLazyActive = true;
+	protected boolean isGurobiHeuristicsActive = true;
 	protected Defines.PresolveHeuristicType presolveHeuristicType = Defines.PresolveHeuristicType.NONE;
 	protected String hostname;
 	protected int threadCount = 0;
@@ -226,9 +227,8 @@ public abstract class TspModel extends GRBCallback{
 			if( log.isDebugEnabled() ){
 				grbEnv.set( GRB.StringParam.LogFile, "out.log" );
 			}
-			//TODO Disable gurobi heuristics, cause gurobi does not call the MIPSOL Callback when a solution is found with a heuristic - if it is the best solution
-			// gurobi terminates with this solution, but maybe it is not feasible. The Callback would check it and adds lazy constraints
-			if( type.equals( Defines.FSTSP ) ){
+
+			if( !isGurobiHeuristicsActive ){
 				grbEnv.set( GRB.DoubleParam.Heuristics, 0.0 );
 			}
 
@@ -714,6 +714,13 @@ public abstract class TspModel extends GRBCallback{
 		}
 	}
 
+	public boolean isGurobiHeuristicsActive(){
+		return isGurobiHeuristicsActive;
+	}
+
+	public void setGurobiHeuristicsActive( boolean gurobiHeuristicsActive ){
+		isGurobiHeuristicsActive = gurobiHeuristicsActive;
+	}
 }
 
 

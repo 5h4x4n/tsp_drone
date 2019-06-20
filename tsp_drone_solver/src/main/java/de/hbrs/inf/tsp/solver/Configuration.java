@@ -11,6 +11,7 @@ public class Configuration{
 	private static String testDescription = "";
 	private static boolean allCustomersByDrones = false;
 	private static boolean lazyActive = true;
+	private static boolean gurobiHeuristicsActive = true;
 	private static Defines.PresolveHeuristicType presolveHeuristicType = Defines.PresolveHeuristicType.NONE;
 	private static double[] truckSpeeds = null;
 	private static double[] droneSpeeds = null;
@@ -152,5 +153,13 @@ public class Configuration{
 
 	public static Defines.PresolveHeuristicType getPresolveHeuristicType(){
 		return presolveHeuristicType;
+	}
+
+	public static void setGurobiHeuristicsActive( boolean gurobiHeuristicsActive ){
+		Configuration.gurobiHeuristicsActive = gurobiHeuristicsActive;
+	}
+
+	public static boolean isGurobiHeuristicsActive(){
+		return gurobiHeuristicsActive;
 	}
 }
