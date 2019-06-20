@@ -1,5 +1,6 @@
 package de.hbrs.inf.tsp;
 
+import de.hbrs.inf.tsp.gurobi.GurobiConstraint;
 import gurobi.*;
 import org.apache.log4j.Logger;
 
@@ -334,6 +335,7 @@ public class Fstsp extends TspModel{
 		fstspIterationResult.setTruckTours( findSubtours( truckEdgeVars ) );
 		double[][][] droneFlightsVars = grbModel.get( GRB.DoubleAttr.X, grbDroneFlightsVars );
 		fstspIterationResult.setDroneFlights( findDroneFlights( droneFlightsVars ) );
+		fstspIterationResult.setTruckEdgeWaitVars( grbModel.get( GRB.DoubleAttr.X, grbTruckEdgeWaitVars ) );
 		result.getFstspIterationResults().add( fstspIterationResult );
 
 		return fstspIterationResult;
@@ -388,26 +390,66 @@ public class Fstsp extends TspModel{
 	}
 
 	@Override protected boolean addViolatedConstraints() throws GRBException{
+		log.info( "Look for violated constraints and add them." );
 
-		//TODO implementation is only necessary if FSTSP should be solved with the iterative way instead of lazy
-		return false;
+		ArrayList<ArrayList<Integer>> subtours = result.getLast().getTruckTours();
+
+		ArrayList<Integer[]> droneFlights = ((FstspIterationResult)result.getLast()).getDroneFlights();
+
+		double[][] truckEdgeWaitVars = ((FstspIterationResult)result.getLast()).getTruckEdgeWaitVars();
+
+		ArrayList<GurobiConstraint> violatedConstraints = getViolatedConstraints( subtours, droneFlights, truckEdgeWaitVars );
+		if( violatedConstraints.size() > 0 ){
+			log.info( "Add all violated constraints!" );
+			for( GurobiConstraint violatedConstraint : violatedConstraints ){
+				grbModel.addConstr( violatedConstraint.getLinExpr(), violatedConstraint.getSense(), violatedConstraint.getRhs(), violatedConstraint.getName() );
+				additionalConstraintsCounter++;
+			}
+			return true;
+		} else {
+			log.info( "No violated constraints found!" );
+			return false;
+		}
 	}
 
 	@Override protected boolean addViolatedLazyConstraints() throws GRBException{
-
 		log.info( "Look for violated constraints and add them as lazy constraints." );
-		boolean addedConstraints = false;
 
 		log.info( "Looking for truck subtours." );
 		ArrayList<ArrayList<Integer>> subtours;
 		double[][] truckEdgeVars = getSolution( grbTruckEdgeVars );
 		subtours = findSubtours( truckEdgeVars );
 
+		double[][][] droneFlightsVars = new double[dimension][dimension][dimension];
+		for( int i = 0; i < dimension; i++ ){
+			droneFlightsVars[i] = getSolution( grbDroneFlightsVars[i] );
+		}
+		ArrayList<Integer[]> droneFlights = findDroneFlights( droneFlightsVars );
+
+		double[][] truckEdgeWaitVars = getSolution( grbTruckEdgeWaitVars );
+
+		ArrayList<GurobiConstraint> violatedConstraints = getViolatedConstraints( subtours, droneFlights, truckEdgeWaitVars );
+		if( violatedConstraints.size() > 0 ){
+			log.info( "Add all violated constraints as lazy constraints!" );
+			for( GurobiConstraint violatedConstraint : violatedConstraints ){
+				addLazy( violatedConstraint.getLinExpr(), violatedConstraint.getSense(), violatedConstraint.getRhs() );
+				additionalConstraintsCounter++;
+			}
+			return true;
+		} else {
+			log.info( "No violated constraints found!" );
+			return false;
+		}
+	}
+
+	private ArrayList<GurobiConstraint> getViolatedConstraints( ArrayList<ArrayList<Integer>> subtours, ArrayList<Integer[]> droneFlights, double[][] truckEdgeWaitVars ){
+		ArrayList<GurobiConstraint> violatedConstraints = new ArrayList<>();
+
 		if( subtours.size() > 1 ){
 			log.info( "Found subtours: " + subtours.size() );
 			log.debug( "Subtours: " + subtours );
 
-			log.info( "Add violated subtour elimination constraints as lazy constraints" );
+			log.info( "Get violated subtour elimination constraints" );
 			for( ArrayList<Integer> subtour : subtours ){
 
 				if( subtour.contains( 0 ) ){
@@ -422,21 +464,14 @@ public class Fstsp extends TspModel{
 						subtourEliminationConstraintString.append( "x" ).append( edge[0] ).append( "_" ).append( edge[1] ).append( " + " );
 						grbExpr.addTerm( 1.0, grbTruckEdgeVars[edge[0]][edge[1]] );
 					}
-					log.debug( "Add (lazy) subtour elimination constraint: " + subtourEliminationConstraintString
+					log.debug( "Found violated subtour elimination constraint: " + subtourEliminationConstraintString
 									.substring( 0, subtourEliminationConstraintString.length() - 2 ) + "<= " + (subtour.size() - 1) );
-					addLazy( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1 );
-					addedConstraints = true;
-					additionalConstraintsCounter++;
+					violatedConstraints.add( new GurobiConstraint( grbExpr, GRB.LESS_EQUAL, subtourVertexCounter - 1, null ) );
 				}
 			}
 		}
 
-		log.info( "Looking for prohibited sub-drone-flights." );
-		double[][][] droneFlightsVars = new double[dimension][dimension][dimension];
-		for( int i = 0; i < dimension; i++ ){
-			droneFlightsVars[i] = getSolution( grbDroneFlightsVars[i] );
-		}
-		ArrayList<Integer[]> droneFlights = findDroneFlights( droneFlightsVars );
+		log.info( "Looking for forbidden sub-drone-flights." );
 		if( droneFlights.size() > 0 ){
 			log.debug( "droneFlights:" );
 			for( int k = 0; k < droneFlights.size(); k++ ){
@@ -480,27 +515,20 @@ public class Fstsp extends TspModel{
 								GRBLinExpr grbExpr = new GRBLinExpr();
 
 								grbExpr.addTerm( 1.0, grbDroneFlightsVars[i][j][c] );
-								StringBuilder test = new StringBuilder( Double.toString( droneFlightsVars[i][j][c] ) ).append( " + " );
 								subDroneFlightEliminationConstraintString.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( c ).append( " + " );
 								grbExpr.addTerm( 1.0, grbDroneFlightsVars[i2][j2][c2] );
-								test.append( droneFlightsVars[i2][j2][c2] ).append( " + " );
 								subDroneFlightEliminationConstraintString.append( "y" ).append( i2 ).append( "_" ).append( j2 ).append( "_" ).append( c2 )
 												.append( " + " );
 								for( int k = 0; k < truckTourItoJ.size() - 1; k++ ){
 									int node1 = truckTourItoJ.get( k );
 									int node2 = truckTourItoJ.get( k + 1 );
 									grbExpr.addTerm( 1.0, grbTruckEdgeVars[node1][node2] );
-									test.append( truckEdgeVars[node1][node2] ).append( " + " );
 									subDroneFlightEliminationConstraintString.append( "x" ).append( node1 ).append( "_" ).append( node2 ).append( " + " );
 								}
 
-								//log.debug( "TEST: " + test.substring( 0, test.length() - 2 ) );
-
-								log.debug( "Add (lazy) sub-drone-flight elimination constraint: " + subDroneFlightEliminationConstraintString
+								log.debug( "Found violated sub-drone-flight elimination constraint: " + subDroneFlightEliminationConstraintString
 												.substring( 0, subDroneFlightEliminationConstraintString.length() - 2 ) + "<= " + truckTourItoJ.size() );
-								addLazy( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size() );
-								additionalConstraintsCounter++;
-								addedConstraints = true;
+								violatedConstraints.add( new GurobiConstraint( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size(), null ) );
 							} else {
 								log.debug( "Skip sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is in a different truck subtour." );
 							}
@@ -508,13 +536,11 @@ public class Fstsp extends TspModel{
 							log.debug( "Skip the current sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is the current drone flight." );
 						}
 					}
-
 				}
 			}
-
 		}
 
-		log.info( "Looking for forbidden drone flights and add lazy constraints for the wait times for allowed drone flights." );
+		log.info( "Looking for forbidden drone flights and violated wait times constraints for allowed drone flights." );
 		// do it together with the sub drone flights check to increase performance?!
 		for( Integer[] droneFlight : droneFlights ){
 			Integer i = droneFlight[0];
@@ -568,31 +594,30 @@ public class Fstsp extends TspModel{
 								grbExpr.addTerm( 1.0, grbTruckEdgeVars[node1][node2] );
 								droneFlightTimeExceedsConstraintString.append( "x" ).append( node1 ).append( "_" ).append( node2 ).append( " + " );
 							}
-							log.debug( "Add (lazy) drone flight time exceeds constraint: " + droneFlightTimeExceedsConstraintString
+							log.debug( "Found violated drone flight time exceeds constraint: " + droneFlightTimeExceedsConstraintString
 											.substring( 0, droneFlightTimeExceedsConstraintString.length() - 2 ) + "<= " + (truckTourItoJ.size() - 1) );
-							addLazy( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size() - 1 );
+							violatedConstraints.add( new GurobiConstraint( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size() - 1, null ) );
 						} else {
 							break;
 						}
 					} else {
 						grbExpr.addTerm( 1.0, grbTruckEdgeWaitVars[i][j] );
-						int w_ij = (int)(getSolution( grbTruckEdgeWaitVars )[i][j] + 0.5d);
+						int w_ij = (int)(truckEdgeWaitVars[i][j] + 0.5d);
 						if( w_ij >= rhs ){
 							log.debug( "Do not add wait time constraint, cause w" + i + "_" + j + " = " + w_ij + " is already greater-equal " + rhs );
 							break;
 						}
 						log.debug( "w" + i + "_" + j + ": " + w_ij );
-						log.debug( "Add (lazy) wait time constraint: " + waitTimeConstraintString.substring( 0, waitTimeConstraintString.length() - 2 ) + ") + w" + i
+						log.debug( "Found violated wait time constraint: " + waitTimeConstraintString.substring( 0, waitTimeConstraintString.length() - 2 ) + ") + w" + i
 										+ "_" + j + " >= " + rhs );
-						addLazy( grbExpr, GRB.GREATER_EQUAL, rhs );
+						violatedConstraints.add( new GurobiConstraint( grbExpr, GRB.GREATER_EQUAL, rhs, null ) );
 					}
-					additionalConstraintsCounter++;
-					addedConstraints = true;
 				}
 			}
 		}
 
-		return addedConstraints;
+		return violatedConstraints;
+
 	}
 
 	public double getDroneFlightTime(){

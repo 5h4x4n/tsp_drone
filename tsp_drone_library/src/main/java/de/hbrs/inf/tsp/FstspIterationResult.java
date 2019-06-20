@@ -6,6 +6,8 @@ public class FstspIterationResult extends TspModelIterationResult{
 
 	private ArrayList<Integer[]> droneFlights;
 
+	private double[][] truckEdgeWaitVars;
+
 	@Override public String getSolutionString(){
 		StringBuilder solutionString = new StringBuilder( super.getSolutionString() ).append( "\n" );
 		solutionString.append( "Drone_Flights_Size" ).append( ": " ).append( droneFlights.size() ).append( "\n" );
@@ -27,5 +29,13 @@ public class FstspIterationResult extends TspModelIterationResult{
 
 	public ArrayList<Integer[]> getDroneFlights(){
 		return droneFlights;
+	}
+
+	public double[][] getTruckEdgeWaitVars(){
+		return truckEdgeWaitVars;
+	}
+
+	public void setTruckEdgeWaitVars( double[][] truckEdgeWaitVars ){
+		this.truckEdgeWaitVars = truckEdgeWaitVars;
 	}
 }
