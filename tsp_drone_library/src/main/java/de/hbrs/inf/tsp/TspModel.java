@@ -391,6 +391,7 @@ public abstract class TspModel extends GRBCallback{
 			grbEnv.dispose();
 
 		} catch( GRBException e ){
+			e.printStackTrace();
 			errorCode = e.getErrorCode();
 			log.error( "Error code: " + e.getErrorCode() + ". " + e.getMessage() );
 		}
