@@ -574,6 +574,32 @@ public abstract class TspModel extends GRBCallback{
 		return edges;
 	}
 
+	protected void log2DimIntArray( int[][] array, String title ){
+		/*
+		StringBuilder outputString = new StringBuilder( "\n" ).append( title ).append( ":\n" );
+		for( int i = 0; i < dimension; i++ ){
+			StringBuilder rowString = new StringBuilder();
+			for( int j = 0; j < dimension; j++ ){
+				if( i == j ){
+					rowString.append( "-, " );
+				} else {
+					rowString.append( array[i][j] ).append( ", " );
+				}
+			}
+			outputString.append( rowString.substring( 0, rowString.length() - 2 ) ).append( "\n" );
+		}
+		log.debug( outputString );
+		 */
+
+		System.out.println( title + ":" );
+		for( int row = 0; row < array.length; row++ ){
+			for( int col = 0; col < array[row].length; col++ ){
+				System.out.printf( "%6d", array[row][col] );
+			}
+			System.out.println();
+		}
+	}
+
 	protected abstract TspModelIterationResult calculateAndAddIterationResult() throws GRBException;
 
 	public double[][] getNodes(){

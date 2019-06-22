@@ -137,9 +137,9 @@ public class Fstsp extends TspModel{
 		}
 
 		//create decision variables for the drone flights
-		for( int customer = 0; customer < dimension; customer++ ){
-			for( int i = 0; i < dimension; i++ ){
-				for( int j = i; j < dimension; j++ ){
+		for( int i = 0; i < dimension; i++ ){
+			for( int j = i; j < dimension; j++ ){
+				for( int customer = 0; customer < dimension; customer++ ){
 					if( possibleDroneFlights[i][j][customer] ){
 						log.debug( "Add decision var y" + i + "_" + j + "_" + customer + " with factor 0.0 " );
 						grbDroneFlightsVars[i][j][customer] = grbModel.addVar( 0.0, 1.0, 0.0, GRB.BINARY, "y" + i + "_" + j + "_" + customer );
@@ -227,7 +227,7 @@ public class Fstsp extends TspModel{
 			}
 		}
 
-		//TODO each node max 2 drone edges
+		// each node max 2 drone edges
 		for( int i = 0; i < dimension; i++ ){
 			grbLinExpr = new GRBLinExpr();
 			logString = new StringBuilder();
@@ -283,7 +283,232 @@ public class Fstsp extends TspModel{
 					}
 				}
 				return false;
+			case FSTSP:
+				//calculate tsp solution to create a heurisitc FSTSP solution
+				Tsp tspProblem = new Tsp( this.name, this.comment, Defines.TSP, this.dimension, this.nodes, this.distances );
+				if( tspProblem.grbOptimize() != null ){
+					if( tspProblem.getResult().isOptimal() ){
 
+						ArrayList<Integer> tspTruckTour = tspProblem.getResult().getLast().getTruckTours().get( 0 );
+
+						int[][] adjMatrix = new int[dimension][dimension];
+						int[][] customerWithGreatestSaving = new int[dimension][dimension];
+						int[][] truckEdgeWaitTimes = new int[dimension][dimension];
+						for( int[] row : adjMatrix ){
+							Arrays.fill( row, -1 );
+						}
+						for( int[] row : customerWithGreatestSaving ){
+							Arrays.fill( row, -1 );
+						}
+
+						//TODO interpret tsp solution the other way round
+						//add directed weighted edges for tsp solution
+						for( int i = 0; i < tspTruckTour.size() - 1; i++ ){
+							adjMatrix[tspTruckTour.get( i )][tspTruckTour.get( i + 1 )] = 0;
+						}
+						//TODO use this when droneflight to end depot allowed
+						//adjMatrix[tspTruckTour.size() - 1][0] = 0;
+
+						for( int i = 0; i < tspTruckTour.size(); i++ ){
+							for( int j = i + 2; j < tspTruckTour.size(); j++ ){
+
+								int startNode = tspTruckTour.get( i );
+								int endNode = tspTruckTour.get( j );
+
+								List<Integer> truckTourFromIToJ = tspTruckTour.subList( i, j + 1 );
+								List<Integer> truckTourBetweenIAndJ = tspTruckTour.subList( i + 1, j );
+								log.debug( "truckTourFromIToJ: " + truckTourFromIToJ );
+								log.debug( "truckTourBetweenIAndJ: " + truckTourBetweenIAndJ );
+
+								//calculate truck time without customer
+								int truckTimeIToJOld = 0;
+								for( int k = 0; k < truckTourFromIToJ.size() - 1; k++ ){
+									truckTimeIToJOld += truckTimes[truckTourFromIToJ.get( k )][truckTourFromIToJ.get( k + 1 )];
+								}
+
+								for( int customer : truckTourBetweenIAndJ ){
+
+									if( possibleDroneFlights[startNode][endNode][customer] ){
+
+										log.debug( "Check droneFlight: ({ " + startNode + ", " + endNode + " }, " + customer + " )" );
+
+										List<Integer> truckTourFromIToJWithoutCustomer = new ArrayList<>( truckTourFromIToJ );
+										truckTourFromIToJWithoutCustomer.remove( new Integer( customer ) );
+
+										//calculate droneFlightTime
+										int droneFlightTime = droneTimes[startNode][customer] + droneTimes[customer][endNode];
+
+										//calculate truck time without customer
+										int truckTimeIToJNew = 0;
+										for( int k = 0; k < truckTourFromIToJWithoutCustomer.size() - 1; k++ ){
+											truckTimeIToJNew += truckTimes[truckTourFromIToJWithoutCustomer.get( k )][truckTourFromIToJWithoutCustomer.get( k + 1 )];
+										}
+
+										int truckEdgeWaitTime = 0;
+										if( droneFlightTime > truckTimeIToJNew ){
+											truckEdgeWaitTime = droneFlightTime - truckTimeIToJNew;
+										} else if( truckTimeIToJNew > this.droneFlightTime ){
+											log.debug( "droneFlight: ({ " + startNode + ", " + endNode + " }, " + customer + " ) not possible, cause flight time plus "
+															+ "wait time exceeds droneFlightTime!" );
+											break;
+										}
+
+										int saving = (-truckEdgeWaitTime - truckTimeIToJNew) + truckTimeIToJOld;
+
+										log.debug( "truckTimeIToJOld for tour ( " + startNode + ", " + endNode + " ) is: " + truckTimeIToJOld );
+										log.debug( "truckTimeIToJNew for tour ( " + startNode + ", " + endNode + " ) is: " + truckTimeIToJNew );
+										log.debug( "droneFlightTime for droneflight ({ " + startNode + ", " + endNode + " }, " + customer + " ) is: " + droneFlightTime );
+										log.debug( "truckEdgeWaitTime for tour ( " + startNode + ", " + endNode + " ) is: " + truckEdgeWaitTime );
+										log.debug( "saving for tour ( " + startNode + ", " + endNode + " ) is: " + saving );
+
+										if( saving > 0 && saving > adjMatrix[startNode][endNode] ){
+											adjMatrix[startNode][endNode] = saving;
+											customerWithGreatestSaving[startNode][endNode] = customer;
+											truckEdgeWaitTimes[startNode][endNode] = truckEdgeWaitTime;
+										}
+
+									} else {
+										log.debug( "droneFlight: ({ " + startNode + ", " + endNode + " }, " + customer + " ) not possible. Skip it!" );
+									}
+								}
+							}
+						}
+
+						log2DimIntArray( adjMatrix, "Adjacency matrix of directed heuristic graph" );
+						log2DimIntArray( customerWithGreatestSaving, "customerWithGreatestSaving" );
+						log2DimIntArray( truckEdgeWaitTimes, "truckEdgeWaitTimes" );
+
+						//calculate path with most savings (longest path)
+						log.debug( "tspTruckTour: " + tspTruckTour );
+						ArrayList<Integer>[] longestPathOfI = new ArrayList[dimension];
+						ArrayList<Integer>[] truckTourToI = new ArrayList[dimension];
+						int[] greatestSavingOfI = new int[dimension];
+						ArrayList<Integer[]>[] droneFlightsInLongestPathOfI = new ArrayList[dimension];
+
+						longestPathOfI[0] = new ArrayList<>();
+						longestPathOfI[0].add( 0 );
+						for( int i = 0; i < dimension; i++ ){
+							droneFlightsInLongestPathOfI[i] = new ArrayList<>();
+						}
+
+						for( int i = 1; i < tspTruckTour.size(); i++ ){
+							longestPathOfI[tspTruckTour.get( i )] = new ArrayList<>( longestPathOfI[tspTruckTour.get( i - 1 )] );
+							longestPathOfI[tspTruckTour.get( i )].add( tspTruckTour.get( i ) );
+						}
+/*
+						for( int i = 0; i < longestPathOfI.length; i++ ){
+							log.debug( "longestPathOfI[" + tspTruckTour.get( i ) + "]: " + longestPathOfI[tspTruckTour.get( i )] );
+							log.debug( "truckTourOfI[" + tspTruckTour.get( i ) + "]: " + truckTourOfI[tspTruckTour.get( i )] );
+							log.debug( "greatestSavingsOfI[" + tspTruckTour.get( i ) + "]: " + greatestSavingOfI[tspTruckTour.get( i )] );
+						}
+ */
+
+						for( int k = 1; k < dimension; k++ ){
+							int i = tspTruckTour.get( k );
+							for( int j = 0; j < dimension; j++ ){
+								if( i != j && adjMatrix[j][i] >= 0 ){
+									//log.debug( "edge: (" + j + ", " + i + ") has saving: " + (adjMatrix[j][i] + greatestSavingOfI[j]) );
+									if( adjMatrix[j][i] + greatestSavingOfI[j] > greatestSavingOfI[i] ){
+
+										//log.debug( "New best saving found!" );
+
+										longestPathOfI[i] = new ArrayList<>( longestPathOfI[j] );
+										droneFlightsInLongestPathOfI[i] = new ArrayList<>( droneFlightsInLongestPathOfI[j] );
+										int customer = customerWithGreatestSaving[j][i];
+										if( customer > 0 ){
+											longestPathOfI[i].add( customer );
+											droneFlightsInLongestPathOfI[i].add( new Integer[]{ j, i, customer } );
+										}
+										//droneFlightCustomerInSolution[i] = customer;
+
+										longestPathOfI[i].add( i );
+										greatestSavingOfI[i] = adjMatrix[j][i] + greatestSavingOfI[j];
+
+										//log.debug( "longestPathOfI[" + i + "]: " + longestPathOfI[i] );
+										//log.debug( "greatestSavingOfI[" + i + "]: " + greatestSavingOfI[i] );
+									} else {
+										//log.debug( "Current saving is below current best saving of: " + greatestSavingOfI[i] );
+									}
+								}
+							}
+							truckTourToI[i] = new ArrayList<>( tspTruckTour.subList( 0, k + 1 ) );
+							for( Integer[] droneFlight : droneFlightsInLongestPathOfI[i] ){
+								truckTourToI[i].remove( new Integer( droneFlight[2] ) );
+							}
+
+							log.debug( "greatestSavingOfI[" + i + "]: " + greatestSavingOfI[i] );
+							log.debug( "longestPathOfI[" + i + "]: " + longestPathOfI[i] );
+							log.debug( "truckTourToI[" + i + "]: " + truckTourToI[i] );
+							log.debug( "droneFlightsInLongestPathOfI[" + i + "]: " );
+							if( droneFlightsInLongestPathOfI[i].size() <= 0 ){
+								log.debug( "-" );
+							}
+							for( Integer[] droneFlight : droneFlightsInLongestPathOfI[i] ){
+								log.debug( "droneFlight: ({ " + droneFlight[0] + ", " + droneFlight[1] + " }, " + droneFlight[2] + " )" );
+							}
+						}
+
+						log.debug( "------------------------------------------------------------------" );
+						log.debug( "tspTruckTour: " + tspTruckTour );
+						int lastNode = tspTruckTour.get( tspTruckTour.size() - 1 );
+						log.debug( "longestPathOf last node (" + lastNode + "): " + longestPathOfI[lastNode] );
+						log.debug( "truckTourTo last node (" + lastNode + "): " + truckTourToI[lastNode] );
+						log.debug( "greatestSavingOf last node (" + lastNode + "): " + greatestSavingOfI[lastNode] );
+						log.debug( "droneFlightsInLongestPathOf last node (" + lastNode + "): " );
+						if( droneFlightsInLongestPathOfI[lastNode].size() <= 0 ){
+							log.debug( "-" );
+						}
+						for( Integer[] droneFlight : droneFlightsInLongestPathOfI[lastNode] ){
+							log.debug( "droneFlight: ({ " + droneFlight[0] + ", " + droneFlight[1] + " }, " + droneFlight[2] + " )" );
+						}
+
+						// intialize grbTruckEdgeVarsStartValues, grbDroneFlightsVarsStartValues and grbTruckEdgeWaitVarsStartValues
+						grbTruckEdgeVarsStartValues = new double[dimension][dimension];
+						grbDroneFlightsVarsStartValues = new double[dimension][dimension][dimension];
+						grbTruckEdgeWaitVarsStartValues = new double[dimension][dimension];
+
+						for( int i = 0; i < truckTourToI[lastNode].size(); i++ ){
+							int startNode = truckTourToI[lastNode].get( i );
+							int endNode;
+							if( i == truckTourToI[lastNode].size() - 1 ){
+								endNode = 0;
+							} else {
+								endNode = truckTourToI[lastNode].get( i + 1 );
+							}
+							grbTruckEdgeVarsStartValues[startNode][endNode] = 1;
+							grbTruckEdgeVarsStartValues[endNode][startNode] = 1;
+						}
+
+						for( Integer[] droneFlight : droneFlightsInLongestPathOfI[lastNode] ){
+							grbDroneFlightsVarsStartValues[droneFlight[0]][droneFlight[1]][droneFlight[2]] = 1;
+							grbDroneFlightsVarsStartValues[droneFlight[1]][droneFlight[0]][droneFlight[2]] = 1;
+
+							grbTruckEdgeWaitVarsStartValues[droneFlight[0]][droneFlight[1]] = truckEdgeWaitTimes[droneFlight[0]][droneFlight[1]];
+							grbTruckEdgeWaitVarsStartValues[droneFlight[1]][droneFlight[0]] = truckEdgeWaitTimes[droneFlight[0]][droneFlight[1]];
+						}
+
+						double calculatedHeuristicValue = 0.0;
+						log.debug( "Calculate heuristicValue: " );
+						for( int i = 0; i < dimension; i++ ){
+							for( int j = i; j < dimension; j++ ){
+								if( (int)(grbTruckEdgeVarsStartValues[i][j] + 0.5d) == 1 ){
+									log.debug( "Add truckEdge ( " + i + ", " + j + " ) with truckTime " + truckTimes[i][j] );
+									calculatedHeuristicValue += truckTimes[i][j];
+								}
+								if( grbTruckEdgeWaitVarsStartValues[i][j] > 0 ){
+									log.debug( "Add truckEdgeWaitTime " + grbTruckEdgeWaitVarsStartValues[i][j] );
+									calculatedHeuristicValue += grbTruckEdgeWaitVarsStartValues[i][j];
+								}
+							}
+						}
+
+						log.info( "Calculated heuristicValue with FSTSP heuristic solution: " + calculatedHeuristicValue );
+						setHeuristicValue( calculatedHeuristicValue );
+
+						return true;
+					}
+				}
+				return false;
 			default:
 				log.info( "PresolveHeuristicType + '" + presolveHeuristicType.toString() + "' not supported for TSP!" );
 				return false;
@@ -295,14 +520,14 @@ public class Fstsp extends TspModel{
 		super.setStartValues();
 		if( grbDroneFlightsVarsStartValues != null ){
 			log.info( "Set start values for grbDroneFlightsVars!" );
-			for( int customer = 0; customer < dimension; customer++ ){
-				for( int i = 0; i < dimension; i++ ){
-					for( int j = i; j < dimension; j++ ){
-						if( grbDroneFlightsVarsStartValues[i][j][customer] >= 0 ){
-							log.debug( "Set start value for y" + i + "_" + j + "_" + customer + ": " + (int)(grbDroneFlightsVarsStartValues[j][j][customer] + 0.5d) );
-							grbDroneFlightsVars[j][j][customer].set( GRB.DoubleAttr.Start, (int)(grbDroneFlightsVarsStartValues[j][j][customer] + 0.5d) );
+			for( int i = 0; i < dimension; i++ ){
+				for( int j = i; j < dimension; j++ ){
+					for( int customer = 0; customer < dimension; customer++ ){
+						if( possibleDroneFlights[i][j][customer] && grbDroneFlightsVarsStartValues[i][j][customer] >= 0 ){
+							log.debug( "Set start value for y" + i + "_" + j + "_" + customer + ": " + (int)(grbDroneFlightsVarsStartValues[i][j][customer] + 0.5d) );
+							grbDroneFlightsVars[i][j][customer].set( GRB.DoubleAttr.Start, (int)(grbDroneFlightsVarsStartValues[i][j][customer] + 0.5d) );
 						} else {
-							grbDroneFlightsVars[j][j][customer].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+							grbDroneFlightsVars[i][j][customer].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
 						}
 					}
 				}
@@ -316,10 +541,10 @@ public class Fstsp extends TspModel{
 			for( int i = 0; i < dimension; i++ ){
 				for( int j = i; j < dimension; j++ ){
 					if( i != j && grbTruckEdgeWaitVarsStartValues[i][j] >= 0 ){
-						log.debug( "Set start value for w" + i + "_" + j + ": " + (int)(grbTruckEdgeWaitVarsStartValues[j][j] + 0.5d) );
-						grbTruckEdgeWaitVars[j][j].set( GRB.DoubleAttr.Start, (int)(grbTruckEdgeWaitVarsStartValues[j][j] + 0.5d) );
+						log.debug( "Set start value for w" + i + "_" + j + ": " + (int)(grbTruckEdgeWaitVarsStartValues[i][j] + 0.5d) );
+						grbTruckEdgeWaitVars[i][j].set( GRB.DoubleAttr.Start, (int)(grbTruckEdgeWaitVarsStartValues[i][j] + 0.5d) );
 					} else {
-						grbTruckEdgeWaitVars[j][j].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
+						grbTruckEdgeWaitVars[i][j].set( GRB.DoubleAttr.Start, GRB.UNDEFINED );
 					}
 				}
 			}
@@ -341,7 +566,7 @@ public class Fstsp extends TspModel{
 		return fstspIterationResult;
 	}
 
-	private ArrayList<Integer[]> findDroneFlights( double[][][] droneFlightsVars ) throws GRBException{
+	private ArrayList<Integer[]> findDroneFlights( double[][][] droneFlightsVars ){
 		ArrayList<Integer[]> droneFlights = new ArrayList<>();
 		for( int i = 0; i < droneFlightsVars.length; i++ ) {
 			for( int j = i + 1; j < droneFlightsVars[i].length; j++ ){
@@ -501,6 +726,8 @@ public class Fstsp extends TspModel{
 					}
 					List<Integer> truckTourItoJ = subtour.subList( indexI, indexJ + 1 );
 					log.debug( "truckTourItoJ: " + truckTourItoJ );
+					List<Integer> truckTourBetweenIToJ = subtour.subList( indexI + 1, indexJ );
+					log.debug( "truckTourBetweenIToJ: " + truckTourBetweenIToJ );
 
 					for( Integer[] subDroneFlight : droneFlights ){
 						Integer i2 = subDroneFlight[0];
@@ -509,7 +736,16 @@ public class Fstsp extends TspModel{
 						//skip the current sub drone flight
 						if( !(i2.equals( i ) && j2.equals( j ) && c2.equals( c )) ){
 							// skip sub drone flights which have start and end node in a different truck subtour
-							if( (truckTourItoJ.contains( i2 ) || truckTourItoJ.contains( j2 )) && subtour.contains( i2 ) && subtour.contains( j2 ) ){
+
+							//TODO IMPORTANT: BUG!!!! NOT ALL RIGHT CASES CATCHED!!!
+							// 1) 2 * start und 2 * end node
+							// 2) mindestens einer in truckTourBetweenIToJ
+							if( ((truckTourItoJ.get( 0 ).equals( i2 ) && truckTourItoJ.get( truckTourItoJ.size() - 1 ).equals( j2 )) || (
+											truckTourItoJ.get( 0 ).equals( j2 ) && truckTourItoJ.get( truckTourItoJ.size() - 1 ).equals( i2 )) || (
+											truckTourBetweenIToJ.contains( i2 ) || truckTourBetweenIToJ.contains( j2 ))) && subtour.contains( i2 ) && subtour
+											.contains( j2 ) ){
+
+								//if( (truckTourItoJ.contains( i2 ) || truckTourItoJ.contains( j2 )) && subtour.contains( i2 ) && subtour.contains( j2 ) ){
 
 								StringBuilder subDroneFlightEliminationConstraintString = new StringBuilder();
 								GRBLinExpr grbExpr = new GRBLinExpr();

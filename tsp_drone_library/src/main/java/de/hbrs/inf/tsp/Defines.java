@@ -41,7 +41,7 @@ public class Defines{
 
 	public enum PresolveHeuristicType{
 
-		NONE( "None" ), TSP( "TSP" );
+		NONE( "None" ), TSP( "TSP" ), FSTSP( "FSTSP" );
 
 		private String type;
 
