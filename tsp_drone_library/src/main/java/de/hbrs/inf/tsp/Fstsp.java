@@ -118,7 +118,7 @@ public class Fstsp extends TspModel{
 		GRBLinExpr grbLinExpr;
 		StringBuilder logString;
 
-		//create decision variables for the truck edges and the according wait times
+		//create decision variables for the truck edges and for the wait times
 		for( int i = 0; i < dimension; i++ ){
 			for( int j = i; j < dimension; j++ ){
 				if( i == j ){
@@ -129,8 +129,20 @@ public class Fstsp extends TspModel{
 					grbTruckEdgeVars[i][j] = grbModel.addVar( 0.0, 1.0, truckTimes[i][j], GRB.BINARY, "x" + i + "_" + j );
 					grbTruckEdgeVars[j][i] = grbTruckEdgeVars[i][j];
 
-					log.debug( "Add decision var w" + i + "_" + j + " with factor 1.0 and upper bound " + droneFlightTime );
-					grbTruckEdgeWaitVars[i][j] = grbModel.addVar( 0.0, droneFlightTime, 1.0, GRB.INTEGER, "w" + i + "_" + j );
+					boolean droneFlightPossibleForIToJ = false;
+					for( int customer = 0; customer < dimension; customer++ ){
+						if( possibleDroneFlights[i][j][customer] ){
+							droneFlightPossibleForIToJ = true;
+							break;
+						}
+					}
+					if( !droneFlightPossibleForIToJ ){
+						log.debug( "- Add decision var w" + i + "_" + j + " with 0.0" );
+						grbTruckEdgeWaitVars[i][j] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.INTEGER, "w" + i + "_" + j );
+					} else {
+						log.debug( "Add decision var w" + i + "_" + j + " with factor 1.0 and upper bound " + droneFlightTime );
+						grbTruckEdgeWaitVars[i][j] = grbModel.addVar( 0.0, droneFlightTime, 1.0, GRB.INTEGER, "w" + i + "_" + j );
+					}
 					grbTruckEdgeWaitVars[j][i] = grbTruckEdgeWaitVars[i][j];
 				}
 			}
@@ -191,42 +203,6 @@ public class Fstsp extends TspModel{
 		grbModel.addConstr( grbLinExpr, GRB.EQUAL, 2.0, "deg2_depot" );
 		calculatedConstraintsCounter++;
 
-		//create constraints that the truck visits start and end nodes of a drone flight
-		for( int customer = 1; customer < dimension; customer++ ) {
-			for( int i = 0; i < dimension; i++ ) {
-				for( int j = i; j < dimension; j++ ){
-					if( possibleDroneFlights[i][j][customer] ){
-						grbLinExpr = new GRBLinExpr();
-						logString = new StringBuilder();
-						GRBLinExpr grbLinExpr2 = new GRBLinExpr();
-						StringBuilder logString2 = new StringBuilder();
-						for( int h = 0; h < dimension; h++ ){
-							if( i != h ){
-								logString.append( "x" ).append( i ).append( "_" ).append( h ).append( " + " );
-								grbLinExpr.addTerm( 1.0, grbTruckEdgeVars[i][h] );
-							}
-							if( j != h ){
-								logString2.append( "x" ).append( j ).append( "_" ).append( h ).append( " + " );
-								grbLinExpr2.addTerm( 1.0, grbTruckEdgeVars[j][h] );
-							}
-						}
-
-						logString = new StringBuilder( logString.substring( 0, logString.length() - 3 ) );
-						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + j + "_" + customer + " <= " + logString );
-						grbModel.addConstr( grbLinExpr, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][j][customer],
-										"truck_visits_drone_nodes_" + i + "_" + j + "_" + customer + "_i" );
-						calculatedConstraintsCounter++;
-
-						logString2 = new StringBuilder( logString2.substring( 0, logString2.length() - 3 ) );
-						log.debug( "Add constraint truck_visits_drone_nodes: y" + i + "_" + j + "_" + customer + " <= " + logString2 );
-						grbModel.addConstr( grbLinExpr2, GRB.GREATER_EQUAL, grbDroneFlightsVars[i][j][customer],
-										"truck_visits_drone_nodes_" + i + "_" + j + "_" + customer + "_j" );
-						calculatedConstraintsCounter++;
-					}
-				}
-			}
-		}
-
 		// each node max 2 drone edges
 		for( int i = 0; i < dimension; i++ ){
 			grbLinExpr = new GRBLinExpr();
@@ -248,6 +224,42 @@ public class Fstsp extends TspModel{
 				grbModel.addConstr( grbLinExpr, GRB.LESS_EQUAL, 2, "max_drone_edge_constraint_" + i );
 				calculatedConstraintsCounter++;
 			}
+		}
+
+		//create constraints that the truck visits start and end nodes of a drone flight
+		for( int i = 0; i < dimension; i++ ){
+			boolean possibleDroneFlightsForNodeI = false;
+			GRBLinExpr grbLinExprRhs = new GRBLinExpr();
+			StringBuilder logStringRhs = new StringBuilder();
+			for( int j = 0; j < dimension; j++ ){
+				for( int customer = 1; customer < dimension; customer++ ){
+					if( i != j && i != customer && j != customer ){
+						if( possibleDroneFlights[i][j][customer] ){
+							logStringRhs.append( "y" ).append( i ).append( "_" ).append( j ).append( "_" ).append( customer ).append( " + " );
+							grbLinExprRhs.addTerm( 1.0, grbDroneFlightsVars[i][j][customer] );
+							possibleDroneFlightsForNodeI = true;
+						}
+					}
+				}
+			}
+			if( !possibleDroneFlightsForNodeI ){
+				continue;
+			}
+
+			GRBLinExpr grbLinExprLhs = new GRBLinExpr();
+			StringBuilder logStringLhs = new StringBuilder();
+			for( int j = 0; j < dimension; j++ ){
+				if( i != j ){
+					logStringLhs.append( "x" ).append( i ).append( "_" ).append( j ).append( " + " );
+					grbLinExprLhs.addTerm( 1.0, grbTruckEdgeVars[i][j] );
+				}
+			}
+
+			logStringLhs = new StringBuilder( logStringLhs.substring( 0, logStringLhs.length() - 3 ) );
+			logStringRhs = new StringBuilder( logStringRhs.substring( 0, logStringRhs.length() - 3 ) );
+			log.debug( "Add constraint truck_visits_drone_nodes: " + logStringLhs + " >= " + logStringRhs );
+			grbModel.addConstr( grbLinExprLhs, GRB.GREATER_EQUAL, grbLinExprRhs, "truck_visits_drone_node_" + i );
+			calculatedConstraintsCounter++;
 		}
 
 		log.debug( "calculatedConstraintsCounter: " + calculatedConstraintsCounter );
@@ -737,16 +749,10 @@ public class Fstsp extends TspModel{
 						if( !(i2.equals( i ) && j2.equals( j ) && c2.equals( c )) ){
 							// skip sub drone flights which have start and end node in a different truck subtour
 
-							//TODO IMPORTANT: BUG!!!! NOT ALL RIGHT CASES CATCHED!!!
-							// 1) 2 * start und 2 * end node
-							// 2) mindestens einer in truckTourBetweenIToJ
-							if( ((truckTourItoJ.get( 0 ).equals( i2 ) && truckTourItoJ.get( truckTourItoJ.size() - 1 ).equals( j2 )) || (
-											truckTourItoJ.get( 0 ).equals( j2 ) && truckTourItoJ.get( truckTourItoJ.size() - 1 ).equals( i2 )) || (
-											truckTourBetweenIToJ.contains( i2 ) || truckTourBetweenIToJ.contains( j2 ))) && subtour.contains( i2 ) && subtour
-											.contains( j2 ) ){
-
-								//if( (truckTourItoJ.contains( i2 ) || truckTourItoJ.contains( j2 )) && subtour.contains( i2 ) && subtour.contains( j2 ) ){
-
+							if( truckTourBetweenIToJ.contains( i2 ) || truckTourBetweenIToJ.contains( j2 ) || (truckTourItoJ.get( 0 ).equals( i2 ) && truckTourItoJ
+											.get( truckTourItoJ.size() - 1 ).equals( j2 )) || (truckTourItoJ.get( 0 ).equals( j2 ) && truckTourItoJ
+											.get( truckTourItoJ.size() - 1 ).equals( i2 )) ){
+				
 								StringBuilder subDroneFlightEliminationConstraintString = new StringBuilder();
 								GRBLinExpr grbExpr = new GRBLinExpr();
 
@@ -766,7 +772,7 @@ public class Fstsp extends TspModel{
 												.substring( 0, subDroneFlightEliminationConstraintString.length() - 2 ) + "<= " + truckTourItoJ.size() );
 								violatedConstraints.add( new GurobiConstraint( grbExpr, GRB.LESS_EQUAL, truckTourItoJ.size(), null ) );
 							} else {
-								log.debug( "Skip sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is in a different truck subtour." );
+								log.debug( "Skip sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is not forbidden." );
 							}
 						} else {
 							log.debug( "Skip the current sub drone flight ({ " + i2 + ", " + j2 + " }, " + c2 + " ), cause it is the current drone flight." );
@@ -777,7 +783,7 @@ public class Fstsp extends TspModel{
 		}
 
 		log.info( "Looking for forbidden drone flights and violated wait times constraints for allowed drone flights." );
-		// do it together with the sub drone flights check to increase performance?!
+		// TODO do it together with the sub drone flights check to increase performance?!
 		for( Integer[] droneFlight : droneFlights ){
 			Integer i = droneFlight[0];
 			Integer j = droneFlight[1];
