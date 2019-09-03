@@ -111,7 +111,6 @@ public class Pdstsp extends TspModel{
 					log.debug( "Add decision var x" + i + "_" + j + " with factor " + truckTimes[i][j] );
 					grbLinExpr.addTerm( truckTimes[i][j], grbTruckEdgeVars[i][j] );
 				} else {
-					//TODO test if nothing goes wrong now
 					grbTruckEdgeVars[i][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "x" + i + "_" + i );
 				}
 
@@ -134,7 +133,6 @@ public class Pdstsp extends TspModel{
 					log.debug( "Add decision var y" + v + "_" + i );
 					grbLinExpr.addTerm( droneTimes[0][i] + droneTimes[i][0], grbDronesCustomersVars[v][i] );
 				} else {
-					//TODO test if nothing goes wrong now
 					grbDronesCustomersVars[v][i] = grbModel.addVar( 0.0, 0.0, 0.0, GRB.BINARY, "y" + v + "_" + i );
 					log.debug( "Add decision var y" + v + "_" + i + " = 0 (" + i + " is not in Flight range)" );
 				}
