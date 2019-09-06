@@ -684,7 +684,7 @@ public class Fstsp extends TspModel{
 
 		if( subtours.size() > 1 ){
 			log.info( "Found subtours: " + subtours.size() );
-			log.debug( "Subtours: " + subtours );
+			log.info( "Subtours: " + subtours );
 
 			log.info( "Get violated subtour elimination constraints" );
 			for( ArrayList<Integer> subtour : subtours ){
@@ -710,12 +710,12 @@ public class Fstsp extends TspModel{
 
 		log.info( "Looking for forbidden sub-drone-flights." );
 		if( droneFlights.size() > 0 ){
-			log.debug( "droneFlights:" );
+			log.info( "droneFlights:" );
 			for( int k = 0; k < droneFlights.size(); k++ ){
 				Integer i = droneFlights.get( k )[0];
 				Integer j = droneFlights.get( k )[1];
 				Integer c = droneFlights.get( k )[2];
-				log.debug( "droneFlight_" + k + ": ({ " + i + ", " + j + " }, " + c + " )" );
+				log.info( "droneFlight_" + k + ": ({ " + i + ", " + j + " }, " + c + " )" );
 			}
 		} else {
 			log.debug( "No droneFlights in solution!" );
@@ -752,7 +752,7 @@ public class Fstsp extends TspModel{
 							if( truckTourBetweenIToJ.contains( i2 ) || truckTourBetweenIToJ.contains( j2 ) || (truckTourItoJ.get( 0 ).equals( i2 ) && truckTourItoJ
 											.get( truckTourItoJ.size() - 1 ).equals( j2 )) || (truckTourItoJ.get( 0 ).equals( j2 ) && truckTourItoJ
 											.get( truckTourItoJ.size() - 1 ).equals( i2 )) ){
-				
+
 								StringBuilder subDroneFlightEliminationConstraintString = new StringBuilder();
 								GRBLinExpr grbExpr = new GRBLinExpr();
 
@@ -788,7 +788,7 @@ public class Fstsp extends TspModel{
 			Integer i = droneFlight[0];
 			Integer j = droneFlight[1];
 			Integer c = droneFlight[2];
-			log.info( "Check drone flight ({ " + i + ", " + j + " }, " + c + " ) for wait time." );
+			log.debug( "Check drone flight ({ " + i + ", " + j + " }, " + c + " ) for wait time." );
 
 			for( ArrayList<Integer> subtour : subtours ){
 				if( subtour.contains( i ) && subtour.contains( j ) ){
