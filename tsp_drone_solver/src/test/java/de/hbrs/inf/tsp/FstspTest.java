@@ -37,45 +37,4 @@ public class FstspTest{
 		Assert.assertEquals( tspModel.getResult().getLast().getObjective(), 2417500.0, 0.0 );
 	}
 
-	//TODO Remove: Just for fast testing
-	@Test public void test(){
-
-		ArrayList<FstspDroneFlight> arrayList = new ArrayList<>();
-		HashSet<Integer> set = new HashSet<>();
-		set.add( 1 );
-		set.add( 2 );
-		arrayList.add( new FstspDroneFlight( set, 3 ) );
-		set = new HashSet<>();
-		set.add( 1 );
-		set.add( 3 );
-		arrayList.add( new FstspDroneFlight( set, 4 ) );
-		set = new HashSet<>();
-		set.add( 4 );
-		set.add( 1 );
-		arrayList.add( new FstspDroneFlight( set, 5 ) );
-
-		set = new HashSet<>();
-		set.add( 1 );
-		set.add( 2 );
-		System.out.println( arrayList.contains( new FstspDroneFlight( set, 3 ) ) );
-		set = new HashSet<>();
-		set.add( 3 );
-		set.add( 1 );
-		System.out.println( arrayList.contains( new FstspDroneFlight( set, 4 ) ) );
-		set = new HashSet<>();
-		set.add( 4 );
-		set.add( 1 );
-		System.out.println( arrayList.contains( new FstspDroneFlight( set, 5 ) ) );
-
-		set = new HashSet<>();
-		set.add( 1 );
-		set.add( 4 );
-		System.out.println( arrayList.contains( new FstspDroneFlight( set, 9 ) ) );
-		set = new HashSet<>();
-		set.add( 9 );
-		set.add( 1 );
-		System.out.println( arrayList.contains( new FstspDroneFlight( set, 5 ) ) );
-
-	}
-
 }
