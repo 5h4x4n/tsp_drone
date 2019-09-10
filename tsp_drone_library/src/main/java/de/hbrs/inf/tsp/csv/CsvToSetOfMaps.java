@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class CsvToSetOfMaps{
+class CsvToSetOfMaps{
 
 	private static final Logger log = Logger.getLogger( CsvToSetOfMaps.class.getName() );
 

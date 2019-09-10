@@ -217,7 +217,7 @@ public abstract class TspModel extends GRBCallback{
 		}
 	}
 
-	public abstract boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType );
+	protected abstract boolean presolveHeuristic( Defines.PresolveHeuristicType presolveHeuristicType );
 
 	public TspModelResult grbOptimize(){
 		try{
