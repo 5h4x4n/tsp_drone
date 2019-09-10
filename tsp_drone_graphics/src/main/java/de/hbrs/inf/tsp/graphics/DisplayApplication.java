@@ -36,7 +36,16 @@ public class DisplayApplication extends Application{
 	private static final int DASHES_DISTANCE = 5;
 	private static final double NODE_MARGIN_DISTANCE_RATIO = 0.02;
 
-	private static final Color[] DRONE_EDGE_COLORS = { Color.GREEN, Color.ORANGE, Color.PURPLE, Color.MAGENTA };
+	private static Color GREEN = new Color( 0.0f, 0.5f, 0.0f, 1.0f );
+	private static Color BLACK = Color.BLACK;
+	private static Color ORANGE = Color.ORANGE;
+	private static Color PURPLE = Color.PURPLE;
+	private static Color MAGENTA = Color.MAGENTA;
+	private static Color LIGHTGRAY = new Color( 0.75f, 0.75f, 0.75f, 1.0f );
+	private static Color BLUE = Color.BLUE;
+	private static Color RED = Color.RED;
+
+	private static final Color[] DRONE_EDGE_COLORS = { GREEN, ORANGE, PURPLE, MAGENTA };
 
 	private static Logger log;
 
@@ -268,6 +277,7 @@ public class DisplayApplication extends Application{
 				//stage.setTitle( "TSP Drone - Display Application - " + tspType + ": " + tspModel.getName() + " - Iteration " + iterationCount + "/"
 				//				+ iterationResults.size() );
 
+				/*
 				if( tspType.equals( Defines.PDSTSP ) ){
 					double normalizedDroneFlightRange = ((Pdstsp)tspModel).getDroneFlightRange() * normalizeFactor;
 					log.info( "normalized drone flight range: " + normalizedDroneFlightRange );
@@ -306,15 +316,18 @@ public class DisplayApplication extends Application{
 
 					drawDroneFlightRange( gc, nodes[0], normalizedDroneFlightRange );
 				}
+				 */
 
-				//TODO
-				if( tspType.equals( Defines.FSTSP ) ){
-					double normalizedDroneFlightRange = ((Fstsp)tspModel).getDroneFlightRange() * normalizeFactor;
+				if( tspType.equals( Defines.PDSTSP ) || tspType.equals( Defines.FSTSP ) ){
+
+					double normalizedDroneFlightRange = 0;
+					if( tspType.equals( Defines.FSTSP ) ){
+						normalizedDroneFlightRange = ((Fstsp)tspModel).getDroneFlightRange();
+					} else {
+						normalizedDroneFlightRange = ((Pdstsp)tspModel).getDroneFlightRange();
+					}
 					normalizedDroneFlightRange *= (calculateDistance( nodes[0], nodes[1] ) / tspModel.getDistances()[0][1]);
-
 					log.info( "normalized drone flight range: " + normalizedDroneFlightRange );
-
-					//TODO maybe normalizedDroneFlightRange is not correct ...
 					drawDroneFlightRange( gc, nodes[0], normalizedDroneFlightRange );
 				}
 
@@ -411,29 +424,29 @@ public class DisplayApplication extends Application{
 	}
 
 	private void drawDroneFlightRange( GraphicsContext gc, Node depot, double droneFlightRange ) {
-		gc.setStroke( Color.GREEN );
-		gc.setFill( Color.LIGHTGRAY );
+		gc.setStroke( GREEN );
+		gc.setFill( LIGHTGRAY );
 		gc.setLineWidth( DRONE_FLIGHT_RANGE_LINE_WIDTH );
 		gc.fillOval( depot.getX() - 0.5 * droneFlightRange, depot.getY() - 0.5 * droneFlightRange, droneFlightRange, droneFlightRange );
 		gc.strokeOval( depot.getX() - 0.5 * droneFlightRange, depot.getY() - 0.5 * droneFlightRange, droneFlightRange, droneFlightRange );
 	}
 
 	private void drawNode( GraphicsContext gc, Node node ) {
-		Color fill = Color.BLACK;
-		Color stroke = Color.BLACK;
+		Color fill = BLACK;
+		Color stroke = BLACK;
 
 		switch ( node.getType() ) {
 			case DEPOT:
-				fill = stroke = Color.BLUE;
+				fill = stroke = BLUE;
 				break;
 			case DRONE_DELIVERY_NOT_POSSIBLE:
-				fill = stroke = Color.BLACK;
+				fill = stroke = BLACK;
 				break;
 			case DRONE_DELIVERY_POSSIBLE_AND_IN_FLIGHT_RANGE:
-				fill = stroke = Color.GREEN;
+				fill = stroke = GREEN;
 				break;
 			case DRONE_DELIVERY_POSSIBLE_BUT_NOT_IN_FLIGHT_RANGE:
-				fill = stroke = Color.RED;
+				fill = stroke = RED;
 				break;
 		}
 
@@ -455,16 +468,16 @@ public class DisplayApplication extends Application{
 
 	private void drawEdge( GraphicsContext gc, Edge edge ) {
 		gc.setLineWidth( EDGE_LINE_WIDTH );
-		Color color = Color.BLACK;
+		Color color = BLACK;
 		double dashesDistance = 0;
 
 		switch ( edge.getType() ) {
 			case TRUCK:
-				color = Color.BLACK;
+				color = BLACK;
 				break;
 			case DRONE:
 				dashesDistance = DASHES_DISTANCE;
-				color = Color.GREEN;
+				color = GREEN;
 				break;
 		}
 
