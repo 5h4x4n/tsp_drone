@@ -234,10 +234,6 @@ public abstract class TspModel extends GRBCallback{
 
 			grbModel = calcGrbModel();
 
-			grbModel.set( GRB.DoubleParam.NodefileStart, 0.5 );
-			log.info( "NodefileStart: " + grbModel.get( GRB.DoubleParam.NodefileStart ) );
-			log.info( "NodefileDir: " + grbModel.get( GRB.StringParam.NodefileDir ) );
-
 			if( isLazyActive ){
 				grbModel.set( GRB.IntParam.LazyConstraints, 1 );
 			}
